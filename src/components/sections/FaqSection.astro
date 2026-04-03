@@ -1,7 +1,14 @@
 ---
 import { ChevronDown } from "@lucide/astro";
 
-const faqs = [
+interface FaqItem {
+  question: string;
+  answer: string;
+  href?: string;
+  hrefLabel?: string;
+}
+
+const faqs: FaqItem[] = [
   {
     question: "How do I add providers?",
     answer:
@@ -16,6 +23,12 @@ const faqs = [
     question: "Can you add a new website as a provider?",
     answer:
       "New provider requests are not currently being accepted by the maintainer due to limited time. Community contributions are still welcome, while maintenance remains focused on existing providers.",
+  },
+  {
+    question: "Provider working for others but not working for me?",
+    answer: "Follow this guide:",
+    href: "/guide/bypass-isp-blocking/",
+    hrefLabel: "/guide/bypass-isp-blocking/",
   },
   {
     question: "Why is a particular show or movie not working?",
@@ -42,43 +55,56 @@ const faqs = [
       data-faq-accordion
     >
       {
-        faqs.map((item, index) => (
-          <article
-            class="group border-b border-white/10 last:border-b-0"
-            data-faq-item
-            data-state={index === 0 ? "open" : "closed"}
-          >
-            <button
-              type="button"
-              class="flex w-full items-center justify-between gap-4 py-5 text-left font-headline text-lg font-semibold text-white transition-colors hover:text-vega-accent"
-              data-faq-trigger
-              aria-expanded={index === 0 ? "true" : "false"}
-              aria-controls={`faq-panel-${index}`}
+        faqs.map((item, index) => {
+          const itemHref = item.href;
+          const itemHrefLabel = item.hrefLabel ?? itemHref;
+
+          return (
+            <article
+              class="group border-b border-white/10 last:border-b-0"
+              data-faq-item
+              data-state={index === 0 ? "open" : "closed"}
             >
-              <span>{item.question}</span>
-              <ChevronDown
-                class="h-5 w-5 shrink-0 text-vega-accent transition-transform duration-200 group-data-[state=open]:rotate-180"
-                aria-hidden="true"
-              />
-            </button>
-            <div
-              id={`faq-panel-${index}`}
-              class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out"
-              data-faq-content
-              style={
-                index === 0
-                  ? "grid-template-rows: 1fr; opacity: 1;"
-                  : "grid-template-rows: 0fr; opacity: 0;"
-              }
-            >
-              <div class="overflow-hidden">
-                <p class="pb-5 pr-8 text-base leading-relaxed text-vega-muted">
-                  {item.answer}
-                </p>
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 py-5 text-left font-headline text-lg font-semibold text-white transition-colors hover:text-vega-accent"
+                data-faq-trigger
+                aria-expanded={index === 0 ? "true" : "false"}
+                aria-controls={`faq-panel-${index}`}
+              >
+                <span>{item.question}</span>
+                <ChevronDown
+                  class="h-5 w-5 shrink-0 text-vega-accent transition-transform duration-200 group-data-[state=open]:rotate-180"
+                  aria-hidden="true"
+                />
+              </button>
+              <div
+                id={`faq-panel-${index}`}
+                class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out"
+                data-faq-content
+                style={
+                  index === 0
+                    ? "grid-template-rows: 1fr; opacity: 1;"
+                    : "grid-template-rows: 0fr; opacity: 0;"
+                }
+              >
+                <div class="overflow-hidden">
+                  <p class="pb-5 pr-8 text-base leading-relaxed text-vega-muted">
+                    {item.answer}
+                    {itemHref ? (
+                      <a
+                        class="ml-1 font-semibold text-vega-accent underline underline-offset-2"
+                        href={itemHref}
+                      >
+                        {itemHrefLabel}
+                      </a>
+                    ) : null}
+                  </p>
+                </div>
               </div>
-            </div>
-          </article>
-        ))
+            </article>
+          );
+        })
       }
     </div>
   </div>

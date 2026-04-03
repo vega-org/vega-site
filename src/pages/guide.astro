@@ -1,0 +1,185 @@
+---
+import { ArrowLeft } from "@lucide/astro";
+import AddingProvidersSection from "../components/guide/sections/AddingProvidersSection.astro";
+import BypassIspBlockingSection from "../components/guide/sections/BypassIspBlockingSection.astro";
+import CreateProviderSection from "../components/guide/sections/CreateProviderSection.astro";
+import GettingStartedSection from "../components/guide/sections/GettingStartedSection.astro";
+import { APP_LINKS, DISCORD_INVITE_URL, REPO } from "../config/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Vega Guide | Getting Started"
+  description="Official Vega documentation: getting started, installation, and provider setup."
+>
+  <header
+    class="sticky top-0 z-40 border-b border-white/10 bg-vega-bg/85 backdrop-blur-xl"
+  >
+    <div
+      class="mx-auto flex min-h-16 w-[min(1200px,calc(100%-1.5rem))] items-center justify-between gap-4 md:w-[min(1200px,calc(100%-3rem))]"
+    >
+      <a
+        class="inline-flex items-center gap-2 text-sm font-bold text-vega-muted transition hover:text-vega-accent"
+        href="/"
+      >
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
+        Back to Home
+      </a>
+      <a class="flex items-center gap-2" href="/">
+        <img
+          class="h-7 w-auto object-cover"
+          src="/logo.png"
+          alt="Vega logo"
+          loading="lazy"
+        />
+        <span class="font-headline text-xl font-black tracking-tight text-white"
+          >Vega Docs</span
+        >
+      </a>
+      <div class="hidden items-center gap-4 md:flex">
+        <a
+          class="text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href={REPO.url}
+          target="_blank"
+          rel="noreferrer">GitHub</a
+        >
+        <a
+          class="text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noreferrer">Discord</a
+        >
+      </div>
+    </div>
+  </header>
+
+  <main class="px-4 py-12 md:px-6 md:py-16">
+    <div class="mx-auto grid w-full max-w-300 gap-8 lg:grid-cols-[280px_1fr]">
+      <aside
+        class="h-fit rounded-2xl border border-white/10 bg-vega-surface-hi p-5 lg:sticky lg:top-24"
+      >
+        <p class="text-xs font-bold uppercase tracking-widest text-vega-accent">
+          Documentation
+        </p>
+        <nav class="mt-4 space-y-2" aria-label="Guide sections" data-guide-nav>
+          <a
+            class="block rounded-md bg-white/8 px-3 py-2 text-sm font-semibold text-white"
+            data-guide-link
+            href="#getting-started">Getting Started</a
+          >
+          <a
+            class="block rounded-md px-3 py-2 text-sm font-semibold text-vega-muted transition hover:bg-white/8 hover:text-white"
+            data-guide-link
+            href="#adding-providers">Adding Providers</a
+          >
+          <a
+            class="block rounded-md px-3 py-2 text-sm font-semibold text-vega-muted transition hover:bg-white/8 hover:text-white"
+            data-guide-link
+            href="#create-provider">Create Provider</a
+          >
+          <a
+            class="block rounded-md px-3 py-2 text-sm font-semibold text-vega-muted transition hover:bg-white/8 hover:text-white"
+            data-guide-link
+            href="#bypass-isp-blocking">Bypass ISP Blocking</a
+          >
+        </nav>
+      </aside>
+
+      <div class="space-y-6">
+        <GettingStartedSection />
+        <AddingProvidersSection />
+        <CreateProviderSection />
+        <BypassIspBlockingSection />
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script is:inline>
+  const nav = document.querySelector("[data-guide-nav]");
+
+  if (nav) {
+    const links = Array.from(nav.querySelectorAll("[data-guide-link]"));
+    const sections = links
+      .map((link) => {
+        const id = link.getAttribute("href")?.replace("#", "") || "";
+        const element = document.getElementById(id);
+        return element ? { id, element } : null;
+      })
+      .filter(Boolean);
+
+    const activeClasses = ["bg-white/8", "text-white"];
+    const inactiveClasses = ["text-vega-muted"];
+
+    const setActive = (id) => {
+      links.forEach((link) => {
+        const linkId = link.getAttribute("href")?.replace("#", "");
+        const isActive = linkId === id;
+
+        link.classList.toggle(activeClasses[0], isActive);
+        link.classList.toggle(activeClasses[1], isActive);
+        link.classList.toggle(inactiveClasses[0], !isActive);
+
+        if (isActive) {
+          link.setAttribute("aria-current", "true");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+
+    const getActiveSectionId = () => {
+      if (!sections.length) {
+        return "";
+      }
+
+      const offset = 140;
+      const scrollY = window.scrollY + offset;
+      let activeId = sections[0].id;
+
+      sections.forEach((section) => {
+        const top = section.element.offsetTop;
+        if (top <= scrollY) {
+          activeId = section.id;
+        }
+      });
+
+      return activeId;
+    };
+
+    let ticking = false;
+    const updateFromScroll = () => {
+      if (ticking) {
+        return;
+      }
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const activeId = getActiveSectionId();
+        if (activeId) {
+          setActive(activeId);
+        }
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", updateFromScroll, { passive: true });
+    window.addEventListener("resize", updateFromScroll);
+
+    const initialHash = window.location.hash.replace("#", "");
+    if (initialHash) {
+      setActive(initialHash);
+    } else {
+      updateFromScroll();
+    }
+
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        const id = link.getAttribute("href")?.replace("#", "") || "";
+        if (id) {
+          setActive(id);
+        }
+      });
+    });
+  }
+</script>

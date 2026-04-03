@@ -1,0 +1,181 @@
+---
+import { REPO } from "../../config/site";
+import { getAppStats } from "../../lib/stats";
+import { APP_LINKS } from "../../config/site";
+
+const stats = await getAppStats(
+  REPO.owner,
+  REPO.name,
+  REPO.discordInviteApiUrl,
+  REPO.githubCacheTtlSeconds,
+);
+
+const docsCards = [
+  {
+    icon: "download",
+    title: "Total Downloads",
+    count: stats.totalDownloads,
+  },
+  {
+    icon: "commit",
+    title: "Total Commits",
+    count: stats.totalCommits,
+  },
+  {
+    icon: "star",
+    title: "Total Stars",
+    count: stats.totalStars,
+  },
+  {
+    icon: "groups",
+    title: "Discord Members",
+    count: stats.discordMembers,
+  },
+];
+---
+
+<section class="bg-vega-bg px-4 py-24 md:px-6" id="docs" data-stats-section>
+  <div class="mx-auto grid w-full max-w-350 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+    <article
+      class="relative overflow-hidden rounded-3xl bg-vega-surface-hi p-8"
+    >
+      <span
+        class="material-symbols-outlined absolute -top-3 right-1 text-[9rem] text-vega-accent/15"
+        aria-hidden="true"
+      >
+        menu_book
+      </span>
+      <h2
+        class="relative z-10 font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
+      >
+        Get Started Guide
+      </h2>
+      <div class="relative z-10 mt-6 grid gap-4">
+        <div class="flex items-start gap-3">
+          <span
+            class="grid h-8 w-8 shrink-0 place-content-center rounded-full bg-vega-accent font-headline text-sm font-extrabold text-[#240900]"
+          >
+            1
+          </span>
+          <div>
+            <h4 class="font-headline text-lg font-bold text-white">
+              Installation
+            </h4>
+            <p class="mt-1 text-sm text-vega-muted">
+              Download and install the Vega app from GitHub or vega.8man.in.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span
+            class="grid h-8 w-8 shrink-0 place-content-center rounded-full bg-vega-accent font-headline text-sm font-extrabold text-[#240900]"
+          >
+            2
+          </span>
+          <div>
+            <h4 class="font-headline text-lg font-bold text-white">
+              Adding Providers
+            </h4>
+            <p class="mt-1 text-sm text-vega-muted">
+              Go to Settings &gt; Provider Manager &gt; Available Providers, tap
+              plus, and add vega-org, zenda-cross, or
+              https://github.com/vega-org/vega-providers.
+            </p>
+          </div>
+        </div>
+      </div>
+      <a
+        class="mt-6 inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-6 py-3 font-headline text-sm font-bold text-white transition hover:bg-white/12"
+        href={APP_LINKS.guide}
+      >
+        Full Documentation
+      </a>
+    </article>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {
+        docsCards.map((card) => (
+          <article class="rounded-2xl bg-vega-bg-soft p-5 transition hover:bg-vega-surface-hi">
+            <span
+              class="material-symbols-outlined text-3xl text-vega-accent"
+              aria-hidden="true"
+            >
+              {card.icon}
+            </span>
+            <h5 class="mt-2 font-headline text-xl font-bold text-white">
+              {card.title}
+            </h5>
+            {typeof card.count === "number" ? (
+              <p class="mt-2 font-headline text-3xl font-black tracking-tight text-white">
+                <span data-counter data-target={card.count}>
+                  0
+                </span>
+                <span>+</span>
+              </p>
+            ) : (
+              <p class="mt-2 font-headline text-3xl font-black tracking-tight text-white">
+                N/A
+              </p>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  const sections = document.querySelectorAll("[data-stats-section]");
+
+  sections.forEach((section) => {
+    const counters = Array.from(section.querySelectorAll("[data-counter]"));
+    if (counters.length === 0) {
+      return;
+    }
+
+    const animateCounter = (counter, durationMs = 1200) => {
+      const target = Number.parseInt(counter.dataset.target || "0", 10);
+      if (!Number.isFinite(target) || target <= 0) {
+        counter.textContent = "0";
+        return;
+      }
+
+      const start = performance.now();
+      const formatter = new Intl.NumberFormat("en-US");
+
+      const tick = (now) => {
+        const progress = Math.min((now - start) / durationMs, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.floor(target * eased);
+        counter.textContent = formatter.format(value);
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          counter.textContent = formatter.format(target);
+        }
+      };
+
+      requestAnimationFrame(tick);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          counters.forEach((counter, index) => {
+            window.setTimeout(() => animateCounter(counter), index * 120);
+          });
+
+          observer.disconnect();
+        });
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(section);
+  });
+</script>

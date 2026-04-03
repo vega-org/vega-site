@@ -1,0 +1,61 @@
+---
+import { REPO } from "../../config/site";
+---
+
+<header
+  class="overflow-hidden px-4 pb-8 pt-24 md:px-6 md:pb-10 md:pt-28 lg:pb-8 lg:pt-24"
+  id="top"
+>
+  <div
+    class="mx-auto grid w-full max-w-350 items-center gap-8 lg:min-h-[calc(100svh-4.5rem)] lg:grid-cols-[1.03fr_0.97fr]"
+  >
+    <div>
+      <!-- <span
+        class="inline-block rounded-md bg-vega-surface-hi px-3 py-1 pt-1.5 font-headline text-xs font-bold uppercase tracking-[0.12em] text-vega-accent"
+        >Open Source</span
+      > -->
+      <h1
+        class="mt-4 font-headline text-[clamp(2.35rem,5.6vw,5.2rem)] leading-[0.92] font-black tracking-tight text-white [text-shadow:0_0_32px_rgba(255,143,112,0.28)]"
+      >
+        A open-source media streaming app.
+      </h1>
+      <p
+        class="mt-4 max-w-[38ch] text-[clamp(1rem,1.6vw,1.15rem)] leading-relaxed text-vega-muted"
+      >
+        Bring your own sources. Keep your privacy. Vega delivers a media
+        experience built around the content you control.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3 max-md:*:w-full">
+        <a
+          class="inline-flex items-center justify-center rounded-md bg-linear-to-br from-vega-accent to-vega-accent-strong px-7 py-3.5 font-headline text-base font-extrabold text-[#240900] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(255,120,82,0.35)]"
+          href="#download"
+        >
+          Download Vega
+        </a>
+        <a
+          class="inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-7 py-3.5 font-headline text-base font-bold text-white transition hover:bg-white/12"
+          href={REPO.url}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View Source
+        </a>
+      </div>
+    </div>
+    <div class="group relative mx-auto flex w-full max-w-176 items-end py-2">
+      <img
+        class="absolute bottom-0 right-[1%] z-0 w-[82%] max-w-none object-contain transition duration-500 group-hover:translate-x-[1%]"
+        src="/hero-landscape.png"
+        alt="Vega landscape playback mockup"
+        loading="lazy"
+      />
+
+      <img
+        class="relative z-10 w-[56%] min-w-52 max-w-[320px] object-contain transition duration-500 group-hover:-translate-y-1 -mb-5"
+        src="/hero-portrait.png"
+        alt="Vega portrait browsing mockup"
+        loading="lazy"
+      />
+    </div>
+  </div>
+</header>

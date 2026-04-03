@@ -1,0 +1,107 @@
+---
+import { REPO } from "../../config/site";
+import { getRepoContributors } from "../../lib/github";
+
+const contributors = await getRepoContributors(
+  REPO.owner,
+  REPO.name,
+  24,
+  REPO.githubCacheTtlSeconds,
+);
+---
+
+<section
+  class="bg-vega-bg-soft px-4 py-24 md:px-6"
+  aria-labelledby="contributors-title"
+>
+  <div class="mx-auto w-full max-w-6xl">
+    <h2
+      id="contributors-title"
+      class="text-center font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
+    >
+      Contributors
+    </h2>
+
+    {
+      contributors.length > 0 ? (
+        <div class="mt-10" data-contributor-slider>
+          <div class="mb-4 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+              data-slider-prev
+              aria-label="Scroll contributors left"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              class="rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+              data-slider-next
+              aria-label="Scroll contributors right"
+            >
+              Next
+            </button>
+          </div>
+
+          <ul
+            class="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            data-slider-track
+          >
+            {contributors.map((contributor) => (
+              <li class="min-w-45 snap-start">
+                <a
+                  class="group block rounded-2xl border border-white/10 bg-vega-surface p-4 transition hover:border-vega-accent/35 hover:bg-vega-surface-hi"
+                  href={contributor.profileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <img
+                    class="h-20 w-20 rounded-full object-cover"
+                    src={contributor.avatarUrl}
+                    alt={`${contributor.login} avatar`}
+                    loading="lazy"
+                  />
+                  <h3 class="mt-3 truncate font-headline text-lg font-bold text-white">
+                    {contributor.login}
+                  </h3>
+                  <p class="mt-1 text-sm text-vega-muted">
+                    {contributor.contributions} commits
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div class="mt-10 rounded-2xl border border-white/10 bg-vega-surface p-6 text-center text-vega-muted">
+          Contributors are temporarily unavailable.
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<script is:inline>
+  const sliderRoots = document.querySelectorAll("[data-contributor-slider]");
+
+  sliderRoots.forEach((root) => {
+    const track = root.querySelector("[data-slider-track]");
+    const prev = root.querySelector("[data-slider-prev]");
+    const next = root.querySelector("[data-slider-next]");
+
+    if (!track || !prev || !next) {
+      return;
+    }
+
+    const getStep = () => Math.max(track.clientWidth * 0.75, 220);
+
+    prev.addEventListener("click", () => {
+      track.scrollBy({ left: -getStep(), behavior: "smooth" });
+    });
+
+    next.addEventListener("click", () => {
+      track.scrollBy({ left: getStep(), behavior: "smooth" });
+    });
+  });
+</script>

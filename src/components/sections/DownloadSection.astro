@@ -1,0 +1,230 @@
+---
+import { ChevronDown } from "@lucide/astro";
+import { marked } from "marked";
+import { REPO } from "../../config/site";
+import { getRepoReleases, type RepoRelease } from "../../lib/github";
+
+const releases = await getRepoReleases(
+  REPO.owner,
+  REPO.name,
+  6,
+  REPO.githubCacheTtlSeconds,
+);
+const latestRelease = releases[0] ?? null;
+const previousReleases = releases.slice(1, 6);
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "2-digit",
+  year: "numeric",
+});
+
+function formatDate(value: string): string {
+  if (!value) {
+    return "Unknown date";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Unknown date";
+  }
+
+  return dateFormatter.format(parsed);
+}
+
+function formatSize(bytes: number): string {
+  if (!bytes || bytes <= 0) {
+    return "size unknown";
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+}
+
+function getLatestDownloadUrl(release: RepoRelease): string {
+  return (
+    release.universalAsset?.url ?? release.assets[0]?.url ?? release.notesUrl
+  );
+}
+
+function renderReleaseNotes(markdown: string): string {
+  return marked.parse(markdown, { gfm: true, breaks: true }) as string;
+}
+---
+
+<section class="bg-vega-bg px-4 py-24 md:px-6" id="download">
+  <div class="mx-auto w-full max-w-5xl text-center">
+    <h2
+      class="font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
+    >
+      Ready to ascend?
+    </h2>
+    <p class="mx-auto mt-4 max-w-3xl text-lg text-vega-muted">
+      Grab the latest stable build of Vega.
+    </p>
+
+    <div
+      class="mt-8 rounded-2xl border-l-4 border-vega-accent bg-vega-surface-hi p-8 text-left"
+    >
+      <div
+        class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between"
+      >
+        <div>
+          <div
+            class="inline-block rounded-md bg-vega-surface px-3 py-1 font-headline text-xs font-bold uppercase tracking-[0.12em] text-vega-accent"
+          >
+            Stable Build
+          </div>
+          <h3
+            class="mt-3 font-headline text-4xl font-black tracking-tight text-white"
+          >
+            {latestRelease ? latestRelease.name : "Latest release on GitHub"}
+          </h3>
+          <p class="mt-1 text-sm text-vega-muted">
+            {
+              latestRelease
+                ? `Released ${formatDate(latestRelease.publishedAt)} • ${formatSize(
+                    latestRelease.universalAsset?.sizeBytes ??
+                      latestRelease.assets[0]?.sizeBytes ??
+                      0,
+                  )} • Universal build`
+                : "Live release data unavailable right now. Open GitHub releases for the latest artifacts."
+            }
+          </p>
+        </div>
+        <a
+          class="inline-flex items-center justify-center gap-2 rounded-md bg-linear-to-br from-vega-accent to-vega-accent-strong px-7 py-3.5 font-headline text-lg font-extrabold text-[#240900] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(255,120,82,0.35)]"
+          href={latestRelease ? getLatestDownloadUrl(latestRelease) : REPO.releasesUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >download</span
+          >
+          Download Latest
+        </a>
+      </div>
+
+      {
+        latestRelease ? (
+          <details class="mt-5 rounded-xl border border-white/10 bg-vega-surface px-4 py-3">
+            <summary class="cursor-pointer list-none font-headline text-sm font-bold uppercase tracking-[0.08em] text-vega-accent flex items-center justify-between">
+              Variants and release notes <ChevronDown class="h-6 w-6 text-white stroke-4" aria-hidden="true" />
+            </summary>
+            <div class="mt-4 flex flex-col gap-10">
+              <div>
+                <h4 class="font-headline text-sm font-bold uppercase tracking-[0.08em] text-white">
+                  Downloads
+                </h4>
+                <ul class="mt-3 space-y-2 text-sm text-vega-muted">
+                  {
+                    latestRelease.assets.length > 0 ? (
+                      latestRelease.assets.map((asset) => (
+                        <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 px-3 py-2">
+                          <span class="truncate">{asset.name}</span>
+                          <a class="shrink-0 font-bold text-vega-accent" href={asset.url} target="_blank" rel="noreferrer">
+                            Download ({formatSize(asset.sizeBytes)})
+                          </a>
+                        </li>
+                      ))
+                    ) : (
+                      <li>
+                        No downloadable assets were published for this release.
+                      </li>
+                    )
+                  }
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-headline text-sm font-bold uppercase tracking-[0.08em] text-white">
+                  Release notes
+                </h4>
+                <div
+                  class="mt-3 space-y-3 text-sm leading-relaxed text-vega-muted [&_a]:font-bold [&_a]:text-vega-accent [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_li]:ml-5 [&_li]:list-disc [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/30 [&_pre]:p-3 [&_ul]:space-y-1"
+                  set:html={renderReleaseNotes(latestRelease.notesMarkdown)}
+                />
+                <a class="mt-3 inline-flex font-bold text-vega-accent" href={latestRelease.notesUrl} target="_blank" rel="noreferrer">
+                  View full release notes
+                </a>
+              </div>
+            </div>
+          </details>
+        ) : null
+      }
+    </div>
+
+    <div class="mt-8 space-y-3 text-left">
+      <h3
+        class="font-headline text-lg font-bold uppercase tracking-widest text-vega-muted"
+      >
+        Previous releases
+      </h3>
+      {
+        previousReleases.length > 0 ? (
+          previousReleases.map((release) => (
+            <details class="rounded-xl border border-white/10 bg-vega-surface px-5 py-4">
+              <summary class="cursor-pointer list-none">
+                <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                  <span class="font-headline text-xl font-black tracking-tight text-white">
+                    {release.version}
+                  </span>
+                  <span class="text-sm text-vega-muted">
+                    Released {formatDate(release.publishedAt)}
+                  </span>
+                </div>
+              </summary>
+              <div class="mt-4 grid gap-5 md:grid-cols-[1fr_1.2fr]">
+                <div>
+                  <h4 class="font-headline text-xs font-bold uppercase tracking-widest text-vega-muted">
+                    Variants
+                  </h4>
+                  <ul class="mt-3 space-y-2 text-sm text-vega-muted">
+                    {release.assets.length > 0 ? (
+                      release.assets.map((asset) => (
+                        <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 px-3 py-2">
+                          <span class="truncate">{asset.name}</span>
+                          <a
+                            class="shrink-0 font-bold text-vega-accent"
+                            href={asset.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Download ({formatSize(asset.sizeBytes)})
+                          </a>
+                        </li>
+                      ))
+                    ) : (
+                      <li>
+                        No downloadable assets were published for this release.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <h4 class="font-headline text-xs font-bold uppercase tracking-widest text-vega-muted">
+                    Release notes
+                  </h4>
+                  <div
+                    class="mt-3 space-y-3 text-sm leading-relaxed text-vega-muted [&_a]:font-bold [&_a]:text-vega-accent [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_li]:ml-5 [&_li]:list-disc [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-black/30 [&_pre]:p-3 [&_ul]:space-y-1"
+                    set:html={renderReleaseNotes(release.notesMarkdown)}
+                  />
+                  <a
+                    class="mt-3 inline-flex font-bold text-vega-accent"
+                    href={release.notesUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View full release notes
+                  </a>
+                </div>
+              </div>
+            </details>
+          ))
+        ) : (
+          <p class="rounded-xl border border-white/10 bg-vega-surface px-5 py-4 text-sm text-vega-muted">
+            No previous stable releases found.
+          </p>
+        )
+      }
+    </div>
+  </div>
+</section>

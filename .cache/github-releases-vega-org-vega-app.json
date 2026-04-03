@@ -1,0 +1,179 @@
+{
+  "updatedAt": "2026-04-03T04:27:06.709Z",
+  "releases": [
+    {
+      "version": "v3.3.5",
+      "name": "v3.3.5",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.3.5",
+      "notesMarkdown": "- Video could not be played issue in the player (caused by unsupported audio format).\n- Fixed updated provider not using the latest code.\n\n\n\n\n> [!WARNING]\n> After version 3.3.4 version app won't include providers by default.\nFor users updating from the previous version, no additional action is needed to use vega provider.\nFor new installs, go to Settings > Provider Manager > Available Providers > Click plus button > enter ```vega-org``` in input, then confirm.",
+      "publishedAt": "2026-04-01T18:03:23Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.3.5.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.5/Vega-arm64-v8a-v3.3.5.apk",
+          "sizeBytes": 45579147
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.3.5.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.5/Vega-armeabi-v7a-v3.3.5.apk",
+          "sizeBytes": 37617987
+        },
+        {
+          "name": "Vega-universal-v3.3.5.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.5/Vega-universal-v3.3.5.apk",
+          "sizeBytes": 113671855
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.3.5.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.5/Vega-universal-v3.3.5.apk",
+        "sizeBytes": 113671855
+      }
+    },
+    {
+      "version": "v3.3.4",
+      "name": "v3.3.4",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.3.4",
+      "notesMarkdown": "- Added support for multiple provider sources.\n\n\n\n> [!WARNING]\n> From this version onwards app won't include providers by default.\nFor users updating from the previous version, no additional action is needed to use vega provider.\nFor new installs, go to Settings > Provider Manager > Available Providers > Click plus button > enter ```vega-org``` in input, then confirm.",
+      "publishedAt": "2026-03-22T10:33:12Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.3.4.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.4/Vega-arm64-v8a-v3.3.4.apk",
+          "sizeBytes": 44299081
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.3.4.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.4/Vega-armeabi-v7a-v3.3.4.apk",
+          "sizeBytes": 36436223
+        },
+        {
+          "name": "Vega-universal-v3.3.4.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.4/Vega-universal-v3.3.4.apk",
+          "sizeBytes": 107951507
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.3.4.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.4/Vega-universal-v3.3.4.apk",
+        "sizeBytes": 107951507
+      }
+    },
+    {
+      "version": "v3.3.3",
+      "name": "v3.3.3",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.3.3",
+      "notesMarkdown": "- Fixed shuttering after opening the drawer.\n- Added option to add custom provider repository.",
+      "publishedAt": "2026-02-23T16:55:37Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.3.3.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.3/Vega-arm64-v8a-v3.3.3.apk",
+          "sizeBytes": 44288409
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.3.3.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.3/Vega-armeabi-v7a-v3.3.3.apk",
+          "sizeBytes": 36425551
+        },
+        {
+          "name": "Vega-universal-v3.3.3.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.3/Vega-universal-v3.3.3.apk",
+          "sizeBytes": 107940835
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.3.3.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.3/Vega-universal-v3.3.3.apk",
+        "sizeBytes": 107940835
+      }
+    },
+    {
+      "version": "v3.3.2",
+      "name": "v3.3.2",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.3.2",
+      "notesMarkdown": "- Fixed external player not opening\n- Fixed rendering errors\n- Fixed lag on changing tab",
+      "publishedAt": "2026-01-30T15:46:59Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.3.2.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.2/Vega-arm64-v8a-v3.3.2.apk",
+          "sizeBytes": 44285217
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.3.2.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.2/Vega-armeabi-v7a-v3.3.2.apk",
+          "sizeBytes": 36422359
+        },
+        {
+          "name": "Vega-universal-v3.3.2.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.2/Vega-universal-v3.3.2.apk",
+          "sizeBytes": 107937643
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.3.2.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.2/Vega-universal-v3.3.2.apk",
+        "sizeBytes": 107937643
+      }
+    },
+    {
+      "version": "v3.3.1",
+      "name": "v3.3.1",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.3.1",
+      "notesMarkdown": "- Fixed rendering error on download\n- Performance Improvements\n- Fixed hubcloud extractor\n- Updated to SDK 54",
+      "publishedAt": "2026-01-26T14:16:18Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.3.1.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.1/Vega-arm64-v8a-v3.3.1.apk",
+          "sizeBytes": 44265905
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.3.1.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.1/Vega-armeabi-v7a-v3.3.1.apk",
+          "sizeBytes": 36403047
+        },
+        {
+          "name": "Vega-universal-v3.3.1.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.1/Vega-universal-v3.3.1.apk",
+          "sizeBytes": 107918331
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.3.1.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.3.1/Vega-universal-v3.3.1.apk",
+        "sizeBytes": 107918331
+      }
+    },
+    {
+      "version": "v3.2.6",
+      "name": "v3.2.6",
+      "notesUrl": "https://github.com/vega-org/vega-app/releases/tag/v3.2.6",
+      "notesMarkdown": "- Fixed Hubcloud/Vcloud extractor.\n- Fixed Player text colour.",
+      "publishedAt": "2025-11-15T06:35:36Z",
+      "assets": [
+        {
+          "name": "Vega-arm64-v8a-v3.2.6.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.2.6/Vega-arm64-v8a-v3.2.6.apk",
+          "sizeBytes": 36670509
+        },
+        {
+          "name": "Vega-armeabi-v7a-v3.2.6.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.2.6/Vega-armeabi-v7a-v3.2.6.apk",
+          "sizeBytes": 30230375
+        },
+        {
+          "name": "Vega-universal-v3.2.6.apk",
+          "url": "https://github.com/vega-org/vega-app/releases/download/v3.2.6/Vega-universal-v3.2.6.apk",
+          "sizeBytes": 87414375
+        }
+      ],
+      "universalAsset": {
+        "name": "Vega-universal-v3.2.6.apk",
+        "url": "https://github.com/vega-org/vega-app/releases/download/v3.2.6/Vega-universal-v3.2.6.apk",
+        "sizeBytes": 87414375
+      }
+    }
+  ]
+}

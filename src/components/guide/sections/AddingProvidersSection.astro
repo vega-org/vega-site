@@ -1,0 +1,134 @@
+---
+import { Copy, PlugZap } from "@lucide/astro";
+import { APP_LINKS } from "../../../config/site";
+
+const officialProviderName = "vega-org";
+const officialProviderUrl = "https://github.com/vega-org/vega-providers";
+
+const providerSteps = [
+  "Go to Settings > Provider Manager > Available Providers.",
+  "Click the plus button.",
+  "To add official providers, enter vega-org or https://github.com/vega-org/vega-providers and press Confirm.",
+];
+---
+
+<section
+  id="adding-providers"
+  class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
+    <PlugZap class="h-4 w-4" aria-hidden="true" />
+    Adding Providers
+  </div>
+
+  <h2
+    class="mt-4 font-headline text-[clamp(1.8rem,3.6vw,2.6rem)] font-black tracking-tight text-white"
+  >
+    Add Provider Sources
+  </h2>
+
+  <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
+    You can create your own provider by following the
+    <a
+      class="font-bold text-vega-accent underline underline-offset-2"
+      href={APP_LINKS.providerAuthoringGuide}
+    >
+      provider authoring guide
+    </a>
+    below, or use official/community providers such as vega-org.
+  </p>
+
+  <ol
+    class="mt-6 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+  >
+    <li>{providerSteps[0]}</li>
+    <li>{providerSteps[1]}</li>
+    <li>
+      To add official providers, enter
+      <span class="ml-1 inline-flex items-center gap-2">
+        <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
+          >{officialProviderName}</code
+        >
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[11px] font-bold text-white transition hover:bg-white/12"
+          data-copy-provider-value
+          data-copy-text={officialProviderName}
+          aria-label="Copy vega-org"
+        >
+          <Copy class="h-3.5 w-3.5 text-vega-accent" aria-hidden="true" />
+          Copy
+        </button>
+      </span>
+      <span class="mx-1">or</span>
+      <span class="inline-flex items-center gap-2">
+        <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
+          >{officialProviderUrl}</code
+        >
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[11px] font-bold text-white transition hover:bg-white/12"
+          data-copy-provider-value
+          data-copy-text={officialProviderUrl}
+          aria-label="Copy provider repository URL"
+        >
+          <Copy class="h-3.5 w-3.5 text-vega-accent" aria-hidden="true" />
+          Copy
+        </button>
+      </span>
+      <span class="ml-1">and press Confirm.</span>
+    </li>
+  </ol>
+  <p class="mt-4 text-vega-muted">
+    Follow the same process to add a custom source for providers.,
+  </p>
+
+  <div
+    class="pointer-events-none fixed bottom-5 right-5 z-50 translate-y-3 rounded-md border border-white/15 bg-vega-surface-hi px-4 py-2 text-sm font-semibold text-white opacity-0 transition duration-200"
+    role="status"
+    aria-live="polite"
+    data-provider-toast
+  >
+    Copied to clipboard
+  </div>
+</section>
+
+<script is:inline>
+  const copyButtons = document.querySelectorAll("[data-copy-provider-value]");
+  const toast = document.querySelector("[data-provider-toast]");
+
+  const showToast = (message) => {
+    if (!toast) {
+      return;
+    }
+
+    toast.textContent = message;
+    toast.classList.remove("opacity-0", "translate-y-3");
+    toast.classList.add("opacity-100", "translate-y-0");
+
+    window.clearTimeout(showToast.timeoutId);
+    showToast.timeoutId = window.setTimeout(() => {
+      toast.classList.add("opacity-0", "translate-y-3");
+      toast.classList.remove("opacity-100", "translate-y-0");
+    }, 1800);
+  };
+
+  copyButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const text = button.dataset.copyText || "";
+      if (!text) {
+        showToast("Nothing to copy");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Copied to clipboard");
+      } catch {
+        showToast("Clipboard not available");
+      }
+    });
+  });
+</script>

@@ -1,0 +1,114 @@
+---
+import { APP_LINKS } from "../../../config/site";
+import { Network, Shield, Wifi } from "@lucide/astro";
+---
+
+<section
+  id="bypass-isp-blocking"
+  class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
+    <Network class="h-4 w-4" aria-hidden="true" />
+    Bypass ISP Blocking
+  </div>
+
+  <h2
+    class="mt-4 font-headline text-[clamp(1.8rem,3.6vw,2.6rem)] font-black tracking-tight text-white"
+  >
+    Provider Works for Others but Not for You?
+  </h2>
+
+  <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
+    If a provider works for other users but not for you, your ISP (Internet
+    Service Provider) may be blocking the provider website URL. Try these
+    methods in order.
+  </p>
+
+  <ol
+    class="mt-6 list-decimal space-y-6 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+  >
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <div class="inline-flex items-center gap-2 text-white">
+          <Wifi class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+          <h3 class="font-headline text-lg font-bold">
+            Change DNS (First Method)
+          </h3>
+        </div>
+        <ol class="mt-3 list-decimal space-y-1.5 pl-5 marker:text-vega-accent">
+          <li>
+            Go to <strong class="text-white"
+              >Settings &gt; Network &amp; Internet</strong
+            >.
+          </li>
+          <li>
+            Select <strong class="text-white">Advanced &gt; Private DNS</strong
+            >.
+          </li>
+          <li>
+            Select <strong class="text-white"
+              >Private DNS provider hostname</strong
+            >.
+          </li>
+          <li>
+            Enter <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
+              >one.one.one.one</code
+            > and tap <strong class="text-white">Save</strong>.
+          </li>
+        </ol>
+        <p class="mt-3 text-sm text-vega-muted">
+          You can also use Cloudflare Family DNS if you prefer family-safe
+          filtering.
+        </p>
+      </article>
+    </li>
+
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <div class="inline-flex items-center gap-2 text-white">
+          <Shield class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+          <h3 class="font-headline text-lg font-bold">
+            Use Cloudflare WARP (Second Method)
+          </h3>
+        </div>
+        <p class="mt-3 text-sm text-vega-muted">
+          If DNS changes do not work, install Cloudflare WARP and turn it on.
+        </p>
+        <a
+          class="mt-2 inline-flex text-sm font-bold text-vega-accent"
+          href={APP_LINKS.warpPlayStore}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Download WARP from Play Store
+        </a>
+        <p class="mt-3 text-sm text-vega-muted">
+          If Play Store link is not working, you can also download WARP from
+          APKMirror.
+        </p>
+        <a
+          class="mt-2 inline-flex text-sm font-bold text-vega-accent"
+          href={APP_LINKS.warpApkMirror}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Download WARP from APKMirror
+        </a>
+      </article>
+    </li>
+
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <h3 class="font-headline text-lg font-bold text-white">
+          Use a VPN (Third Method)
+        </h3>
+        <p class="mt-3 text-sm text-vega-muted">
+          You can use a VPN to bypass ISP-level blocking. Some websites detect
+          and block VPN traffic, so a reliable premium VPN may be required.
+        </p>
+      </article>
+    </li>
+  </ol>
+</section>

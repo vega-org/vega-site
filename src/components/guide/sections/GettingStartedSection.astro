@@ -1,0 +1,110 @@
+---
+import { BookOpenText, Download, Info } from "@lucide/astro";
+import { APP_LINKS, REPO } from "../../../config/site";
+---
+
+<section
+  id="getting-started"
+  class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
+    <BookOpenText class="h-4 w-4" aria-hidden="true" />
+    Getting Started
+  </div>
+
+  <h1
+    class="mt-4 font-headline text-[clamp(2rem,4vw,3.1rem)] font-black tracking-tight text-white"
+  >
+    Download and Install Vega
+  </h1>
+  <p class="mt-4 max-w-[72ch] text-base leading-relaxed text-vega-muted">
+    Download Vega from the official release channels only. Use either the GitHub
+    releases page or the official website.
+  </p>
+
+  <div class="mt-6 flex flex-wrap gap-3">
+    <a
+      class="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+      href={REPO.releasesUrl}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <Download class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+      Download from GitHub
+    </a>
+    <a
+      class="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+      href={APP_LINKS.officialSite}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <Download class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+      Download from Official Site
+    </a>
+  </div>
+
+  <article
+    class="mt-8 rounded-xl border border-white/10 bg-vega-surface-hi p-5"
+  >
+    <h2 class="font-headline text-xl font-bold text-white">
+      Which Version Should I Download?
+    </h2>
+    <p class="mt-2 text-sm leading-relaxed text-vega-muted">
+      Always download the <strong class="text-white">latest version</strong>. It
+      includes the newest provider fixes, playback improvements, and security
+      updates.
+    </p>
+  </article>
+
+  <article
+    class="mt-4 rounded-xl border border-white/10 bg-vega-surface-hi p-5"
+  >
+    <h2 class="font-headline text-xl font-bold text-white">
+      Choosing Variants
+    </h2>
+    <p class="mt-2 text-sm leading-relaxed text-vega-muted">
+      If you do not care about APK size, install the
+      <strong class="text-white"> universal build</strong>. It works across all
+      supported Android CPU architectures.
+    </p>
+    <p class="mt-3 text-sm leading-relaxed text-vega-muted">
+      If you care about APK size, choose the architecture-specific build:
+    </p>
+    <ul class="mt-3 space-y-2 text-sm text-vega-muted">
+      <li class="flex items-start gap-2">
+        <Info
+          class="mt-0.5 h-4 w-4 shrink-0 text-vega-accent"
+          aria-hidden="true"
+        />
+        <span
+          ><strong class="text-white">arm64-v8a</strong>: 64-bit ARM devices.
+          Most modern phones and tablets use this.</span
+        >
+      </li>
+      <li class="flex items-start gap-2">
+        <Info
+          class="mt-0.5 h-4 w-4 shrink-0 text-vega-accent"
+          aria-hidden="true"
+        />
+        <span
+          ><strong class="text-white">armeabi-v7a</strong>: 32-bit ARM devices.
+          Use this for older Android devices.</span
+        >
+      </li>
+    </ul>
+    <div class="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
+      <h3
+        class="font-headline text-sm font-bold uppercase tracking-widest text-vega-accent"
+      >
+        How to find your architecture
+      </h3>
+      <p class="mt-2 text-sm leading-relaxed text-vega-muted">
+        On Android, install a device info app (for example: CPU-Z, Droid
+        Hardware Info, or AIDA64) and check CPU ABI. If it shows arm64-v8a,
+        install the v8a build. If it shows armeabi-v7a, install the v7a build.
+      </p>
+    </div>
+  </article>
+</section>

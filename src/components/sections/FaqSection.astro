@@ -1,0 +1,129 @@
+---
+import { ChevronDown } from "@lucide/astro";
+
+const faqs = [
+  {
+    question: "How do I add providers?",
+    answer:
+      "Go to Settings > Provider Manager > Available Providers, tap the plus button, then enter one of: vega-org, zenda-cross, or https://github.com/vega-org/vega-providers, and confirm. Use the same flow for adding custom provider sources.",
+  },
+  {
+    question: "Is the app available for TV?",
+    answer:
+      "There is currently no dedicated TV support. The app may run on some TV operating systems, but you may need a mouse for reliable control.",
+  },
+  {
+    question: "Can you add a new website as a provider?",
+    answer:
+      "New provider requests are not currently being accepted by the maintainer due to limited time. Community contributions are still welcome, while maintenance remains focused on existing providers.",
+  },
+  {
+    question: "Why is a particular show or movie not working?",
+    answer:
+      "Some websites frequently change their download pages by moving buttons or altering layout structure. When this happens, the app can fail to resolve streaming links. The parser targets common page patterns, so breakages can happen until source layouts stabilize.",
+  },
+  {
+    question: "Is the app available for iOS?",
+    answer:
+      "iOS is not currently supported. It is technically possible, but would require refactoring and an Apple build pipeline with Xcode on macOS.",
+  },
+];
+---
+
+<section class="bg-vega-bg-soft px-4 py-24 md:px-6" id="faq">
+  <div class="mx-auto w-full max-w-4xl">
+    <h2
+      class="text-center font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
+    >
+      Frequently Asked Questions
+    </h2>
+    <div
+      class="mt-10 rounded-xl border border-white/10 bg-vega-surface-hi px-6"
+      data-faq-accordion
+    >
+      {
+        faqs.map((item, index) => (
+          <article
+            class="group border-b border-white/10 last:border-b-0"
+            data-faq-item
+            data-state={index === 0 ? "open" : "closed"}
+          >
+            <button
+              type="button"
+              class="flex w-full items-center justify-between gap-4 py-5 text-left font-headline text-lg font-semibold text-white transition-colors hover:text-vega-accent"
+              data-faq-trigger
+              aria-expanded={index === 0 ? "true" : "false"}
+              aria-controls={`faq-panel-${index}`}
+            >
+              <span>{item.question}</span>
+              <ChevronDown
+                class="h-5 w-5 shrink-0 text-vega-accent transition-transform duration-200 group-data-[state=open]:rotate-180"
+                aria-hidden="true"
+              />
+            </button>
+            <div
+              id={`faq-panel-${index}`}
+              class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out"
+              data-faq-content
+              style={
+                index === 0
+                  ? "grid-template-rows: 1fr; opacity: 1;"
+                  : "grid-template-rows: 0fr; opacity: 0;"
+              }
+            >
+              <div class="overflow-hidden">
+                <p class="pb-5 pr-8 text-base leading-relaxed text-vega-muted">
+                  {item.answer}
+                </p>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  const accordionRoots = document.querySelectorAll("[data-faq-accordion]");
+
+  accordionRoots.forEach((root) => {
+    const items = root.querySelectorAll("[data-faq-item]");
+
+    const setItemState = (item, open) => {
+      const trigger = item.querySelector("[data-faq-trigger]");
+      const content = item.querySelector("[data-faq-content]");
+
+      item.dataset.state = open ? "open" : "closed";
+
+      if (trigger) {
+        trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+
+      if (content) {
+        content.style.gridTemplateRows = open ? "1fr" : "0fr";
+        content.style.opacity = open ? "1" : "0";
+      }
+    };
+
+    items.forEach((item) => {
+      const trigger = item.querySelector("[data-faq-trigger]");
+
+      if (!trigger) {
+        return;
+      }
+
+      trigger.addEventListener("click", () => {
+        const isOpen = item.dataset.state === "open";
+
+        items.forEach((other) => {
+          setItemState(other, false);
+        });
+
+        if (!isOpen) {
+          setItemState(item, true);
+        }
+      });
+    });
+  });
+</script>

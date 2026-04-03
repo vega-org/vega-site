@@ -1,0 +1,116 @@
+---
+import { APP_LINKS, DISCORD_INVITE_URL } from "../../config/site";
+
+interface Props {
+  repoUrl: string;
+  stars: number | null;
+  starsLabel: string | null;
+  discordMembers: number | null;
+  discordMembersLabel: string | null;
+}
+
+const { repoUrl, stars, starsLabel, discordMembers, discordMembersLabel } =
+  Astro.props;
+---
+
+<nav
+  class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-vega-bg/70 backdrop-blur-xl"
+  aria-label="Primary"
+>
+  <div
+    class="mx-auto flex min-h-18 w-[min(1400px,calc(100%-1.5rem))] items-center justify-between gap-4 md:w-[min(1400px,calc(100%-3rem))]"
+  >
+    <a class="flex items-center gap-2" href="/#top">
+      <img
+        class="h-8 w-auto object-cover"
+        src="/logo.png"
+        alt="Vega logo"
+        loading="lazy"
+      />
+      <span class="text-3xl font-black tracking-tight">Vega</span>
+    </a>
+
+    <div class="hidden items-center gap-7 md:flex">
+      <a
+        class="border-b-2 border-vega-accent pb-1 font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-accent"
+        href="#top">Home</a
+      >
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
+        href="#features">Features</a
+      >
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
+        href="#faq">FAQ</a
+      >
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
+        href={APP_LINKS.guide}>Docs</a
+      >
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
+        href="#download">Download</a
+      >
+    </div>
+    <div class="flex items-center gap-2">
+      <a
+        class="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2.5 font-headline text-sm font-bold text-white transition hover:bg-white/12"
+        href={repoUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={typeof stars === "number"
+          ? `Vega GitHub repository with ${stars} stars`
+          : "Vega GitHub repository"}
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.426 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.866-.013-1.699-2.782.605-3.37-1.344-3.37-1.344-.455-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.607.069-.607 1.003.07 1.531 1.033 1.531 1.033.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.026 2.747-1.026.546 1.378.203 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.694-4.566 4.942.359.31.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.523 2 12 2z"
+          ></path>
+        </svg>
+        <span>GitHub</span>
+        {
+          starsLabel ? (
+            <span class="rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold text-vega-accent">
+              {starsLabel}
+            </span>
+          ) : null
+        }
+      </a>
+
+      <a
+        class="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2.5 font-headline text-sm font-bold text-white transition hover:bg-white/12"
+        href={DISCORD_INVITE_URL}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={typeof discordMembers === "number"
+          ? `Join Vega Discord with ${discordMembers} members`
+          : "Join Vega Discord"}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          class="h-4 w-4"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18.8944 4.34399C17.5184 3.71467 16.057 3.256 14.5317 3C14.3397 3.33067 14.1263 3.77866 13.977 4.13067C12.3546 3.89599 10.7439 3.89599 9.14394 4.13067C8.9946 3.77866 8.77059 3.33067 8.58925 3C7.05328 3.256 5.59194 3.71467 4.22555 4.34399C1.46289 8.41865 0.716219 12.3973 1.08955 16.3226C2.92421 17.6559 4.6949 18.4666 6.43463 19C6.86129 18.424 7.2453 17.8053 7.57597 17.1546C6.94663 16.92 6.3493 16.632 5.7733 16.2906C5.92263 16.184 6.07197 16.0667 6.21064 15.9493C9.68796 17.5387 13.4544 17.5387 16.889 15.9493C17.0383 16.0667 17.177 16.184 17.3263 16.2906C16.7503 16.632 16.153 16.92 15.5237 17.1546C15.8543 17.8053 16.2384 18.424 16.665 19C18.4037 18.4666 20.185 17.6559 22.0101 16.3226C22.4687 11.7787 21.2837 7.83202 18.8944 4.34399ZM8.05596 13.9013C7.01061 13.9013 6.15728 12.952 6.15728 11.7893C6.15728 10.6267 6.98928 9.67731 8.05596 9.67731C9.11194 9.67731 9.97591 10.6267 9.95457 11.7893C9.95457 12.952 9.11194 13.9013 8.05596 13.9013ZM15.065 13.9013C14.0197 13.9013 13.1653 12.952 13.1653 11.7893C13.1653 10.6267 13.9983 9.67731 15.065 9.67731C16.121 9.67731 16.985 10.6267 16.9637 11.7893C16.9637 12.952 16.1317 13.9013 15.065 13.9013Z"
+            fill="#ffffff"></path>
+        </svg>
+        <span>Discord</span>
+        {
+          discordMembersLabel ? (
+            <span class="rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold text-vega-accent">
+              {discordMembersLabel}
+            </span>
+          ) : null
+        }
+      </a>
+    </div>
+  </div>
+</nav>

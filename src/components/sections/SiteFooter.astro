@@ -1,0 +1,68 @@
+---
+import {
+  APP_LINKS,
+  DISCORD_INVITE_URL,
+  MAINTAINER,
+  REPO,
+} from "../../config/site";
+---
+
+<footer class="border-t border-white/10 bg-vega-bg-soft px-4 py-8 md:px-6">
+  <div
+    class="mx-auto flex w-full max-w-350 flex-col items-start justify-between gap-5 md:flex-row md:items-center"
+  >
+    <a class="flex items-center gap-2" href="/#top">
+      <img
+        class="h-8 w-auto object-cover"
+        src="/logo.png"
+        alt="Vega logo"
+        loading="lazy"
+      />
+      <span class="font-headline text-2xl font-black tracking-tight text-white"
+        >Vega</span
+      >
+    </a>
+
+    <nav class="flex flex-wrap items-center gap-5" aria-label="Footer links">
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+        href={REPO.url}
+        target="_blank"
+        rel="noreferrer"
+      >
+        GitHub
+      </a>
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+        href={DISCORD_INVITE_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Discord
+      </a>
+      <a
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+        href={APP_LINKS.guide}
+      >
+        Guide
+      </a>
+    </nav>
+
+    <a
+      class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 transition hover:bg-white/12"
+      aria-label={`Maintained by ${MAINTAINER.name}`}
+    >
+      <img
+        class="h-7 w-7 rounded-full object-cover"
+        src={MAINTAINER.avatarUrl}
+        alt={`${MAINTAINER.name} avatar`}
+        loading="lazy"
+      />
+      <span
+        class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted"
+      >
+        {MAINTAINER.name}
+      </span>
+    </a>
+  </div>
+</footer>

@@ -1,0 +1,126 @@
+---
+import { FileCode2 } from "@lucide/astro";
+import { marked } from "marked";
+import { APP_LINKS } from "../../../config/site";
+
+const readmeSourceUrl = APP_LINKS.providerReadmeRaw;
+const providerRepoUrl = "https://github.com/vega-org/vega-providers";
+const providerGuideGithubUrl = `${providerRepoUrl}/blob/main/README.md`;
+const readmeBlobBaseUrl =
+  "https://github.com/vega-org/vega-providers/blob/main/";
+const readmeRawBaseUrl =
+  "https://raw.githubusercontent.com/vega-org/vega-providers/main/";
+
+function resolveReadmeUrl(url: string, type: "link" | "image"): string {
+  if (!url) {
+    return url;
+  }
+
+  if (/^(https?:|mailto:|#|data:)/i.test(url)) {
+    return url;
+  }
+
+  const normalized = url.replace(/^\.\//, "").replace(/^\//, "");
+  return type === "image"
+    ? `${readmeRawBaseUrl}${normalized}`
+    : `${readmeBlobBaseUrl}${normalized}`;
+}
+
+function normalizeReadmeHtml(html: string): string {
+  return html
+    .replace(/href="([^"]+)"/g, (_, href: string) => {
+      const resolved = resolveReadmeUrl(href, "link");
+      return `href="${resolved}"`;
+    })
+    .replace(/src="([^"]+)"/g, (_, src: string) => {
+      const resolved = resolveReadmeUrl(src, "image");
+      return `src="${resolved}"`;
+    });
+}
+
+let readmeMarkdown = "";
+
+try {
+  const response = await fetch(readmeSourceUrl);
+
+  if (response.ok) {
+    readmeMarkdown = await response.text();
+  }
+} catch {
+  readmeMarkdown = "";
+}
+
+const readmeHtml = readmeMarkdown
+  ? normalizeReadmeHtml(
+      marked.parse(readmeMarkdown, { gfm: true, breaks: true }) as string,
+    )
+  : "";
+---
+
+<section
+  id="create-provider"
+  class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
+    <FileCode2 class="h-4 w-4" aria-hidden="true" />
+    Create Provider
+  </div>
+
+  <h2
+    class="mt-4 font-headline text-[clamp(1.8rem,3.6vw,2.6rem)] font-black tracking-tight text-white"
+  >
+    Build Your Own Provider
+  </h2>
+
+  <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
+    You can create a provider using the guide below. After creating it, you can
+    open a pull request to the vega-org providers repository so others can use
+    it, or keep your provider separate.
+  </p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <a
+      class="inline-flex items-center rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+      href={providerGuideGithubUrl}
+      target="_blank"
+      rel="noreferrer"
+    >
+      View Guide on GitHub
+    </a>
+    <a
+      class="inline-flex items-center rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+      href={providerRepoUrl}
+      target="_blank"
+      rel="noreferrer"
+    >
+      Open Provider Repository
+    </a>
+  </div>
+
+  {
+    readmeHtml ? (
+      <article class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+        <div
+          class="max-w-none text-sm leading-relaxed text-vega-muted [&_a]:font-bold [&_a]:text-vega-accent [&_h1]:mt-2 [&_h1]:font-headline [&_h1]:text-3xl [&_h1]:font-black [&_h1]:tracking-tight [&_h1]:text-white [&_h2]:mt-7 [&_h2]:font-headline [&_h2]:text-2xl [&_h2]:font-black [&_h2]:tracking-tight [&_h2]:text-white [&_h3]:mt-5 [&_h3]:font-headline [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-white [&_img]:my-4 [&_img]:rounded-lg [&_img]:border [&_img]:border-white/10 [&_li]:ml-5 [&_li]:list-disc [&_ol]:space-y-1 [&_ol]:pl-5 [&_ol]:list-decimal [&_p]:my-3 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:border [&_pre]:border-white/10 [&_pre]:bg-black/35 [&_pre]:p-3 [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-white [&_table]:my-4 [&_table]:w-full [&_table]:overflow-hidden [&_table]:rounded [&_table]:border [&_table]:border-white/10 [&_td]:border [&_td]:border-white/10 [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-white/10 [&_th]:bg-white/5 [&_th]:px-3 [&_th]:py-2"
+          set:html={readmeHtml}
+        />
+      </article>
+    ) : (
+      <article class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+        <p class="text-sm leading-relaxed text-vega-muted">
+          Provider guide content is temporarily unavailable.
+          <a
+            class="ml-1 font-bold text-vega-accent"
+            href={readmeSourceUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open raw README
+          </a>
+        </p>
+      </article>
+    )
+  }
+</section>

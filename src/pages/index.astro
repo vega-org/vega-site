@@ -1,17 +1,48 @@
 ---
+import CtaSection from "../components/sections/CtaSection.astro";
+import DocsSection from "../components/sections/DocsSection.astro";
+import DownloadSection from "../components/sections/DownloadSection.astro";
+import FaqSection from "../components/sections/FaqSection.astro";
+import FeaturesSection from "../components/sections/FeaturesSection.astro";
+import HeaderNav from "../components/sections/HeaderNav.astro";
+import HeroSection from "../components/sections/HeroSection.astro";
+import SiteFooter from "../components/sections/SiteFooter.astro";
+import { REPO } from "../config/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { formatCompactNumber, getRepoStars } from "../lib/github";
+import { getDiscordMemberCount } from "../lib/stats";
 
+const [stars, discordMembers] = await Promise.all([
+  getRepoStars(REPO.owner, REPO.name, REPO.githubCacheTtlSeconds),
+  getDiscordMemberCount(REPO.discordInviteApiUrl, REPO.githubCacheTtlSeconds),
+]);
+
+const starsLabel =
+  typeof stars === "number" ? formatCompactNumber(stars) : null;
+const discordMembersLabel =
+  typeof discordMembers === "number"
+    ? formatCompactNumber(discordMembers)
+    : null;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title="Vega | Cinematic Alchemy"
+  description="Vega is an open-source streaming engine focused on privacy, performance, and cinematic presentation."
+>
+  <HeaderNav
+    repoUrl={REPO.url}
+    stars={stars}
+    starsLabel={starsLabel}
+    discordMembers={discordMembers}
+    discordMembersLabel={discordMembersLabel}
+  />
+  <main>
+    <HeroSection />
+    <FeaturesSection />
+    <DownloadSection />
+    <FaqSection />
+    <DocsSection />
+    <!-- <CtaSection /> -->
+  </main>
+  <SiteFooter />
+</BaseLayout>

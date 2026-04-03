@@ -1,10 +1,12 @@
 ---
+import { Image } from "astro:assets";
 import {
   APP_LINKS,
   DISCORD_INVITE_URL,
   MAINTAINER,
   REPO,
 } from "../../config/site";
+import logo from "../../assets/logo.png";
 ---
 
 <footer class="border-t border-white/10 bg-vega-bg-soft px-4 py-8 md:px-6">
@@ -12,9 +14,11 @@ import {
     class="mx-auto flex w-full max-w-350 flex-col items-start justify-between gap-5 md:flex-row md:items-center"
   >
     <a class="flex items-center gap-2" href="/#top">
-      <img
+      <Image
         class="h-8 w-auto object-cover"
-        src="/logo.png"
+        src={logo}
+        width={96}
+        quality={80}
         alt="Vega logo"
         loading="lazy"
       />

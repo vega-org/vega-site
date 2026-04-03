@@ -1,0 +1,293 @@
+---
+import { Image } from "astro:assets";
+import { ArrowLeft } from "@lucide/astro";
+import { DISCORD_INVITE_URL, REPO } from "../../config/site";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import logo from "../../assets/logo.png";
+
+interface NavItem {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  currentPath: string;
+}
+
+const { title, description, currentPath } = Astro.props;
+
+const navItems: NavItem[] = [
+  { href: "/guide/getting-started", label: "Getting Started" },
+  { href: "/guide/adding-providers", label: "Adding Providers" },
+  { href: "/guide/create-provider", label: "Create Provider" },
+  { href: "/guide/bypass-isp-blocking", label: "Bypass ISP Blocking" },
+];
+
+const isActive = (href: string) => currentPath === href;
+---
+
+<BaseLayout title={`Vega Guide | ${title}`} description={description}>
+  <header
+    class="sticky top-0 z-40 w-full border-b border-white/10 bg-vega-bg/85 backdrop-blur-xl"
+  >
+    <div
+      class="flex min-h-14 w-full items-center justify-between gap-2 px-3 sm:px-4 lg:mx-auto lg:min-h-16 lg:w-[min(1200px,calc(100%-3rem))] lg:gap-4 lg:px-0"
+    >
+      <a
+        class="hidden items-center gap-2 text-sm font-bold text-vega-muted transition hover:text-vega-accent lg:inline-flex"
+        href="/"
+      >
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
+        <span>Back to Home</span>
+      </a>
+
+      <a class="flex items-center gap-1.5 sm:gap-2" href="/">
+        <Image
+          class="h-6 w-auto object-cover sm:h-7"
+          src={logo}
+          width={84}
+          quality={80}
+          alt="Vega logo"
+          loading="lazy"
+        />
+        <span
+          class="font-headline text-base font-black tracking-tight text-white sm:text-xl"
+          >Vega Docs</span
+        >
+      </a>
+
+      <button
+        type="button"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white transition hover:bg-white/12 lg:hidden"
+        aria-label="Toggle documentation menu"
+        aria-controls="guide-mobile-sidebar"
+        aria-expanded="false"
+        data-mobile-menu-toggle
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="hidden items-center gap-4 lg:flex">
+        <a
+          class="text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href={REPO.url}
+          target="_blank"
+          rel="noreferrer">GitHub</a
+        >
+        <a
+          class="text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noreferrer">Discord</a
+        >
+      </div>
+    </div>
+  </header>
+
+  <div
+    id="guide-mobile-sidebar"
+    class="fixed inset-0 z-70 hidden lg:hidden"
+    data-mobile-menu
+  >
+    <button
+      type="button"
+      class="absolute inset-0 bg-black/55"
+      aria-label="Close documentation menu"
+      data-mobile-backdrop></button>
+
+    <aside
+      class="relative flex h-full w-[min(82vw,320px)] -translate-x-full flex-col overflow-y-auto border-r border-white/10 bg-[#090809] p-4 transition-transform duration-200"
+      data-mobile-drawer
+      aria-label="Mobile documentation sidebar"
+    >
+      <div
+        class="mb-4 flex items-center justify-between border-b border-white/10 pb-3"
+      >
+        <span
+          class="text-xs font-bold uppercase tracking-[0.08em] text-vega-accent"
+          >Documentation</span
+        >
+        <button
+          type="button"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white transition hover:bg-white/12"
+          aria-label="Close documentation menu"
+          data-mobile-close-button
+        >
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="flex flex-col gap-2" aria-label="Guide sections">
+        {
+          navItems.map((item) => (
+            <a
+              class:list={[
+                "rounded-md px-3 py-2 text-sm font-semibold transition",
+                isActive(item.href)
+                  ? "bg-white/8 text-white"
+                  : "text-vega-muted hover:bg-white/8 hover:text-white",
+              ]}
+              href={item.href}
+              data-mobile-close
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 pt-4">
+        <a
+          class="rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href="/"
+          data-mobile-close
+        >
+          Home
+        </a>
+        <a
+          class="rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition hover:text-vega-accent"
+          href={REPO.url}
+          target="_blank"
+          rel="noreferrer"
+          data-mobile-close
+        >
+          GitHub
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <main class="px-4 py-8 md:px-6 md:py-16">
+    <div
+      class="mx-auto grid w-full max-w-300 gap-6 lg:gap-8 lg:grid-cols-[280px_1fr]"
+    >
+      <aside
+        class="hidden rounded-2xl border border-white/10 bg-vega-surface-hi p-5 lg:block lg:h-fit lg:sticky lg:top-24"
+      >
+        <p class="text-xs font-bold uppercase tracking-widest text-vega-accent">
+          Documentation
+        </p>
+        <nav class="mt-4 space-y-2" aria-label="Guide sections">
+          {
+            navItems.map((item) => (
+              <a
+                class:list={[
+                  "block rounded-md px-3 py-2 text-sm font-semibold transition",
+                  isActive(item.href)
+                    ? "bg-white/8 text-white"
+                    : "text-vega-muted hover:bg-white/8 hover:text-white",
+                ]}
+                href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+      </aside>
+
+      <div class="min-w-0 space-y-6">
+        <slot />
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script is:inline>
+  const menuToggle = document.querySelector("[data-mobile-menu-toggle]");
+  const mobileMenu = document.querySelector("[data-mobile-menu]");
+  const mobileDrawer = document.querySelector("[data-mobile-drawer]");
+  const mobileBackdrop = document.querySelector("[data-mobile-backdrop]");
+  const mobileCloseButton = document.querySelector(
+    "[data-mobile-close-button]",
+  );
+  const mobileCloseLinks = document.querySelectorAll("[data-mobile-close]");
+  let closeTimer;
+
+  const setMenuOpen = (isOpen) => {
+    if (!mobileMenu || !mobileDrawer || !menuToggle) {
+      return;
+    }
+
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+    }
+
+    if (isOpen) {
+      mobileMenu.classList.remove("hidden");
+      window.requestAnimationFrame(() => {
+        mobileDrawer.classList.remove("-translate-x-full");
+      });
+      document.body.classList.add("overflow-hidden");
+    } else {
+      mobileDrawer.classList.add("-translate-x-full");
+      closeTimer = setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, 200);
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
+  };
+
+  if (menuToggle && mobileMenu && mobileDrawer) {
+    menuToggle.addEventListener("click", () => {
+      const open = menuToggle.getAttribute("aria-expanded") === "true";
+      setMenuOpen(!open);
+    });
+
+    mobileBackdrop?.addEventListener("click", () => {
+      setMenuOpen(false);
+    });
+
+    mobileCloseButton?.addEventListener("click", () => {
+      setMenuOpen(false);
+    });
+
+    mobileCloseLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        setMenuOpen(false);
+      });
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 1024) {
+        setMenuOpen(false);
+      }
+    });
+  }
+</script>

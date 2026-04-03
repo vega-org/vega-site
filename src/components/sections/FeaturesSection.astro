@@ -1,35 +1,44 @@
 ---
+import {
+  Download,
+  MessageCircle,
+  Plug,
+  Scale,
+  Shield,
+  Tv,
+} from "@lucide/astro";
+
 const features = [
   {
-    icon: "live_tv",
+    icon: Tv,
     title: "Free Streaming",
     description:
       "Stream without subscription lock-ins, with full control over your media setup.",
   },
   {
-    icon: "shield_lock",
+    icon: Shield,
     title: "Privacy Focused",
     description: "No trackers. Vega is local-first and transparent.",
   },
   {
-    icon: "gavel",
+    icon: Scale,
     title: "Apache-2.0 License",
     description: "Built on a permissive license suitable for all use cases.",
   },
   {
-    icon: "source",
+    icon: Plug,
     title: "Bring Your Own Sources",
     description:
       "Connect your own providers and catalogs while keeping your stack flexible and portable.",
   },
   {
-    icon: "download",
+    icon: Download,
     title: "Offline Downloading",
     description:
       "Save content for offline playback so your library stays available anywhere.",
   },
   {
-    icon: "forum",
+    icon: MessageCircle,
     title: "Community",
     description:
       "Join discord for any questions, feedback, or to connect with other users and contributors.",
@@ -50,12 +59,10 @@ const features = [
       {
         features.map((feature) => (
           <article class="rounded-2xl border border-white/8 bg-vega-surface-hi p-8 transition hover:-translate-y-0.5 hover:border-vega-accent/35">
-            <span
-              class="material-symbols-outlined mb-5 text-4xl text-vega-accent"
+            <feature.icon
+              class="mb-5 h-10 w-10 text-vega-accent"
               aria-hidden="true"
-            >
-              {feature.icon}
-            </span>
+            />
             <h3 class="font-headline text-2xl font-bold text-white">
               {feature.title}
             </h3>

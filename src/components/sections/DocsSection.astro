@@ -1,4 +1,5 @@
 ---
+import { BookOpen, Download, GitBranch, Star, Users } from "@lucide/astro";
 import { REPO } from "../../config/site";
 import { getAppStats } from "../../lib/stats";
 import { APP_LINKS } from "../../config/site";
@@ -12,22 +13,22 @@ const stats = await getAppStats(
 
 const docsCards = [
   {
-    icon: "download",
+    icon: Download,
     title: "Total Downloads",
     count: stats.totalDownloads,
   },
   {
-    icon: "commit",
+    icon: GitBranch,
     title: "Total Commits",
     count: stats.totalCommits,
   },
   {
-    icon: "star",
+    icon: Star,
     title: "Total Stars",
     count: stats.totalStars,
   },
   {
-    icon: "groups",
+    icon: Users,
     title: "Discord Members",
     count: stats.discordMembers,
   },
@@ -39,12 +40,10 @@ const docsCards = [
     <article
       class="relative overflow-hidden rounded-3xl bg-vega-surface-hi p-8"
     >
-      <span
-        class="material-symbols-outlined absolute -top-3 right-1 text-[9rem] text-vega-accent/15"
+      <BookOpen
+        class="absolute -top-3 right-1 h-32 w-32 text-vega-accent/15 md:h-36 md:w-36"
         aria-hidden="true"
-      >
-        menu_book
-      </span>
+      />
       <h2
         class="relative z-10 font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
       >
@@ -96,12 +95,7 @@ const docsCards = [
       {
         docsCards.map((card) => (
           <article class="rounded-2xl bg-vega-bg-soft p-5 transition hover:bg-vega-surface-hi">
-            <span
-              class="material-symbols-outlined text-3xl text-vega-accent"
-              aria-hidden="true"
-            >
-              {card.icon}
-            </span>
+            <card.icon class="h-8 w-8 text-vega-accent" aria-hidden="true" />
             <h5 class="mt-2 font-headline text-xl font-bold text-white">
               {card.title}
             </h5>

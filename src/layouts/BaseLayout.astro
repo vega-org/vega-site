@@ -23,17 +23,19 @@ const { title, description } = Astro.props;
       href="https://fonts.googleapis.com"
       crossorigin="anonymous"
     />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin="anonymous"
+    />
     <link
       href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet"
-    />
   </head>
-  <body class="bg-vega-bg text-white antialiased selection:bg-vega-accent selection:text-vega-bg">
+  <body
+    class="bg-vega-bg text-white antialiased selection:bg-vega-accent selection:text-vega-bg"
+  >
     <slot />
   </body>
 </html>

@@ -12,6 +12,6 @@ export default defineConfig({
   },
 
   adapter: cloudflare({
-    imageService: "cloudflare-binding",
+    imageService: "cloudflare",
   }),
 });

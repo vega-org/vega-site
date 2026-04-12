@@ -7,41 +7,133 @@ import FeaturesSection from "../components/sections/FeaturesSection.astro";
 import HeaderNav from "../components/sections/HeaderNav.astro";
 import HeroSection from "../components/sections/HeroSection.astro";
 import SiteFooter from "../components/sections/SiteFooter.astro";
-import { REPO } from "../config/site";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { formatCompactNumber, getRepoStars } from "../lib/github";
-import { getDiscordMemberCount } from "../lib/stats";
-
-const [stars, discordMembers] = await Promise.all([
-  getRepoStars(REPO.owner, REPO.name, REPO.githubCacheTtlSeconds),
-  getDiscordMemberCount(REPO.discordInviteApiUrl, REPO.githubCacheTtlSeconds),
-]);
-
-const starsLabel =
-  typeof stars === "number" ? formatCompactNumber(stars) : null;
-const discordMembersLabel =
-  typeof discordMembers === "number"
-    ? formatCompactNumber(discordMembers)
-    : null;
 ---
 
 <BaseLayout
   title="Vega | Cinematic Alchemy"
   description="Vega is an open-source streaming engine focused on privacy, performance, and cinematic presentation."
 >
-  <HeaderNav
-    repoUrl={REPO.url}
-    stars={stars}
-    starsLabel={starsLabel}
-    discordMembers={discordMembers}
-    discordMembersLabel={discordMembersLabel}
-  />
+  <HeaderNav server:defer>
+    <nav
+      slot="fallback"
+      class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-vega-bg/70 backdrop-blur-xl"
+      aria-label="Primary"
+    >
+      <div class="mx-auto flex min-h-16 w-[min(1400px,calc(100%-1rem))] items-center justify-between gap-3 md:min-h-18 md:w-[min(1400px,calc(100%-3rem))] md:gap-4">
+        <div class="flex items-center gap-2">
+          <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+          <div class="vega-skeleton h-8 w-24 rounded-md"></div>
+        </div>
+        <div class="hidden items-center gap-7 md:flex">
+          <div class="vega-skeleton h-4 w-12 rounded"></div>
+          <div class="vega-skeleton h-4 w-16 rounded"></div>
+          <div class="vega-skeleton h-4 w-12 rounded"></div>
+          <div class="vega-skeleton h-4 w-12 rounded"></div>
+          <div class="vega-skeleton h-4 w-20 rounded"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="vega-skeleton h-10 w-24 rounded-md sm:w-32"></div>
+          <div class="vega-skeleton h-10 w-24 rounded-md sm:w-32"></div>
+        </div>
+      </div>
+      <div class="border-t border-white/8 md:hidden">
+        <div class="mx-auto flex w-[min(1400px,calc(100%-1rem))] items-center gap-4 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div class="vega-skeleton h-3 w-10 shrink-0 rounded"></div>
+          <div class="vega-skeleton h-3 w-14 shrink-0 rounded"></div>
+          <div class="vega-skeleton h-3 w-10 shrink-0 rounded"></div>
+          <div class="vega-skeleton h-3 w-10 shrink-0 rounded"></div>
+          <div class="vega-skeleton h-3 w-16 shrink-0 rounded"></div>
+        </div>
+      </div>
+    </nav>
+  </HeaderNav>
   <main>
     <HeroSection />
     <FeaturesSection />
-    <DownloadSection />
+    <DownloadSection server:defer>
+      <section slot="fallback" class="bg-vega-bg px-4 py-24 md:px-6" id="download" aria-busy="true">
+        <div class="mx-auto w-full max-w-5xl text-center">
+          <div class="vega-skeleton mx-auto h-10 w-72 rounded-lg"></div>
+          <div class="vega-skeleton mx-auto mt-4 h-5 w-56 rounded"></div>
+          <div class="mt-8 rounded-2xl border-l-4 border-vega-accent/60 bg-vega-surface-hi p-8 text-left">
+            <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div class="flex-1">
+                <div class="vega-skeleton h-7 w-28 rounded-md"></div>
+                <div class="vega-skeleton mt-3 h-11 w-3/4 rounded-lg"></div>
+                <div class="vega-skeleton mt-3 h-4 w-2/3 rounded"></div>
+              </div>
+              <div class="vega-skeleton h-14 w-52 rounded-md"></div>
+            </div>
+            <div class="mt-5 rounded-xl border border-white/10 bg-vega-surface px-4 py-4">
+              <div class="vega-skeleton h-4 w-48 rounded"></div>
+              <div class="mt-4 grid gap-3 md:grid-cols-2">
+                <div class="vega-skeleton h-16 rounded-lg"></div>
+                <div class="vega-skeleton h-16 rounded-lg"></div>
+              </div>
+              <div class="vega-skeleton mt-4 h-24 rounded-lg"></div>
+            </div>
+          </div>
+          <div class="mt-8 space-y-3 text-left">
+            <div class="vega-skeleton h-4 w-36 rounded"></div>
+            <div class="vega-skeleton h-28 rounded-xl"></div>
+            <div class="vega-skeleton h-28 rounded-xl"></div>
+          </div>
+        </div>
+      </section>
+    </DownloadSection>
     <FaqSection />
-    <DocsSection />
+    <DocsSection server:defer>
+      <section slot="fallback" class="bg-vega-bg px-4 py-24 md:px-6" id="docs" aria-busy="true">
+        <div class="mx-auto grid w-full max-w-350 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <article class="rounded-3xl bg-vega-surface-hi p-8">
+            <div class="vega-skeleton h-10 w-56 rounded-lg"></div>
+            <div class="vega-skeleton mt-6 h-4 w-full rounded"></div>
+            <div class="vega-skeleton mt-3 h-4 w-11/12 rounded"></div>
+            <div class="mt-6 space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="vega-skeleton h-8 w-8 shrink-0 rounded-full"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="vega-skeleton h-5 w-32 rounded"></div>
+                  <div class="vega-skeleton h-4 w-full rounded"></div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="vega-skeleton h-8 w-8 shrink-0 rounded-full"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="vega-skeleton h-5 w-40 rounded"></div>
+                  <div class="vega-skeleton h-4 w-full rounded"></div>
+                </div>
+              </div>
+            </div>
+            <div class="vega-skeleton mt-6 h-12 w-44 rounded-md"></div>
+          </article>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-vega-bg-soft p-5">
+              <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+              <div class="vega-skeleton mt-3 h-5 w-28 rounded"></div>
+              <div class="vega-skeleton mt-3 h-9 w-24 rounded"></div>
+            </div>
+            <div class="rounded-2xl bg-vega-bg-soft p-5">
+              <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+              <div class="vega-skeleton mt-3 h-5 w-28 rounded"></div>
+              <div class="vega-skeleton mt-3 h-9 w-24 rounded"></div>
+            </div>
+            <div class="rounded-2xl bg-vega-bg-soft p-5">
+              <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+              <div class="vega-skeleton mt-3 h-5 w-28 rounded"></div>
+              <div class="vega-skeleton mt-3 h-9 w-24 rounded"></div>
+            </div>
+            <div class="rounded-2xl bg-vega-bg-soft p-5">
+              <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+              <div class="vega-skeleton mt-3 h-5 w-28 rounded"></div>
+              <div class="vega-skeleton mt-3 h-9 w-24 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </DocsSection>
     <!-- <CtaSection /> -->
   </main>
   <SiteFooter />

@@ -25,3 +25,37 @@
       radial-gradient(circle at 80% -10%, #2b120d 0%, #0e0e0e 40%), #0e0e0e;
   }
 }
+
+@layer components {
+  .vega-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.04)
+    );
+    background-size: 200% 100%;
+    animation: vega-skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  .vega-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+}
+
+@keyframes vega-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

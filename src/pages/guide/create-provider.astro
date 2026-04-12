@@ -8,5 +8,28 @@ import CreateProviderSection from "../../components/guide/sections/CreateProvide
   description="Official Vega documentation: build and publish a custom provider."
   currentPath="/guide/create-provider"
 >
-  <CreateProviderSection />
+  <CreateProviderSection server:defer>
+    <section
+      slot="fallback"
+      id="create-provider"
+      class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+      aria-busy="true"
+    >
+      <div class="vega-skeleton h-7 w-36 rounded-full"></div>
+      <div class="vega-skeleton mt-4 h-10 w-64 rounded-lg"></div>
+      <div class="vega-skeleton mt-4 h-4 w-full rounded"></div>
+      <div class="vega-skeleton mt-3 h-4 w-5/6 rounded"></div>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <div class="vega-skeleton h-10 w-40 rounded-md"></div>
+        <div class="vega-skeleton h-10 w-48 rounded-md"></div>
+      </div>
+      <div class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+        <div class="vega-skeleton h-6 w-44 rounded"></div>
+        <div class="vega-skeleton mt-4 h-4 w-full rounded"></div>
+        <div class="vega-skeleton mt-3 h-4 w-11/12 rounded"></div>
+        <div class="vega-skeleton mt-6 h-24 rounded-lg"></div>
+        <div class="vega-skeleton mt-4 h-24 rounded-lg"></div>
+      </div>
+    </section>
+  </CreateProviderSection>
 </GuideShell>

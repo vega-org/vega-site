@@ -1,18 +1,27 @@
 ---
 import { Image } from "astro:assets";
-import { APP_LINKS, DISCORD_INVITE_URL } from "../../config/site";
+import { APP_LINKS, DISCORD_INVITE_URL, REPO } from "../../config/site";
+import { formatCompactNumber, getRepoStars } from "../../lib/github";
+import { getDiscordMemberCount } from "../../lib/stats";
 import logo from "../../assets/logo.png";
 
 interface Props {
-  repoUrl: string;
-  stars: number | null;
-  starsLabel: string | null;
-  discordMembers: number | null;
-  discordMembersLabel: string | null;
+  repoUrl?: string;
 }
 
-const { repoUrl, stars, starsLabel, discordMembers, discordMembersLabel } =
-  Astro.props;
+const { repoUrl = REPO.url } = Astro.props;
+
+const [stars, discordMembers] = await Promise.all([
+  getRepoStars(REPO.owner, REPO.name, REPO.githubCacheTtlSeconds),
+  getDiscordMemberCount(REPO.discordInviteApiUrl, REPO.githubCacheTtlSeconds),
+]);
+
+const starsLabel =
+  typeof stars === "number" ? formatCompactNumber(stars) : null;
+const discordMembersLabel =
+  typeof discordMembers === "number"
+    ? formatCompactNumber(discordMembers)
+    : null;
 ---
 
 <nav

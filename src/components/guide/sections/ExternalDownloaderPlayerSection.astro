@@ -1,0 +1,91 @@
+---
+import { Download, ExternalLink, PlayCircle, Settings } from "@lucide/astro";
+
+const vlcUrl =
+  "https://play.google.com/store/apps/details?id=org.videolan.vlc&hl=en_IN";
+const fdmUrl =
+  "https://play.google.com/store/apps/details?id=org.freedownloadmanager.fdm&hl=en_IN";
+---
+
+<section
+  id="external-downloader-player"
+  class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
+    <PlayCircle class="h-4 w-4" aria-hidden="true" />
+    External Downloader and Player
+  </div>
+
+  <h2
+    class="mt-4 font-headline text-[clamp(1.8rem,3.6vw,2.6rem)] font-black tracking-tight text-white"
+  >
+    Use External Apps for Playback and Downloads
+  </h2>
+
+  <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
+    If the internal player or downloader is not working for you, you can use
+    external apps to play and download.
+  </p>
+
+  <article
+    class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5"
+  >
+    <div class="inline-flex items-center gap-2 text-white">
+      <Settings class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+      <h3 class="font-headline text-lg font-bold">
+        Enable Through Preferences
+      </h3>
+    </div>
+    <p class="mt-3 text-sm leading-relaxed text-vega-muted">
+      Enable this through <strong class="text-white"
+        >Settings &gt; Preferences</strong
+      >. After enabling, Vega will automatically show supported apps when you
+      try to open playback or download actions.
+    </p>
+  </article>
+
+  <div class="mt-6 grid gap-4 md:grid-cols-2">
+    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <div class="inline-flex items-center gap-2 text-white">
+        <PlayCircle class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+        <h3 class="font-headline text-lg font-bold">Recommended Player</h3>
+      </div>
+      <p class="mt-2 text-sm text-vega-muted">VLC media player</p>
+      <a
+        class="mt-3 inline-flex items-center gap-2 text-sm font-bold text-vega-accent"
+        href={vlcUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        Open VLC on Play Store
+      </a>
+    </article>
+
+    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <div class="inline-flex items-center gap-2 text-white">
+        <Download class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+        <h3 class="font-headline text-lg font-bold">Recommended Downloader</h3>
+      </div>
+      <p class="mt-2 text-sm text-vega-muted">Free Download Manager (FDM)</p>
+      <a
+        class="mt-3 inline-flex items-center gap-2 text-sm font-bold text-vega-accent"
+        href={fdmUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        Open FDM on Play Store
+      </a>
+    </article>
+  </div>
+
+  <div class="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+    <p class="text-sm leading-relaxed text-vega-muted">
+      <strong class="text-white">Tip:</strong> Long press on the play button or download
+      button to open with an external player or downloader.
+    </p>
+  </div>
+</section>

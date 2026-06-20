@@ -20,6 +20,9 @@ export const APP_LINKS = Object.freeze({
     "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone",
   warpApkMirror:
     "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/1-1-1-1-warp-safer-internet-6-38-6-release/1-1-1-1-warp-safer-internet-6-38-6-android-apk-download/",
+  byeDpiGithub: "https://github.com/dovecoteescapee/ByeDPIAndroid",
+  byeDpiReleases:
+    "https://github.com/dovecoteescapee/ByeDPIAndroid/releases/latest",
 });
 
 export const MAINTAINER = Object.freeze({

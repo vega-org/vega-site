@@ -1,3 +1,5 @@
+export const SITE_URL = "https://vega.8man.in";
+
 export const REPO = Object.freeze({
   owner: "vega-org",
   name: "vega-app",

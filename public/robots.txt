@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vega.8man.in/sitemap-index.xml

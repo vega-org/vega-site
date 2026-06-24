@@ -10,6 +10,14 @@ export const REPO = Object.freeze({
     "https://discord.com/api/v9/invites/cr42m6maWy?with_counts=true&with_expiration=true&with_permissions=true",
 });
 
+export const DESKTOP_REPO = Object.freeze({
+  owner: "vega-org",
+  name: "vega-desktop",
+  url: "https://github.com/vega-org/vega-desktop",
+  releasesUrl: "https://github.com/vega-org/vega-desktop/releases",
+  githubCacheTtlSeconds: 300,
+});
+
 export const DISCORD_INVITE_URL = "https://discord.com/invite/cr42m6maWy";
 
 export const APP_LINKS = Object.freeze({

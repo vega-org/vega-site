@@ -15,10 +15,14 @@ import PlatformDownload from "./PlatformDownload.astro";
     </p>
 
     <div class="mt-12 flex flex-col gap-12">
-      <PlatformDownload repo={REPO} title="Vega for Android" id="android" />
+      <PlatformDownload
+        repo={REPO}
+        title="Vega for Android Mobile"
+        id="mobile"
+      />
       <PlatformDownload
         repo={DESKTOP_REPO}
-        title="Vega for Desktop"
+        title="Vega for Tv and Desktop"
         autoDetectOS={true}
         id="desktop"
       />

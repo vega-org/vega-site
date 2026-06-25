@@ -3,6 +3,7 @@ export const SITE_URL = "https://vega.8man.in";
 export const REPO = Object.freeze({
   owner: "vega-org",
   name: "vega-app",
+  orgUrl: "https://github.com/vega-org",
   url: "https://github.com/vega-org/vega-app",
   releasesUrl: "https://github.com/vega-org/vega-app/releases",
   githubCacheTtlSeconds: 300,
@@ -13,6 +14,7 @@ export const REPO = Object.freeze({
 export const DESKTOP_REPO = Object.freeze({
   owner: "vega-org",
   name: "vega-desktop",
+  orgUrl: "https://github.com/vega-org",
   url: "https://github.com/vega-org/vega-desktop",
   releasesUrl: "https://github.com/vega-org/vega-desktop/releases",
   githubCacheTtlSeconds: 300,

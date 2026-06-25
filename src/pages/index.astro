@@ -11,7 +11,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout
-  title="Vega | Cinematic Alchemy"
+  title="Vega | Open-source media streaming app"
   description="Vega is an open-source streaming engine focused on privacy, performance, and cinematic presentation."
 >
   <HeaderNav server:defer>
@@ -20,7 +20,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-vega-bg/70 backdrop-blur-xl"
       aria-label="Primary"
     >
-      <div class="mx-auto flex min-h-16 w-[min(1400px,calc(100%-1rem))] items-center justify-between gap-3 md:min-h-18 md:w-[min(1400px,calc(100%-3rem))] md:gap-4">
+      <div
+        class="mx-auto flex min-h-16 w-[min(1400px,calc(100%-1rem))] items-center justify-between gap-3 md:min-h-18 md:w-[min(1400px,calc(100%-3rem))] md:gap-4"
+      >
         <div class="flex items-center gap-2">
           <div class="vega-skeleton h-8 w-8 rounded-md"></div>
           <div class="vega-skeleton h-8 w-24 rounded-md"></div>
@@ -38,7 +40,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
       </div>
       <div class="border-t border-white/8 md:hidden">
-        <div class="mx-auto flex w-[min(1400px,calc(100%-1rem))] items-center gap-4 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          class="mx-auto flex w-[min(1400px,calc(100%-1rem))] items-center gap-4 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           <div class="vega-skeleton h-3 w-10 shrink-0 rounded"></div>
           <div class="vega-skeleton h-3 w-14 shrink-0 rounded"></div>
           <div class="vega-skeleton h-3 w-10 shrink-0 rounded"></div>
@@ -52,12 +56,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     <HeroSection />
     <FeaturesSection />
     <DownloadSection server:defer>
-      <section slot="fallback" class="bg-vega-bg px-4 py-24 md:px-6" id="download" aria-busy="true">
+      <section
+        slot="fallback"
+        class="bg-vega-bg px-4 py-24 md:px-6"
+        id="download"
+        aria-busy="true"
+      >
         <div class="mx-auto w-full max-w-5xl text-center">
           <div class="vega-skeleton mx-auto h-10 w-72 rounded-lg"></div>
           <div class="vega-skeleton mx-auto mt-4 h-5 w-56 rounded"></div>
-          <div class="mt-8 rounded-2xl border-l-4 border-vega-accent/60 bg-vega-surface-hi p-8 text-left">
-            <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div
+            class="mt-8 rounded-2xl border-l-4 border-vega-accent/60 bg-vega-surface-hi p-8 text-left"
+          >
+            <div
+              class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between"
+            >
               <div class="flex-1">
                 <div class="vega-skeleton h-7 w-28 rounded-md"></div>
                 <div class="vega-skeleton mt-3 h-11 w-3/4 rounded-lg"></div>
@@ -65,7 +78,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               </div>
               <div class="vega-skeleton h-14 w-52 rounded-md"></div>
             </div>
-            <div class="mt-5 rounded-xl border border-white/10 bg-vega-surface px-4 py-4">
+            <div
+              class="mt-5 rounded-xl border border-white/10 bg-vega-surface px-4 py-4"
+            >
               <div class="vega-skeleton h-4 w-48 rounded"></div>
               <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <div class="vega-skeleton h-16 rounded-lg"></div>
@@ -84,8 +99,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     </DownloadSection>
     <FaqSection />
     <DocsSection server:defer>
-      <section slot="fallback" class="bg-vega-bg px-4 py-24 md:px-6" id="docs" aria-busy="true">
-        <div class="mx-auto grid w-full max-w-350 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      <section
+        slot="fallback"
+        class="bg-vega-bg px-4 py-24 md:px-6"
+        id="docs"
+        aria-busy="true"
+      >
+        <div
+          class="mx-auto grid w-full max-w-350 gap-4 lg:grid-cols-[1.1fr_0.9fr]"
+        >
           <article class="rounded-3xl bg-vega-surface-hi p-8">
             <div class="vega-skeleton h-10 w-56 rounded-lg"></div>
             <div class="vega-skeleton mt-6 h-4 w-full rounded"></div>

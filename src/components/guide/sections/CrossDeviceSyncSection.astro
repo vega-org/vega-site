@@ -1,12 +1,5 @@
 ---
-import {
-  CheckCircle2,
-  ExternalLink,
-  FolderSync,
-  Monitor,
-  RefreshCw,
-  Smartphone,
-} from "@lucide/astro";
+import { ExternalLink, FolderSync, Monitor, Smartphone } from "@lucide/astro";
 
 const syncthingUrl = "https://syncthing.net/";
 ---
@@ -25,138 +18,92 @@ const syncthingUrl = "https://syncthing.net/";
   <h2
     class="mt-4 font-headline text-[clamp(1.8rem,3.6vw,2.6rem)] font-black tracking-tight text-white"
   >
-    Keep Vega in Sync Across Your Devices
+    Sync Vega Between Android and Desktop
   </h2>
 
   <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
-    Vega synchronizes through your download folder. Share that folder between
-    your devices to keep downloaded media, Continue Watching progress, and
-    WatchList changes available across Vega Mobile and Desktop.
+    Set a download folder in both Vega apps, then use Syncthing to keep those
+    folders synchronized.
   </p>
 
-  <article
-    class="mt-6 rounded-xl border border-vega-accent/30 bg-vega-surface-hi p-5"
-  >
-    <div class="inline-flex items-center gap-2 text-white">
-      <RefreshCw class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-      <h3 class="font-headline text-lg font-bold">Recommended: Syncthing</h3>
-    </div>
-    <p class="mt-3 text-sm leading-relaxed text-vega-muted">
-      Syncthing keeps a folder synchronized directly between your devices. It is
-      open source and does not require uploading your Vega library to a central
-      cloud storage provider.
-    </p>
-    <a
-      class="mt-4 inline-flex items-center gap-2 rounded-lg bg-vega-accent px-4 py-2 text-sm font-bold text-[#240900] transition hover:-translate-y-0.5"
-      href={syncthingUrl}
-      target="_blank"
-      rel="noreferrer"
-    >
-      <ExternalLink class="h-4 w-4" aria-hidden="true" />
-      Visit Syncthing
-    </a>
-  </article>
-
-  <div class="mt-6 grid gap-4 md:grid-cols-2">
-    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
-      <div class="inline-flex items-center gap-2 text-white">
-        <FolderSync class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-        <h3 class="font-headline text-lg font-bold">1. Share a Folder</h3>
-      </div>
-      <ol
-        class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
-      >
-        <li>Install Syncthing on every device you want to connect.</li>
-        <li>Add the devices to each other using their Syncthing device IDs.</li>
-        <li>Create a folder for Vega downloads on one device.</li>
-        <li>Share that folder with your other devices and accept it there.</li>
-        <li>Wait until Syncthing reports that the folder is up to date.</li>
-      </ol>
-    </article>
-
-    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
-      <div class="inline-flex items-center gap-2 text-white">
-        <CheckCircle2 class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-        <h3 class="font-headline text-lg font-bold">2. Connect Vega</h3>
-      </div>
-      <p class="mt-3 text-sm leading-relaxed text-vega-muted">
-        Configure Vega on every device to use its local copy of the same
-        Syncthing folder. Vega creates a hidden <code
-          class="rounded bg-white/10 px-1.5 py-0.5 text-white">.vega-sync</code
-        > directory inside it automatically.
-      </p>
-      <p class="mt-3 text-sm leading-relaxed text-vega-muted">
-        Do not manually copy, rename, or edit files in <code
-          class="rounded bg-white/10 px-1.5 py-0.5 text-white">.vega-sync</code
-        >. Each device maintains its own manifest there.
-      </p>
-    </article>
-  </div>
-
-  <div class="mt-6 grid gap-4 md:grid-cols-2">
-    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
-      <div class="inline-flex items-center gap-2 text-white">
-        <Monitor class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-        <h3 class="font-headline text-lg font-bold">Desktop</h3>
-      </div>
-      <ol
-        class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
-      >
-        <li>Open <strong class="text-white">Settings</strong> in Vega.</li>
-        <li>Find <strong class="text-white">Download Directory</strong>.</li>
-        <li>Select the local Syncthing folder used for your Vega downloads.</li>
-      </ol>
-    </article>
-
+  <div class="mt-6 space-y-4">
     <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
       <div class="inline-flex items-center gap-2 text-white">
         <Smartphone class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-        <h3 class="font-headline text-lg font-bold">Android</h3>
+        <h3 class="font-headline text-lg font-bold">
+          1. Set the Android Download Folder
+        </h3>
       </div>
       <ol
         class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
       >
-        <li>Open <strong class="text-white">Settings</strong> in Vega.</li>
+        <li>Open Vega on Android.</li>
+        <li>Go to <strong class="text-white">Settings</strong>.</li>
         <li>
           Under Downloads, open <strong class="text-white"
             >Download Location</strong
           >.
         </li>
-        <li>Select the local folder managed by Syncthing.</li>
-        <li>Allow folder access when Android asks for permission.</li>
+        <li>Select a folder and allow access when Android asks.</li>
       </ol>
+    </article>
+
+    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <div class="inline-flex items-center gap-2 text-white">
+        <Monitor class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+        <h3 class="font-headline text-lg font-bold">
+          2. Set the Desktop Download Folder
+        </h3>
+      </div>
+      <ol
+        class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+      >
+        <li>Open Vega on Desktop.</li>
+        <li>Go to <strong class="text-white">Settings</strong>.</li>
+        <li>
+          Under <strong class="text-white">Download Directory</strong>, select a
+          folder for Vega downloads.
+        </li>
+      </ol>
+    </article>
+
+    <article
+      class="rounded-xl border border-vega-accent/30 bg-vega-surface-hi p-5"
+    >
+      <div class="inline-flex items-center gap-2 text-white">
+        <FolderSync class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+        <h3 class="font-headline text-lg font-bold">
+          3. Sync Both Folders with Syncthing
+        </h3>
+      </div>
+      <ol
+        class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+      >
+        <li>Install Syncthing on Android and Desktop.</li>
+        <li>Connect both devices in Syncthing.</li>
+        <li>Add the Android Vega download folder to Syncthing.</li>
+        <li>
+          Share it with Desktop and select the Desktop Vega download folder as
+          its local folder.
+        </li>
+        <li>Wait until Syncthing shows both devices as up to date.</li>
+      </ol>
+      <a
+        class="mt-4 inline-flex items-center gap-2 rounded-lg bg-vega-accent px-4 py-2 text-sm font-bold text-[#240900] transition hover:-translate-y-0.5"
+        href={syncthingUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        Visit Syncthing
+      </a>
     </article>
   </div>
 
-  <article class="mt-6 rounded-xl border border-white/10 bg-black/20 p-5">
-    <h3 class="font-headline text-lg font-bold text-white">
-      Using Sync Day to Day
-    </h3>
-    <ul
-      class="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
-    >
-      <li>
-        Keep Syncthing running on both devices until the folder is up to date.
-      </li>
-      <li>
-        Open or return to Vega after Syncthing finishes transferring changes.
-      </li>
-      <li>
-        When switching devices during an episode, pause playback and allow a
-        short time for progress to reach the other device.
-      </li>
-      <li>
-        Avoid downloading or editing the same media on two offline devices at
-        the same time, as Syncthing may create conflict copies.
-      </li>
-    </ul>
-  </article>
-
-  <div class="mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+  <div class="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
     <p class="text-sm leading-relaxed text-vega-muted">
-      <strong class="text-white">Sync delayed?</strong> Check that Syncthing says
-      <strong class="text-white">Up to Date</strong> on both devices, confirm both
-      Vega installations use the shared download folder, then reopen Vega.
+      Keep Syncthing running until both folders are up to date, then open Vega
+      to see synchronized downloads, WatchList changes, and playback progress.
     </p>
   </div>
 </section>

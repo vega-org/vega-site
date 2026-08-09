@@ -1,5 +1,5 @@
 ---
-import { REPO, DESKTOP_REPO } from "../../config/site";
+import { APP_LINKS, REPO, DESKTOP_REPO } from "../../config/site";
 import PlatformDownload from "./PlatformDownload.astro";
 ---
 
@@ -18,12 +18,22 @@ import PlatformDownload from "./PlatformDownload.astro";
       <PlatformDownload
         repo={REPO}
         title="Vega for Android Mobile"
+        storeLink={{
+          href: APP_LINKS.playStore,
+          label: "Get it on Google Play",
+          icon: "play-store",
+        }}
         id="mobile"
       />
       <PlatformDownload
         repo={DESKTOP_REPO}
         title="Vega for Tv and Desktop"
         autoDetectOS={true}
+        storeLink={{
+          href: APP_LINKS.microsoftStore,
+          label: "Get it from Microsoft",
+          icon: "microsoft-store",
+        }}
         id="desktop"
       />
     </div>

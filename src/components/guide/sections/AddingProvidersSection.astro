@@ -2,8 +2,8 @@
 import { Copy, PlugZap } from "@lucide/astro";
 import { APP_LINKS } from "../../../config/site";
 
-const officialProviderName = "vega-org";
-const officialProviderUrl = "https://github.com/vega-org/vega-providers";
+const officialProviderName = "Zenda-Cross";
+// const officialProviderUrl = "https://github.com/vega-org/vega-providers";
 
 const providerSteps = [
   "Go to Settings > Provider Manager > Available Providers.",
@@ -46,7 +46,8 @@ const providerSteps = [
     <li>{providerSteps[0]}</li>
     <li>{providerSteps[1]}</li>
     <li>
-      To add Zenda-X providers, enter
+      To add Zenda-Cross providers, got to his github profile and copy the
+      provider repository URL and past it or enter the username
       <span class="ml-1 inline-flex items-center gap-2">
         <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
           >{officialProviderName}</code
@@ -63,7 +64,7 @@ const providerSteps = [
         </button>
       </span>
       <span class="mx-1">or</span>
-      <span class="inline-flex items-center gap-2">
+      <!-- <span class="inline-flex items-center gap-2">
         <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
           >{officialProviderUrl}</code
         >
@@ -77,7 +78,7 @@ const providerSteps = [
           <Copy class="h-3.5 w-3.5 text-vega-accent" aria-hidden="true" />
           Copy
         </button>
-      </span>
+      </span> -->
       <span class="ml-1">and press Confirm.</span>
     </li>
   </ol>

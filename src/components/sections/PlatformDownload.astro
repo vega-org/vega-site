@@ -7,6 +7,7 @@ import {
   type RepoReleaseAsset,
 } from "../../lib/github";
 import VariantIcon from "./VariantIcon.astro";
+import StoreIcon from "./StoreIcon.astro";
 
 export interface Props {
   repo: {
@@ -18,9 +19,14 @@ export interface Props {
   title: string;
   autoDetectOS?: boolean;
   id?: string;
+  storeLink?: {
+    href: string;
+    label: string;
+    icon: "play-store" | "microsoft-store";
+  };
 }
 
-const { repo, title, autoDetectOS = false, id } = Astro.props;
+const { repo, title, autoDetectOS = false, id, storeLink } = Astro.props;
 
 const releases = await getRepoReleases(
   repo.owner,
@@ -200,25 +206,40 @@ const filteredAssets =
           }
         </p>
       </div>
-      <a
-        class={`inline-flex items-center justify-center gap-2 rounded-md bg-linear-to-br from-vega-accent to-vega-accent-strong px-7 py-3.5 font-headline text-lg font-extrabold text-[#240900] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(255,120,82,0.35)] ${autoDetectOS ? "auto-os-download" : ""}`}
-        href={latestRelease
-          ? getLatestDownloadUrl(latestRelease)
-          : repo.releasesUrl}
-        target="_blank"
-        rel="noreferrer"
-        data-assets={autoDetectOS
-          ? JSON.stringify(
-              latestRelease?.assets.map((a) => ({
-                name: a.name,
-                url: a.url,
-              })) || [],
-            )
-          : undefined}
-      >
-        <Download class="h-5 w-5" aria-hidden="true" />
-        <span class="btn-text">Download Latest</span>
-      </a>
+      <div class="flex flex-col gap-3 sm:flex-row md:flex-col lg:flex-row">
+        {
+          storeLink && (
+            <a
+              class="inline-flex items-center justify-center gap-2 rounded-md border border-vega-accent/60 bg-vega-surface px-7 py-3.5 font-headline text-lg font-extrabold text-vega-accent transition hover:-translate-y-0.5 hover:border-vega-accent hover:bg-vega-accent/10"
+              href={storeLink.href}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <StoreIcon store={storeLink.icon} class="h-5 w-5" />
+              {storeLink.label}
+            </a>
+          )
+        }
+        <a
+          class={`inline-flex items-center justify-center gap-2 rounded-md bg-linear-to-br from-vega-accent to-vega-accent-strong px-7 py-3.5 font-headline text-lg font-extrabold text-[#240900] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(255,120,82,0.35)] ${autoDetectOS ? "auto-os-download" : ""}`}
+          href={latestRelease
+            ? getLatestDownloadUrl(latestRelease)
+            : repo.releasesUrl}
+          target="_blank"
+          rel="noreferrer"
+          data-assets={autoDetectOS
+            ? JSON.stringify(
+                latestRelease?.assets.map((a) => ({
+                  name: a.name,
+                  url: a.url,
+                })) || [],
+              )
+            : undefined}
+        >
+          <Download class="h-5 w-5" aria-hidden="true" />
+          <span class="btn-text">Download Latest</span>
+        </a>
+      </div>
     </div>
 
     {

@@ -1,0 +1,166 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import HeaderNav from "../components/sections/HeaderNav.astro";
+import SiteFooter from "../components/sections/SiteFooter.astro";
+---
+
+<BaseLayout
+  title="Terms of Service | Vega"
+  description="Terms governing lawful and authorized use of the Vega app."
+>
+  <HeaderNav server:defer>
+    <nav
+      slot="fallback"
+      class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-vega-bg/70 backdrop-blur-xl"
+      aria-label="Primary"
+    >
+      <div
+        class="mx-auto flex min-h-16 w-[min(1400px,calc(100%-1rem))] items-center justify-between gap-3 md:min-h-18 md:w-[min(1400px,calc(100%-3rem))] md:gap-4"
+      >
+        <div class="flex items-center gap-2">
+          <div class="vega-skeleton h-8 w-8 rounded-md"></div>
+          <div class="vega-skeleton h-8 w-24 rounded-md"></div>
+        </div>
+      </div>
+    </nav>
+  </HeaderNav>
+
+  <main class="px-4 pt-28 pb-24 md:px-6">
+    <div class="mx-auto w-full max-w-3xl">
+      <h1
+        class="font-headline text-[clamp(2rem,4vw,3.2rem)] font-black tracking-tight text-white"
+      >
+        Terms of Service
+      </h1>
+      <p class="mt-2 text-sm text-vega-muted">Last updated: August 9, 2026</p>
+
+      <div class="mt-10 space-y-10 text-vega-muted leading-relaxed">
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            1. Acceptance of Terms
+          </h2>
+          <p class="mt-3">
+            By downloading, installing, or using Vega, you agree to these Terms
+            of Service. If you do not agree, do not use the app.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            2. Permitted Use
+          </h2>
+          <p class="mt-3">
+            Vega may only be used with content you personally own, content you
+            are authorized to access, or content that is lawfully available for
+            your intended use. You are responsible for confirming that you have
+            the necessary rights and permissions.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            3. Prohibited Use
+          </h2>
+          <p class="mt-3">You must not use Vega to:</p>
+          <ul class="mt-3 list-disc space-y-2 pl-6">
+            <li>Access, stream, download, or distribute pirated content.</li>
+            <li>
+              Scrape, extract, or retrieve content from websites or services
+              without authorization.
+            </li>
+            <li>
+              Bypass access controls, paywalls, digital rights management, or
+              other technical restrictions.
+            </li>
+            <li>
+              Infringe copyrights, trademarks, privacy rights, contractual
+              rights, or any other legal rights.
+            </li>
+            <li>Use the app for any unlawful or unauthorized purpose.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            4. Third-Party Sources
+          </h2>
+          <p class="mt-3">
+            Vega does not provide, host, endorse, or verify third-party media
+            sources. Any source added to the app is selected and controlled by
+            the user. You are solely responsible for a source's legality,
+            availability, security, and terms of use.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            5. Intellectual Property
+          </h2>
+          <p class="mt-3">
+            Vega does not grant rights to any media or third-party content.
+            Ownership of such content remains with its respective rights
+            holders. The Vega name, website, and app materials remain subject to
+            their applicable licenses and intellectual property rights.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            6. User Responsibility
+          </h2>
+          <p class="mt-3">
+            You are responsible for your use of Vega and for complying with all
+            applicable laws, licenses, contracts, and third-party terms. You
+            assume all risks arising from sources or content you configure.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            7. Disclaimer and Limitation of Liability
+          </h2>
+          <p class="mt-3">
+            Vega is provided "as is" and "as available," without warranties of
+            any kind to the extent permitted by law. The developers and
+            maintainers are not liable for user-configured sources, third-party
+            content, unauthorized use, service interruptions, data loss, or
+            damages arising from use of the app.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            8. Enforcement and Termination
+          </h2>
+          <p class="mt-3">
+            Access to Vega services may be restricted or terminated when these
+            terms are violated. Prohibited conduct may also be reported when
+            required by law.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            9. Changes to These Terms
+          </h2>
+          <p class="mt-3">
+            These terms may be updated periodically. Continued use of Vega after
+            an update means you accept the revised terms.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="font-headline text-xl font-bold text-white">
+            10. Contact
+          </h2>
+          <p class="mt-3">
+            For questions about these terms, open an issue in the official Vega
+            GitHub repository.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>

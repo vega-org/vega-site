@@ -28,9 +28,7 @@ export const APP_LINKS = Object.freeze({
   playStore: "https://play.google.com/store/apps/details?id=vega.app",
   microsoftStore:
     "https://apps.microsoft.com/detail/9n3fdt30wdlb?referrer=appbadge&mode=full",
-  providerAuthoringGuide: "/guide#create-provider",
-  providerReadmeRaw:
-    "https://raw.githubusercontent.com/vega-org/vega-providers/refs/heads/main/README.md",
+  providerAuthoringGuide: "/guide/create-provider",
   warpPlayStore:
     "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone",
   warpApkMirror:

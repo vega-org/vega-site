@@ -221,8 +221,11 @@ const androidIntent = `intent:#Intent;action=vega.intent.action.ADD_SOURCE;packa
     const targetUri = isAndroid ? androidIntent : desktopUri;
     const statusText = document.getElementById("launch-status-text");
 
-    // Auto-launch the appropriate URI protocol for user's platform
+    // Auto-launch the appropriate URI protocol for user's platform (single trigger)
+    let hasTriggered = false;
     const triggerIntent = () => {
+      if (hasTriggered) return;
+      hasTriggered = true;
       try {
         window.location.href = targetUri;
       } catch (e) {
@@ -231,7 +234,6 @@ const androidIntent = `intent:#Intent;action=vega.intent.action.ADD_SOURCE;packa
     };
 
     triggerIntent();
-    setTimeout(triggerIntent, 300);
 
     setTimeout(() => {
       if (statusText) {

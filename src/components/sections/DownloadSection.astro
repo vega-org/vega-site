@@ -17,7 +17,8 @@ import PlatformDownload from "./PlatformDownload.astro";
     <div class="mt-12 flex flex-col gap-12">
       <PlatformDownload
         repo={REPO}
-        title="Vega for Android Mobile"
+        title="Vega for Android"
+        platformType="android"
         storeLink={{
           href: APP_LINKS.playStore,
           label: "Get it on Google Play",
@@ -27,7 +28,8 @@ import PlatformDownload from "./PlatformDownload.astro";
       />
       <PlatformDownload
         repo={DESKTOP_REPO}
-        title="Vega for Tv and Desktop"
+        title="Vega for Desktop"
+        platformType="desktop"
         autoDetectOS={true}
         storeLink={{
           href: APP_LINKS.microsoftStore,

@@ -1,0 +1,58 @@
+---
+import { ArrowLeft, BookOpen } from "@lucide/astro";
+import { Image } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AddSourceCard from "../components/sections/AddSourceCard.astro";
+import SiteFooter from "../components/sections/SiteFooter.astro";
+import logo from "../assets/logo.png";
+import { APP_LINKS } from "../config/site";
+---
+
+<BaseLayout
+  title="Add Zenda-X Providers | Vega"
+  description="One-tap installer to add Zenda-X provider extensions to the Vega streaming app."
+>
+  <header
+    class="sticky top-0 z-40 w-full border-b border-white/10 bg-vega-bg/85 backdrop-blur-xl"
+  >
+    <div
+      class="mx-auto flex min-h-16 w-[min(1200px,calc(100%-2rem))] items-center justify-between gap-4"
+    >
+      <a
+        class="inline-flex items-center gap-2 text-sm font-bold text-vega-muted transition hover:text-vega-accent"
+        href="/"
+      >
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
+        <span>Back to Home</span>
+      </a>
+
+      <a class="flex items-center gap-2" href="/">
+        <Image
+          class="h-7 w-auto object-cover"
+          src={logo}
+          width={84}
+          quality={80}
+          alt="Vega logo"
+          loading="lazy"
+        />
+        <span class="font-headline text-xl font-black tracking-tight text-white"
+          >Vega</span
+        >
+      </a>
+
+      <a
+        class="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-headline text-xs font-bold text-white transition hover:bg-white/15"
+        href={APP_LINKS.guide}
+      >
+        <BookOpen class="h-3.5 w-3.5 text-vega-accent" aria-hidden="true" />
+        <span class="hidden sm:inline">Guide</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="flex min-h-[calc(100vh-160px)] items-center justify-center px-4 py-12 md:px-6 md:py-20">
+    <AddSourceCard />
+  </main>
+
+  <SiteFooter />
+</BaseLayout>

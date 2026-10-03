@@ -29,6 +29,8 @@ export const APP_LINKS = Object.freeze({
   microsoftStore:
     "https://apps.microsoft.com/detail/9n3fdt30wdlb?referrer=appbadge&mode=full",
   providerAuthoringGuide: "/guide/create-provider",
+  addSource: "/add-source",
+  zendaXRepo: "https://github.com/Zenda-Cross/vega-providers",
   warpPlayStore:
     "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone",
   warpApkMirror:

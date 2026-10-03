@@ -56,6 +56,8 @@ export interface RepoRelease {
   publishedAt: string;
   assets: RepoReleaseAsset[];
   universalAsset: RepoReleaseAsset | null;
+  mobileAsset?: RepoReleaseAsset | null;
+  tvAsset?: RepoReleaseAsset | null;
 }
 
 export interface RepoContributor {
@@ -340,9 +342,52 @@ function isUniversalAsset(asset: RepoReleaseAsset): boolean {
   return ["universal"].some((hint) => normalized.includes(hint));
 }
 
+function pickMobileAsset(assets: RepoReleaseAsset[]): RepoReleaseAsset | null {
+  const explicitMobile = assets.find((a) => {
+    const lower = a.name.toLowerCase();
+    return lower.includes("mobile") && lower.endsWith(".apk");
+  });
+  if (explicitMobile) return explicitMobile;
+
+  const explicitUniversal = assets.find((a) => {
+    const lower = a.name.toLowerCase();
+    return isUniversalAsset(a) && !lower.includes("tv");
+  });
+  if (explicitUniversal) return explicitUniversal;
+
+  return (
+    assets.find((a) => {
+      const lower = a.name.toLowerCase();
+      return lower.endsWith(".apk") && !lower.includes("tv");
+    }) ?? null
+  );
+}
+
+function pickTvAsset(assets: RepoReleaseAsset[]): RepoReleaseAsset | null {
+  return (
+    assets.find((a) => {
+      const lower = a.name.toLowerCase();
+      return (
+        (lower.includes("tv") ||
+          lower.includes("android-tv") ||
+          lower.includes("androidtv")) &&
+        lower.endsWith(".apk")
+      );
+    }) ?? null
+  );
+}
+
 function pickUniversalAsset(
   assets: RepoReleaseAsset[],
 ): RepoReleaseAsset | null {
+  const mobileUniversal = assets.find((asset) => {
+    const lower = asset.name.toLowerCase();
+    return isUniversalAsset(asset) && (lower.includes("mobile") || !lower.includes("tv"));
+  });
+  if (mobileUniversal) {
+    return mobileUniversal;
+  }
+
   const explicitUniversal = assets.find((asset) => isUniversalAsset(asset));
   if (explicitUniversal) {
     return explicitUniversal;
@@ -371,6 +416,8 @@ function mapRelease(release: GitHubReleaseResponse): RepoRelease | null {
     publishedAt: release.published_at ?? "",
     assets,
     universalAsset: pickUniversalAsset(assets),
+    mobileAsset: pickMobileAsset(assets),
+    tvAsset: pickTvAsset(assets),
   };
 }
 
@@ -380,8 +427,7 @@ export async function getRepoReleases(
   count = 6,
   cacheTtlSeconds = DEFAULT_CACHE_TTL_SECONDS,
 ): Promise<RepoRelease[]> {
-  // Pull a wider window so prereleases at the top do not hide older stable tags.
-  const pageSize = Math.min(Math.max(count * 4, 20), 100);
+  const pageSize = Math.min(Math.max(count * 2, 10), 100);
   const data = await fetchGitHubJson<GitHubReleaseResponse[]>(
     `/repos/${owner}/${name}/releases?per_page=${pageSize}`,
     DEFAULT_GITHUB_TIMEOUT_MS,

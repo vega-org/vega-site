@@ -1,7 +1,15 @@
 ---
 import { APP_LINKS, REPO } from "../../../config/site";
 import { getRepoReleases } from "../../../lib/github";
-import { Download, ExternalLink, Network, Shield, Wifi } from "@lucide/astro";
+import {
+  Cloud,
+  Download,
+  ExternalLink,
+  Network,
+  Settings,
+  Shield,
+  Wifi,
+} from "@lucide/astro";
 
 const byeDpiReleases = await getRepoReleases(
   "dovecoteescapee",
@@ -35,20 +43,124 @@ const latestByeDpiApk =
 
   <p class="mt-3 max-w-[72ch] text-base leading-relaxed text-vega-muted">
     If a provider works for other users but not for you, your ISP (Internet
-    Service Provider) may be blocking the provider website URL. Try these
-    methods in order.
+    Service Provider) may be blocking the provider website URL. Start with the
+    options built into Vega. Use the external methods only if those do not
+    help.
+  </p>
+
+  <h3
+    class="mt-8 inline-flex items-center gap-2 font-headline text-xl font-bold text-white"
+  >
+    <Settings class="h-5 w-5 text-vega-accent" aria-hidden="true" />
+    Built into Vega (Recommended)
+  </h3>
+  <p class="mt-2 max-w-[72ch] text-sm leading-relaxed text-vega-muted">
+    These options only change how Vega connects. Nothing else on your device is
+    affected, and you do not need another app.
   </p>
 
   <ol
-    class="mt-6 list-decimal space-y-6 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+    class="mt-5 list-decimal space-y-6 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
   >
     <li>
       <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
         <div class="inline-flex items-center gap-2 text-white">
           <Wifi class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-          <h3 class="font-headline text-lg font-bold">
-            Change DNS (First Method)
-          </h3>
+          <h4 class="font-headline text-lg font-bold">Change DNS</h4>
+        </div>
+        <p class="mt-3 text-sm text-vega-muted">
+          Fixes blocks where your ISP's DNS hides the provider website.
+        </p>
+        <ul class="mt-3 list-disc space-y-1.5 pl-5 marker:text-vega-accent">
+          <li>
+            <strong class="text-white">Android and TV:</strong> open
+            <strong class="text-white">Settings &gt; Network</strong> and set
+            <strong class="text-white">DNS over HTTPS</strong> to Cloudflare or
+            Google.
+          </li>
+          <li>
+            <strong class="text-white">Desktop:</strong> open
+            <strong class="text-white">Settings &gt; Preferences</strong> and
+            set <strong class="text-white">DNS over HTTPS</strong> to Cloudflare
+            or Google.
+          </li>
+        </ul>
+      </article>
+    </li>
+
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <div class="inline-flex items-center gap-2 text-white">
+          <Shield class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+          <h4 class="font-headline text-lg font-bold">Turn On Anti-DPI Mode</h4>
+        </div>
+        <p class="mt-3 text-sm text-vega-muted">
+          Gets past ISPs that inspect traffic to block websites. It uses ByeDPI
+          inside Vega, without a VPN. It does not help when the ISP blocks the
+          website's IP address.
+        </p>
+        <ul class="mt-3 list-disc space-y-1.5 pl-5 marker:text-vega-accent">
+          <li>
+            <strong class="text-white">Android and TV:</strong> open
+            <strong class="text-white">Settings &gt; Network</strong> and turn on
+            <strong class="text-white">AntiDPI Mode</strong>.
+          </li>
+          <li>
+            <strong class="text-white">Desktop:</strong> open
+            <strong class="text-white">Settings &gt; Preferences</strong> and
+            turn on <strong class="text-white">Anti-DPI Mode (ByeDPI)</strong>.
+          </li>
+        </ul>
+      </article>
+    </li>
+
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <div class="inline-flex items-center gap-2 text-white">
+          <Cloud class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+          <h4 class="font-headline text-lg font-bold">Turn On WARP Mode</h4>
+        </div>
+        <p class="mt-3 text-sm text-vega-muted">
+          Sends Vega's traffic through Cloudflare WARP. This also works when
+          the ISP blocks the website's IP address.
+        </p>
+        <ul class="mt-3 list-disc space-y-1.5 pl-5 marker:text-vega-accent">
+          <li>
+            <strong class="text-white">Android and TV:</strong> open
+            <strong class="text-white">Settings &gt; Network</strong> and turn on
+            <strong class="text-white">WARP Mode</strong>.
+          </li>
+          <li>
+            <strong class="text-white">Desktop:</strong> open
+            <strong class="text-white">Settings &gt; Preferences</strong> and
+            turn on <strong class="text-white">Cloudflare WARP Mode</strong>.
+          </li>
+        </ul>
+      </article>
+    </li>
+  </ol>
+
+  <h3
+    class="mt-10 inline-flex items-center gap-2 font-headline text-xl font-bold text-white"
+  >
+    <ExternalLink class="h-5 w-5 text-vega-accent" aria-hidden="true" />
+    External Methods
+  </h4>
+  <p class="mt-2 max-w-[72ch] text-sm leading-relaxed text-vega-muted">
+    If the built-in options do not work, try these in order. They change
+    settings or install apps outside Vega.
+  </p>
+
+  <ol
+    class="mt-5 list-decimal space-y-6 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent"
+  >
+    <li>
+      <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
+        <div class="inline-flex items-center gap-2 text-white">
+          <Wifi class="h-4 w-4 text-vega-accent" aria-hidden="true" />
+          <h4 class="font-headline text-lg font-bold">
+            Change Android Private DNS
+          </h4>
         </div>
         <ol class="mt-3 list-decimal space-y-1.5 pl-5 marker:text-vega-accent">
           <li>
@@ -82,12 +194,12 @@ const latestByeDpiApk =
       <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
         <div class="inline-flex items-center gap-2 text-white">
           <Shield class="h-4 w-4 text-vega-accent" aria-hidden="true" />
-          <h3 class="font-headline text-lg font-bold">
-            Use ByeDPI (Second Method)
-          </h3>
+          <h4 class="font-headline text-lg font-bold">
+            Use the ByeDPI App
+          </h4>
         </div>
         <p class="mt-3 text-sm text-vega-muted">
-          If DNS changes do not work, install ByeDPI, open the app, then tap
+          If Private DNS does not work, install ByeDPI, open the app, then tap
           <strong class="text-white">Connect</strong>.
         </p>
         <p class="mt-3 text-sm text-vega-muted">
@@ -119,9 +231,9 @@ const latestByeDpiApk =
 
     <li>
       <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
-        <h3 class="font-headline text-lg font-bold text-white">
-          Use Cloudflare WARP (Third Method)
-        </h3>
+        <h4 class="font-headline text-lg font-bold text-white">
+          Use the Cloudflare WARP App
+        </h4>
         <p class="mt-3 text-sm text-vega-muted">
           If ByeDPI does not work, install Cloudflare WARP and turn it on.
         </p>
@@ -150,9 +262,9 @@ const latestByeDpiApk =
 
     <li>
       <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-4">
-        <h3 class="font-headline text-lg font-bold text-white">
-          Use a VPN (Fourth Method)
-        </h3>
+        <h4 class="font-headline text-lg font-bold text-white">
+          Use a VPN
+        </h4>
         <p class="mt-3 text-sm text-vega-muted">
           You can use a VPN to bypass ISP-level blocking. Some websites detect
           and block VPN traffic, so a reliable premium VPN may be required.

@@ -1,14 +1,5 @@
 ---
-import {
-  Check,
-  Copy,
-  ExternalLink,
-  Layers,
-  Monitor,
-  PlugZap,
-  Smartphone,
-  Sparkles,
-} from "@lucide/astro";
+import { Check, Copy, Monitor, Smartphone } from "@lucide/astro";
 import { APP_LINKS, MAINTAINER } from "../../config/site";
 
 const sourceUrl = APP_LINKS.zendaXRepo;
@@ -16,322 +7,162 @@ const sourceName = "Zenda-X";
 const encodedUrl = encodeURIComponent(sourceUrl);
 const desktopUri = `vega://add-source?url=${encodedUrl}`;
 const androidIntent = `intent:#Intent;action=vega.intent.action.ADD_SOURCE;package=com.vega;S.url=${encodedUrl};end`;
+
+const buttonBase =
+  "inline-flex items-center justify-center gap-2.5 rounded-lg px-5 py-3.5 font-headline text-[15px] font-bold transition";
+const steps = [
+  "Open Vega on your phone, TV or computer.",
+  "Go to Settings > Provider Manager > Available Providers.",
+  "Tap the + button.",
+  "Enter zenda-cross or paste the repository URL, then confirm.",
+];
 ---
 
-<div class="mx-auto w-full max-w-2xl text-left">
-  <div
-    class="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-vega-surface-hi to-vega-surface p-6 shadow-2xl md:p-10"
+<div class="mx-auto w-full max-w-xl">
+  <p
+    class="font-headline text-xs font-bold uppercase tracking-[0.14em] text-vega-accent"
   >
-    <!-- Background Glow Accents -->
-    <div
-      class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-vega-accent/15 blur-3xl"
-      aria-hidden="true"
+    Provider source
+  </p>
+  <h1
+    class="mt-3 font-headline text-[clamp(2rem,5vw,2.75rem)] leading-[1.05] font-black tracking-tight text-white"
+  >
+    Add {sourceName} to Vega
+  </h1>
+  <p class="mt-3 leading-relaxed text-vega-muted">
+    This adds the {sourceName} provider source to Vega. Vega should open on its own.
+    If it doesn't, use one of the buttons below.
+  </p>
+
+  <p id="launch-status" class="mt-6 text-sm text-vega-muted" aria-live="polite">
+    Opening Vega…
+  </p>
+
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <a
+      id="android-trigger-btn"
+      href={androidIntent}
+      data-platform="android"
+      class={`${buttonBase} border border-white/15 bg-white/5 text-white hover:bg-white/10`}
     >
-    </div>
-    <div
-      class="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-vega-accent-strong/10 blur-3xl"
-      aria-hidden="true"
+      <Smartphone class="h-5 w-5 shrink-0" aria-hidden="true" />
+      Click to add on Android
+    </a>
+    <a
+      id="desktop-trigger-btn"
+      href={desktopUri}
+      data-platform="desktop"
+      class={`${buttonBase} border border-white/15 bg-white/5 text-white hover:bg-white/10`}
     >
-    </div>
-
-    <!-- Header badge -->
-    <div class="flex flex-wrap items-center gap-2">
-      <div
-        class="inline-flex items-center gap-1.5 rounded-full border border-vega-accent/30 bg-vega-accent/10 px-3 py-1 font-headline text-xs font-bold uppercase tracking-widest text-vega-accent"
-      >
-        <Sparkles class="h-3.5 w-3.5" aria-hidden="true" />
-        Vega Source Installer
-      </div>
-      <span
-        class="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 font-headline text-[11px] font-bold text-vega-muted"
-      >
-        Desktop &amp; Android
-      </span>
-    </div>
-
-    <!-- Main Title -->
-    <h1
-      class="mt-4 font-headline text-[clamp(2rem,4vw,2.8rem)] font-black tracking-tight text-white"
-    >
-      Add <span class="text-vega-accent">{sourceName}</span> Providers
-    </h1>
-
-    <p class="mt-2 text-sm leading-relaxed text-vega-muted md:text-base">
-      Automatically register the <strong class="text-white">{sourceName}</strong
-      > provider source in Vega for Desktop or Android.
-    </p>
-
-    <!-- Auto-launch notice -->
-    <div
-      id="launch-status"
-      class="mt-5 flex items-center gap-2.5 rounded-xl border border-vega-accent/20 bg-vega-accent/5 px-4 py-2.5 text-xs font-medium text-vega-accent"
-    >
-      <span class="relative flex h-2 w-2">
-        <span
-          class="absolute inline-flex h-full w-full animate-ping rounded-full bg-vega-accent opacity-75"
-        ></span>
-        <span class="relative inline-flex h-2 w-2 rounded-full bg-vega-accent"
-        ></span>
-      </span>
-      <span id="launch-status-text">Triggering Vega application...</span>
-    </div>
-
-    <!-- Platform Action Buttons -->
-    <div class="mt-6 flex flex-col gap-3">
-      <!-- Android Button (intent:#Intent;action=vega.intent.action.ADD_SOURCE;...) -->
-      <a
-        id="android-trigger-btn"
-        href={androidIntent}
-        class="group inline-flex w-full items-center justify-between gap-3 rounded-xl bg-linear-to-br from-vega-accent to-vega-accent-strong px-6 py-4 font-headline text-base font-black text-[#240900] shadow-[0_12px_24px_rgba(255,120,82,0.3)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(255,120,82,0.45)] sm:text-lg"
-      >
-        <span class="flex items-center gap-3">
-          <Smartphone
-            class="h-6 w-6 shrink-0 transition group-hover:scale-110"
-            aria-hidden="true"
-          />
-          <span>Click on Android ({sourceName})</span>
-        </span>
-        <span
-          class="rounded bg-[#240900]/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wider"
-        >
-          intent://
-        </span>
-      </a>
-      <!-- Desktop Button (vega://add-source?url=...) -->
-      <a
-        id="desktop-trigger-btn"
-        href={desktopUri}
-        class="group inline-flex w-full items-center justify-between gap-3 rounded-xl bg-linear-to-br from-vega-accent to-vega-accent-strong px-6 py-4 font-headline text-base font-black text-[#240900] shadow-[0_12px_24px_rgba(255,120,82,0.3)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(255,120,82,0.45)] sm:text-lg"
-      >
-        <span class="flex items-center gap-3">
-          <Monitor
-            class="h-6 w-6 shrink-0 transition group-hover:scale-110"
-            aria-hidden="true"
-          />
-          <span>Click on Desktop ({sourceName})</span>
-        </span>
-        <span
-          class="rounded bg-[#240900]/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wider"
-        >
-          vega://
-        </span>
-      </a>
-
-      <!-- Direct links -->
-      <div
-        class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-1 text-xs text-vega-muted"
-      >
-        <span>Direct links:</span>
-        <a
-          id="raw-desktop-link"
-          href={desktopUri}
-          class="font-bold text-vega-accent underline underline-offset-2 hover:text-white"
-        >
-          Desktop ({sourceName})
-        </a>
-        <span>•</span>
-        <a
-          id="raw-android-link"
-          href={androidIntent}
-          class="font-bold text-vega-accent underline underline-offset-2 hover:text-white"
-        >
-          {sourceName}
-        </a>
-      </div>
-    </div>
-
-    <!-- Repository Info Card -->
-    <div
-      class="mt-8 rounded-2xl border border-white/10 bg-vega-bg/60 p-4 sm:p-5"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <span
-          class="font-headline text-xs font-bold uppercase tracking-wider text-vega-muted"
-        >
-          Provider Repository
-        </span>
-        <span
-          class="inline-flex items-center gap-1 rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white"
-        >
-          <Layers class="h-3 w-3 text-vega-accent" aria-hidden="true" />
-          Extension
-        </span>
-      </div>
-
-      <div
-        class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div class="flex items-center gap-3 min-w-0">
-          <img
-            class="h-9 w-9 shrink-0 rounded-full border border-white/10 object-cover"
-            src={MAINTAINER.avatarUrl}
-            alt={MAINTAINER.name}
-            width="36"
-            height="36"
-            loading="lazy"
-          />
-          <div class="min-w-0">
-            <div class="font-headline text-sm font-bold text-white truncate">
-              Zenda-Cross / vega-providers
-            </div>
-            <div class="text-xs text-vega-muted truncate">
-              {sourceUrl}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          id="copy-source-btn"
-          data-copy-url={sourceUrl}
-          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-2 font-headline text-xs font-bold text-white transition hover:bg-white/15 active:scale-95"
-        >
-          <Copy
-            class="h-3.5 w-3.5 text-vega-accent"
-            id="copy-icon"
-            aria-hidden="true"
-          />
-          <Check
-            class="hidden h-3.5 w-3.5 text-emerald-400"
-            id="copied-icon"
-            aria-hidden="true"
-          />
-          <span id="copy-text">Copy URL</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Manual Instructions -->
-    <div class="mt-6 rounded-2xl border border-white/10 bg-white/3 p-4 sm:p-5">
-      <h3
-        class="font-headline text-sm font-bold uppercase tracking-wider text-white"
-      >
-        Manual Setup Instructions
-      </h3>
-      <ol
-        class="mt-3 list-decimal space-y-2 pl-4 text-xs leading-relaxed text-vega-muted marker:text-vega-accent"
-      >
-        <li>
-          Open the <strong class="text-white">Vega</strong> application (Desktop or
-          Android).
-        </li>
-        <li>
-          Navigate to <strong class="text-white"
-            >Settings &gt; Provider Manager &gt; Available Providers</strong
-          >.
-        </li>
-        <li>Tap the <strong class="text-white">+ (Plus)</strong> button.</li>
-        <li>
-          Enter <code class="rounded bg-white/10 px-1.5 py-0.5 text-white"
-            >zenda-cross</code
-          > or paste the repository URL and tap <strong class="text-white"
-            >Confirm</strong
-          >.
-        </li>
-      </ol>
-    </div>
-
-    <!-- App Download Fallback -->
-    <div
-      class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-xs text-vega-muted"
-    >
-      <span>Don't have Vega installed yet?</span>
-      <a
-        href="/#download"
-        class="inline-flex items-center gap-1 font-bold text-vega-accent underline underline-offset-2 hover:text-white"
-      >
-        <span>Download Vega App</span>
-        <ExternalLink class="h-3 w-3" aria-hidden="true" />
-      </a>
-    </div>
+      <Monitor class="h-5 w-5 shrink-0" aria-hidden="true" />
+      Click to add on Desktop
+    </a>
   </div>
 
-  <!-- Toast Notification -->
   <div
-    id="copy-toast"
-    class="pointer-events-none fixed bottom-6 right-6 z-50 translate-y-3 rounded-lg border border-white/20 bg-vega-surface-hi px-4 py-2.5 text-xs font-bold text-white opacity-0 shadow-xl transition-all duration-200"
-    role="status"
-    aria-live="polite"
+    class="mt-8 flex items-center gap-3 rounded-xl border border-white/10 bg-vega-surface px-4 py-3.5"
   >
-    Copied repository URL
+    <img
+      class="h-9 w-9 shrink-0 rounded-full object-cover"
+      src={MAINTAINER.avatarUrl}
+      alt=""
+      width="36"
+      height="36"
+      loading="lazy"
+    />
+    <div class="min-w-0 flex-1">
+      <div class="truncate font-headline text-sm font-bold text-white">
+        Zenda-Cross/vega-providers
+      </div>
+      <div class="truncate text-xs text-vega-muted">{sourceUrl}</div>
+    </div>
+    <button
+      type="button"
+      id="copy-source-btn"
+      data-copy-url={sourceUrl}
+      class="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold text-vega-muted transition hover:bg-white/10 hover:text-white"
+      aria-label="Copy repository URL"
+    >
+      <Copy class="h-4 w-4" id="copy-icon" aria-hidden="true" />
+      <Check
+        class="hidden h-4 w-4 text-emerald-400"
+        id="copied-icon"
+        aria-hidden="true"
+      />
+      <span id="copy-text">Copy</span>
+    </button>
   </div>
+
+  <section class="mt-10">
+    <h2 class="font-headline text-lg font-bold text-white">Add it yourself</h2>
+    <ol class="mt-4 space-y-3">
+      {
+        steps.map((step, index) => (
+          <li class="flex gap-3 text-sm leading-relaxed text-vega-muted">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/8 font-headline text-xs font-bold text-white">
+              {index + 1}
+            </span>
+            <span class="pt-0.5">{step}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <p class="mt-10 border-t border-white/10 pt-6 text-sm text-vega-muted">
+    Don't have Vega yet?
+    <a
+      href="/#download"
+      class="font-bold text-vega-accent underline-offset-4 hover:underline"
+      >Download it</a
+    >.
+  </p>
 </div>
 
 <script is:inline>
   (() => {
-    const desktopUri =
-      "vega://add-source?url=https%3A%2F%2Fgithub.com%2FZenda-Cross%2Fvega-providers";
-    const androidIntent =
-      "intent:#Intent;action=vega.intent.action.ADD_SOURCE;package=com.vega;S.url=https%3A%2F%2Fgithub.com%2FZenda-Cross%2Fvega-providers;end";
-
-    // Detect platform
     const isAndroid = /Android/i.test(navigator.userAgent);
-    const targetUri = isAndroid ? androidIntent : desktopUri;
-    const statusText = document.getElementById("launch-status-text");
+    const primary = document.getElementById(
+      isAndroid ? "android-trigger-btn" : "desktop-trigger-btn",
+    );
+    const status = document.getElementById("launch-status");
 
-    // Auto-launch the appropriate URI protocol for user's platform (single trigger)
-    let hasTriggered = false;
-    const triggerIntent = () => {
-      if (hasTriggered) return;
-      hasTriggered = true;
+    if (primary) {
+      // Open Vega once on load.
       try {
-        window.location.href = targetUri;
-      } catch (e) {
-        // Fallback handled by buttons
+        window.location.href = primary.getAttribute("href");
+      } catch {
+        // The buttons stay available.
       }
-    };
-
-    triggerIntent();
+    }
 
     setTimeout(() => {
-      if (statusText) {
-        statusText.textContent = isAndroid
-          ? "If Vega Android didn't open automatically, tap the button below."
-          : "If Vega Desktop didn't open automatically, tap the button below.";
+      if (status) {
+        status.textContent = isAndroid
+          ? "Vega didn't open? Tap Open on Android."
+          : "Vega didn't open? Click Open on Desktop.";
       }
     }, 1500);
 
-    // Clipboard copy
     const copyBtn = document.getElementById("copy-source-btn");
-    const toast = document.getElementById("copy-toast");
     const copyIcon = document.getElementById("copy-icon");
     const copiedIcon = document.getElementById("copied-icon");
     const copyText = document.getElementById("copy-text");
 
-    const showToast = (message) => {
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.remove("opacity-0", "translate-y-3");
-      toast.classList.add("opacity-100", "translate-y-0");
-
-      window.clearTimeout(showToast.timeoutId);
-      showToast.timeoutId = window.setTimeout(() => {
-        toast.classList.add("opacity-0", "translate-y-3");
-        toast.classList.remove("opacity-100", "translate-y-0");
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(copyBtn.dataset.copyUrl || "");
+        copyIcon?.classList.add("hidden");
+        copiedIcon?.classList.remove("hidden");
+        if (copyText) copyText.textContent = "Copied";
+      } catch {
+        if (copyText) copyText.textContent = "Copy failed";
+      }
+      setTimeout(() => {
+        copyIcon?.classList.remove("hidden");
+        copiedIcon?.classList.add("hidden");
+        if (copyText) copyText.textContent = "Copy";
       }, 2000);
-    };
-
-    if (copyBtn) {
-      copyBtn.addEventListener("click", async () => {
-        const textToCopy =
-          copyBtn.dataset.copyUrl ||
-          "https://github.com/Zenda-Cross/vega-providers";
-        try {
-          await navigator.clipboard.writeText(textToCopy);
-          if (copyIcon) copyIcon.classList.add("hidden");
-          if (copiedIcon) copiedIcon.classList.remove("hidden");
-          if (copyText) copyText.textContent = "Copied!";
-          showToast("Copied repository URL to clipboard");
-
-          setTimeout(() => {
-            if (copyIcon) copyIcon.classList.remove("hidden");
-            if (copiedIcon) copiedIcon.classList.add("hidden");
-            if (copyText) copyText.textContent = "Copy URL";
-          }, 2000);
-        } catch {
-          showToast("Failed to copy to clipboard");
-        }
-      });
-    }
+    });
   })();
 </script>

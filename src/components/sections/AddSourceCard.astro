@@ -6,7 +6,7 @@ const sourceUrl = APP_LINKS.zendaXRepo;
 const sourceName = "Zenda-X";
 const encodedUrl = encodeURIComponent(sourceUrl);
 const desktopUri = `vega://add-source?url=${encodedUrl}`;
-const androidIntent = `intent:#Intent;action=vega.intent.action.ADD_SOURCE;package=com.vega;S.url=${encodedUrl};end`;
+const androidIntent = `intent:#Intent;action=vega.intent.action.ADD_SOURCE;S.url=${encodedUrl};end`;
 
 const buttonBase =
   "inline-flex items-center justify-center gap-2.5 rounded-lg px-5 py-3.5 font-headline text-[15px] font-bold transition";

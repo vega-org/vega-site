@@ -94,15 +94,25 @@ interface PlatformGroup {
   icon: "android-tv" | "windows" | "linux" | "apple";
   patterns: string[];
   preferred: string;
+  architecture?: RegExp;
 }
 
 const PLATFORMS: PlatformGroup[] = [
   {
     id: "windows",
-    name: "Windows",
+    name: "Windows — Intel / AMD (x64)",
     icon: "windows",
     patterns: [".exe", ".msi", ".msix"],
-    preferred: ".msix",
+    preferred: ".exe",
+    architecture: /(?:^|[_.-])(?:x64|x86_64|amd64)(?:[_.-]|$)/i,
+  },
+  {
+    id: "windows-arm64",
+    name: "Windows — ARM / Snapdragon (ARM64)",
+    icon: "windows",
+    patterns: [".exe", ".msi", ".msix"],
+    preferred: ".exe",
+    architecture: /(?:^|[_.-])(?:arm64|aarch64)(?:[_.-]|$)/i,
   },
   {
     id: "macos",
@@ -124,16 +134,6 @@ function isDesktopInstaller(name: string): boolean {
   return !DESKTOP_EXCLUDED_PATTERNS.some((p) => p.test(name));
 }
 
-function matchPlatform(name: string): PlatformGroup | null {
-  const lower = name.toLowerCase();
-  for (const platform of PLATFORMS) {
-    if (platform.patterns.some((p) => lower.endsWith(p.toLowerCase()))) {
-      return platform;
-    }
-  }
-  return null;
-}
-
 function isPreferred(name: string, platform: PlatformGroup): boolean {
   return name.toLowerCase().endsWith(platform.preferred.toLowerCase());
 }
@@ -149,7 +149,9 @@ function getDesktopPlatformAssets(assets: RepoReleaseAsset[]): PlatformAsset[] {
   const result: PlatformAsset[] = [];
   for (const platform of PLATFORMS) {
     const matched = filtered.filter(
-      (a) => matchPlatform(a.name)?.id === platform.id,
+      (a) =>
+        platform.patterns.some((extension) => a.name.toLowerCase().endsWith(extension.toLowerCase())) &&
+        (!platform.architecture || platform.architecture.test(a.name)),
     );
     // Pick the preferred variant first, otherwise the first match
     const best =
@@ -196,16 +198,19 @@ if (!isDesktop && latestRelease) {
 }
 
 function getPrimaryDownloadUrl(release: RepoRelease): string {
+  if (isDesktop) return desktopPlatformAssets.length ? `#${id ?? "desktop"}-platforms` : release.notesUrl;
   if (!isDesktop && release.mobileAsset) {
     return release.mobileAsset.url;
   }
   return getLatestDownloadUrl(release);
 }
 
-const primaryBtnText = "Download Latest";
+const primaryBtnText = isDesktop ? "Choose your desktop download" : "Download Latest";
 
 const releaseSubtitle = latestRelease
-  ? `Released ${formatDate(latestRelease.publishedAt)} • ${formatSize(
+  ? isDesktop
+    ? `Released ${formatDate(latestRelease.publishedAt)} • Choose the build for your device below`
+    : `Released ${formatDate(latestRelease.publishedAt)} • ${formatSize(
       latestRelease.universalAsset?.sizeBytes ??
         latestRelease.mobileAsset?.sizeBytes ??
         latestRelease.assets[0]?.sizeBytes ??
@@ -267,7 +272,7 @@ const filteredAssets =
           href={latestRelease
             ? getPrimaryDownloadUrl(latestRelease)
             : repo.releasesUrl}
-          target="_blank"
+          target={isDesktop ? undefined : "_blank"}
           rel="noreferrer"
           data-assets={autoDetectOS
             ? JSON.stringify(
@@ -286,7 +291,7 @@ const filteredAssets =
 
     {
       autoDetectOS && desktopPlatformAssets.length > 0 ? (
-        <div class="mt-6">
+        <div class="mt-6 scroll-mt-24" id={`${id ?? "desktop"}-platforms`}>
           <h4 class="font-headline text-sm font-bold uppercase tracking-[0.08em] text-white/70">
             Download for your platform
           </h4>
@@ -614,13 +619,9 @@ const filteredAssets =
         let osName = "";
 
         if (isWindows) {
-          targetAsset = assets.find(
-            (a: { name: string; url: string }) =>
-              a.name.endsWith(".exe") ||
-              a.name.endsWith(".msi") ||
-              a.name.endsWith(".msix"),
-          );
-          osName = "Windows";
+          const textSpan = btn.querySelector(".btn-text");
+          if (textSpan) textSpan.textContent = "Choose Windows download";
+          return;
         } else if (isMac) {
           targetAsset = assets.find((a: { name: string; url: string }) =>
             a.name.endsWith(".dmg"),

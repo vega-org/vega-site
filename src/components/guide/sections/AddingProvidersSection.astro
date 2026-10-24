@@ -3,6 +3,7 @@ import { Copy, PlugZap } from "@lucide/astro";
 import { APP_LINKS } from "../../../config/site";
 
 const officialProviderName = "Zenda-Cross";
+const {showCommunityExample=true}=Astro.props;
 // const officialProviderUrl = "https://github.com/vega-org/vega-providers";
 
 const providerSteps = [
@@ -44,7 +45,7 @@ const providerSteps = [
   >
     <li>{providerSteps[0]}</li>
     <li>{providerSteps[1]}</li>
-    <li>
+    {showCommunityExample ? <li>
       To add Zenda-Cross providers go to github Zenda-Cross profile and copy
       repo url or enter the username
       <span class="ml-1 inline-flex items-center gap-2">
@@ -63,7 +64,7 @@ const providerSteps = [
         </button>
       </span>
       and press Confirm.
-    </li>
+    </li> : <li>Enter the URL or username of a provider source you chose, then press Confirm.</li>}
   </ol>
   <p class="mt-4 text-vega-muted">
     Follow the same process to add a custom source for providers.

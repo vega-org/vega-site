@@ -9,11 +9,7 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": [
-      "/cast",
-      "/cast/*",
-      "/vega-cast/*"
-    ]
+    "run_worker_first": true
   },
   "observability": {
     "enabled": true

@@ -45,93 +45,280 @@ for element in qtdemux matroskademux h264parse h265parse avdec_h264 avdec_h265 a
 done`;
 ---
 
-<section id="linux-setup" class="linux-guide rounded-2xl border border-white/10 bg-vega-surface p-5 sm:p-7 md:p-10">
-  <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent">
+<section
+  id="linux-setup"
+  class="linux-guide rounded-2xl border border-white/10 bg-vega-surface p-5 sm:p-7 md:p-10"
+>
+  <div
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-vega-accent"
+  >
     <Terminal class="h-4 w-4" aria-hidden="true" /> Linux Setup
   </div>
-  <h1 class="mt-4 font-headline text-[clamp(2rem,4vw,3.1rem)] font-black tracking-tight text-white">Get Linux ready for Vega</h1>
-  <p class="mt-4 text-base leading-relaxed text-vega-muted">Install the desktop runtime and media plugins for your distribution, then run the checks below before playing a video.</p>
+  <h1
+    class="mt-4 font-headline text-[clamp(2rem,4vw,3.1rem)] font-black tracking-tight text-white"
+  >
+    Get Linux ready for Vega
+  </h1>
+  <p class="mt-4 text-base leading-relaxed text-vega-muted">
+    Install the desktop runtime and media plugins for your distribution, then
+    run the checks below before playing a video.
+  </p>
 
-  <article class="mt-7 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+  <article
+    class="mt-7 rounded-xl border border-white/10 bg-vega-surface-hi p-5"
+  >
     <h2>What your system needs</h2>
     <ul>
-      <li>A graphical desktop session using X11 or Wayland, with working graphics drivers and sound.</li>
+      <li>
+        A graphical desktop session using X11 or Wayland, with working graphics
+        drivers and sound.
+      </li>
       <li>WebKitGTK 4.1 and its GTK runtime for Vega's desktop interface.</li>
-      <li>GStreamer media plugins for the built-in player, including decoders for the files you watch.</li>
+      <li>
+        GStreamer media plugins for the built-in player, including decoders for
+        the files you watch.
+      </li>
       <li>A Vega build that matches your CPU architecture.</li>
     </ul>
-    <CommandBlock label="Identify your distribution and CPU" command={`cat /etc/os-release
-uname -m`} />
-    <p>Match <code>x86_64</code> to an <code>amd64</code>/<code>x86_64</code> asset, or <code>aarch64</code> to an <code>arm64</code> asset if that release provides one.</p>
+    <CommandBlock
+      label="Identify your distribution and CPU"
+      command={`cat /etc/os-release
+uname -m`}
+    />
+    <p>
+      Match <code>x86_64</code> to an <code>amd64</code>/<code>x86_64</code> asset,
+      or <code>aarch64</code> to an <code>arm64</code> asset if that release provides
+      one.
+    </p>
   </article>
 
   <h2 class="mt-9" id="runtime-packages">1. Install your runtime packages</h2>
-  <p>Open Terminal and choose your distribution. These are runtime packages for running Vega. Your package manager will also install their dependencies.</p>
+  <p>
+    Open Terminal and choose your distribution. These are runtime packages for
+    running Vega. Your package manager will also install their dependencies.
+  </p>
   <div class="mt-4 space-y-3">
-    {distributions.map((distribution, index) => (
-      <details class="rounded-xl border border-white/10 bg-vega-surface-hi p-4 sm:p-5" open={index === 0}>
-        <summary class="cursor-pointer font-headline text-lg font-bold text-white marker:text-vega-accent">{distribution.name}</summary>
-        <p>{distribution.note}</p>
-        <CommandBlock label={`Install packages — ${distribution.name}`} command={distribution.command} />
-        <CommandBlock label={`Confirm WebKitGTK — ${distribution.name}`} command={distribution.check} />
-        <p>Expected: the installed WebKitGTK package and its version. A “not installed” result means the runtime is still missing.</p>
-        {distribution.name === "Fedora" && <p><a href="https://docs.fedoraproject.org/en-US/quick-docs/installing-plugins-for-playing-movies-and-music/" target="_blank" rel="noreferrer">Fedora's multimedia codec instructions →</a></p>}
-      </details>
-    ))}
+    {
+      distributions.map((distribution, index) => (
+        <details
+          class="rounded-xl border border-white/10 bg-vega-surface-hi p-4 sm:p-5"
+          open={index === 0}
+        >
+          <summary class="cursor-pointer font-headline text-lg font-bold text-white marker:text-vega-accent">
+            {distribution.name}
+          </summary>
+          <p>{distribution.note}</p>
+          <CommandBlock
+            label={`Install packages — ${distribution.name}`}
+            command={distribution.command}
+          />
+          <CommandBlock
+            label={`Confirm WebKitGTK — ${distribution.name}`}
+            command={distribution.check}
+          />
+          <p>
+            Expected: the installed WebKitGTK package and its version. A “not
+            installed” result means the runtime is still missing.
+          </p>
+          {distribution.name === "Fedora" && (
+            <p>
+              <a
+                href="https://docs.fedoraproject.org/en-US/quick-docs/installing-plugins-for-playing-movies-and-music/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Fedora's multimedia codec instructions →
+              </a>
+            </p>
+          )}
+        </details>
+      ))
+    }
   </div>
 
   <h2 class="mt-9" id="install-vega">2. Install Vega</h2>
-  <p>Download the latest matching asset from the <a href={DESKTOP_REPO.releasesUrl} target="_blank" rel="noreferrer">official desktop releases</a>. Run the relevant command from the folder containing your download, with only one matching Vega installer in that folder.</p>
-  <CommandBlock label="Ubuntu / Debian — install the .deb" command="sudo apt install ./Vega_*.deb" />
-  <CommandBlock label="Fedora — install the .rpm" command="sudo dnf install ./Vega*.rpm" />
+  <p>
+    Download the latest matching asset from the <a
+      href={DESKTOP_REPO.releasesUrl}
+      target="_blank"
+      rel="noreferrer">official desktop releases</a
+    >. Run the relevant command from the folder containing your download, with
+    only one matching Vega installer in that folder.
+  </p>
+  <CommandBlock
+    label="Ubuntu / Debian — install the .deb"
+    command="sudo apt install ./Vega_*.deb"
+  />
+  <CommandBlock
+    label="Fedora — install the .rpm"
+    command="sudo dnf install ./Vega*.rpm"
+  />
   <p>Launch Vega from your applications menu as your normal desktop user.</p>
 
-  <details class="mt-5 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
-    <summary class="cursor-pointer font-headline text-lg font-bold text-white marker:text-vega-accent">Using an AppImage instead?</summary>
-    <CommandBlock label="Make the AppImage executable and launch it" command={`chmod +x ./Vega_*.AppImage
-./Vega_*.AppImage`} />
-    <p>If it reports a FUSE error, install the FUSE 2 library for your distribution:</p>
-    <CommandBlock label="Ubuntu 24.04+ / Debian 13+" command="sudo apt install libfuse2t64" />
-    <CommandBlock label="Ubuntu 22.04 / Debian 12" command="sudo apt install libfuse2" />
+  <details
+    class="mt-5 rounded-xl border border-white/10 bg-vega-surface-hi p-5"
+  >
+    <summary
+      class="cursor-pointer font-headline text-lg font-bold text-white marker:text-vega-accent"
+      >Using an AppImage instead?</summary
+    >
+    <CommandBlock
+      label="Make the AppImage executable and launch it"
+      command={`chmod +x ./Vega_*.AppImage
+./Vega_*.AppImage`}
+    />
+    <p>
+      If it reports a FUSE error, install the FUSE 2 library for your
+      distribution:
+    </p>
+    <CommandBlock
+      label="Ubuntu 24.04+ / Debian 13+"
+      command="sudo apt install libfuse2t64"
+    />
+    <CommandBlock
+      label="Ubuntu 22.04 / Debian 12"
+      command="sudo apt install libfuse2"
+    />
     <CommandBlock label="Arch Linux" command="sudo pacman -S fuse2" />
     <CommandBlock label="Fedora" command="sudo dnf install fuse-libs" />
-    <p>See the <a href="https://docs.appimage.org/user-guide/troubleshooting/fuse.html" target="_blank" rel="noreferrer">AppImage FUSE guide</a> for other distributions.</p>
+    <p>
+      See the <a
+        href="https://docs.appimage.org/user-guide/troubleshooting/fuse.html"
+        target="_blank"
+        rel="noreferrer">AppImage FUSE guide</a
+      > for other distributions.
+    </p>
   </details>
 
   <h2 class="mt-9" id="confirm-playback">3. Confirm video and audio support</h2>
-  <CommandBlock label="Check GStreamer and common video/audio elements" command={decoderCheck} />
-  <p><strong>PASS</strong> means that element can be loaded. <strong>MISSING</strong> means it is unavailable or failed to load; install the relevant media plugins for your distribution. <code>avdec_h264</code>, <code>avdec_h265</code>, and <code>avdec_aac</code> check software decoders for H.264, HEVC, and AAC. Other decoders may also support those formats.</p>
-  <CommandBlock label="Confirm your session's audio server" command="pactl info" />
-  <p>Expected: server details, including <strong>Server Name</strong> and <strong>Default Sink</strong>. PulseAudio and PipeWire's PulseAudio compatibility service both work. A connection error means this command cannot reach your session's audio server; check your desktop sound settings and that service before testing playback.</p>
-  <p>Finally, play a local file in Vega. Confirm that time advances, sound works, audio tracks switch, and resizing stays responsive. Press <kbd>F11</kbd> to enter fullscreen and <kbd>Esc</kbd> to exit. Component checks alone do not guarantee every codec profile or GPU path will play correctly.</p>
+  <CommandBlock
+    label="Check GStreamer and common video/audio elements"
+    command={decoderCheck}
+  />
+  <p>
+    <strong>PASS</strong> means that element can be loaded. <strong
+      >MISSING</strong
+    > means it is unavailable or failed to load; install the relevant media plugins
+    for your distribution. <code>avdec_h264</code>, <code>avdec_h265</code>, and <code
+      >avdec_aac</code
+    > check software decoders for H.264, HEVC, and AAC. Other decoders may also support
+    those formats.
+  </p>
+  <CommandBlock
+    label="Confirm your session's audio server"
+    command="pactl info"
+  />
+  <p>
+    Expected: server details, including <strong>Server Name</strong> and <strong
+      >Default Sink</strong
+    >. PulseAudio and PipeWire's PulseAudio compatibility service both work. A
+    connection error means this command cannot reach your session's audio
+    server; check your desktop sound settings and that service before testing
+    playback.
+  </p>
+  <p>
+    Finally, play a local file in Vega. Confirm that time advances, sound works,
+    audio tracks switch, and resizing stays responsive. Press <kbd>F11</kbd> to enter
+    fullscreen and <kbd>Esc</kbd> to exit. Component checks alone do not guarantee
+    every codec profile or GPU path will play correctly.
+  </p>
 
   <h2 class="mt-9" id="troubleshooting">If a check fails</h2>
   <div class="mt-4 space-y-4">
     <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
       <h3>“undefined symbol: vaMapBuffer2” or another library error</h3>
-      <p>This indicates incompatible loaded libraries, rather than establishing a missing HEVC decoder. Update your distribution's packages together and relaunch the latest Vega build. On Arch, use a full <code>sudo pacman -Syu</code> update. If the error remains, include the complete error line and the executable/library paths when reporting it.</p>
+      <p>
+        This indicates incompatible loaded libraries, rather than establishing a
+        missing HEVC decoder. Update your distribution's packages together and
+        relaunch the latest Vega build. On Arch, use a full <code
+          >sudo pacman -Syu</code
+        > update. If the error remains, include the complete error line and the executable/library
+        paths when reporting it.
+      </p>
     </article>
     <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
       <h3>FFmpeg / FFprobe checks</h3>
-      <p>Vega's packaged FFmpeg and FFprobe handle probing and remuxing; GStreamer plugins are separate. Checking a system <code>ffprobe</code> alone does not confirm Vega's bundled tool works. For a current installed .deb, check the bundled tool directly:</p>
-      <CommandBlock label="Confirm the bundled FFprobe starts (.deb)" command="/usr/lib/Vega/resources/ffmpeg-sidecar/ffprobe -version" />
-      <p>Expected: FFprobe's version and build information. If that file is missing, check your installed package/version. AppImage and other package layouts can use a different path.</p>
-    </article>
-    <article class="rounded-xl border border-white/10 bg-vega-surface-hi p-5">
-      <h3>The whole app freezes, but the checks pass</h3>
-      <p>Report the Vega version, distribution/version, GPU, whether the problem affects local files or streams, and exported Vega logs. A working decoder check or playback in VLC does not identify the cause of a WebKit playback freeze.</p>
+      <p>
+        Vega's packaged FFmpeg and FFprobe handle probing and remuxing;
+        GStreamer plugins are separate. Checking a system <code>ffprobe</code> alone
+        does not confirm Vega's bundled tool works. For a current installed .deb,
+        check the bundled tool directly:
+      </p>
+      <CommandBlock
+        label="Confirm the bundled FFprobe starts (.deb)"
+        command="/usr/lib/Vega/resources/ffmpeg-sidecar/ffprobe -version"
+      />
+      <p>
+        Expected: FFprobe's version and build information. If that file is
+        missing, check your installed package/version. AppImage and other
+        package layouts can use a different path.
+      </p>
     </article>
   </div>
-  <p class="mt-7 text-xs">Package references: <a href="https://v2.tauri.app/distribute/debian/" target="_blank" rel="noreferrer">Tauri Linux runtime</a> · <a href="https://gstreamer.freedesktop.org/documentation/installing/on-linux.html" target="_blank" rel="noreferrer">GStreamer installation</a> · <a href="https://archlinux.org/packages/extra/x86_64/gst-libav/" target="_blank" rel="noreferrer">Arch libav plugin</a></p>
+  <p class="mt-7 text-xs">
+    Package references: <a
+      href="https://v2.tauri.app/distribute/debian/"
+      target="_blank"
+      rel="noreferrer">Tauri Linux runtime</a
+    > · <a
+      href="https://gstreamer.freedesktop.org/documentation/installing/on-linux.html"
+      target="_blank"
+      rel="noreferrer">GStreamer installation</a
+    > · <a
+      href="https://archlinux.org/packages/extra/x86_64/gst-libav/"
+      target="_blank"
+      rel="noreferrer">Arch libav plugin</a>
+  </p>
 </section>
 
 <style>
-  .linux-guide h2 { font-family: var(--font-headline); font-size: 1.35rem; font-weight: 700; color: white; line-height: 1.4; }
-  .linux-guide h3 { font-family: var(--font-headline); font-size: 1.05rem; font-weight: 700; color: white; }
-  .linux-guide p { margin-top: .8rem; color: var(--color-vega-muted); font-size: .9rem; line-height: 1.8; }
-  .linux-guide ul { margin-top: .8rem; padding-left: 1.2rem; list-style: disc; color: var(--color-vega-muted); font-size: .9rem; line-height: 1.8; }
-  .linux-guide li + li { margin-top: .35rem; }
-  .linux-guide a { color: var(--color-vega-accent); text-decoration: underline; text-underline-offset: 3px; }
-  .linux-guide strong { color: white; font-weight: 600; }
-  .linux-guide p code, .linux-guide li code, .linux-guide kbd { border-radius: .25rem; background: rgb(255 255 255 / .07); padding: .1rem .3rem; color: white; font-size: .85em; overflow-wrap: anywhere; }
+  .linux-guide h2 {
+    font-family: var(--font-headline);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.4;
+  }
+  .linux-guide h3 {
+    font-family: var(--font-headline);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+  }
+  .linux-guide p {
+    margin-top: 0.8rem;
+    color: var(--color-vega-muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+  .linux-guide ul {
+    margin-top: 0.8rem;
+    padding-left: 1.2rem;
+    list-style: disc;
+    color: var(--color-vega-muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+  .linux-guide li + li {
+    margin-top: 0.35rem;
+  }
+  .linux-guide a {
+    color: var(--color-vega-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .linux-guide strong {
+    color: white;
+    font-weight: 600;
+  }
+  .linux-guide p code,
+  .linux-guide li code,
+  .linux-guide kbd {
+    border-radius: 0.25rem;
+    background: rgb(255 255 255 / 0.07);
+    padding: 0.1rem 0.3rem;
+    color: white;
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
 </style>

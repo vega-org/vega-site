@@ -237,7 +237,7 @@ export class LibmediaEngine implements PlayerEngine {
 
       // Enabling again would clear the subtitle queue that play() just filled.
       if (!this.isSubtitleEnabled) this.player.setSubtitleEnable(false);
-      this.player.setSubtitleDelay(Math.round(this.currentSubtitleDelay * 1000));
+      this.applySubtitleDelay();
     } catch (err) {
       if(superseded())return;
       const normalizedError = normalizePlaybackError(err);
@@ -384,7 +384,7 @@ export class LibmediaEngine implements PlayerEngine {
             try{await player.selectAudio(trackId,player.isLive());}
             finally{if(this.player===player)this.emitState({status:player.getStatus()===8?'paused':'playing'});}
           }
-          await this.refreshAdaptiveAudio();
+          await this.refreshAdaptiveAudio();this.applySubtitleDelay(player);
           if(this.adaptiveAudio?.selectedIndex!==trackId)throw new Error(`Audio rendition ${trackId} was not selected by libmedia`);
           return;
         }
@@ -414,7 +414,7 @@ export class LibmediaEngine implements PlayerEngine {
         if(player.getSelectedSubtitleStreamId()!==trackId)throw new Error(`External subtitle track ${trackId} was not selected by libmedia`);
         if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
         this.isSubtitleEnabled=true;
-        player.setSubtitleDelay(Math.round(this.currentSubtitleDelay*1000));
+        this.applySubtitleDelay(player);
       } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())){
         // The loader list can arrive after the initial demuxed tracks. Resolve
         // against the current playlist rather than treating stream IDs as indices.
@@ -461,6 +461,7 @@ export class LibmediaEngine implements PlayerEngine {
       void this.refreshQualities().catch(()=>{});
       void this.refreshAdaptiveAudio().catch(()=>{});
       void this.refreshAdaptiveSubtitles().catch(()=>{});
+      this.applySubtitleDelay(player);
       this.emitState({ subtitleEnabled: this.isSubtitleEnabled });
     });
   }
@@ -475,10 +476,26 @@ export class LibmediaEngine implements PlayerEngine {
     }
   }
 
+  private subtitleTimelineOffset(player=this.player):number{
+    if(!player||typeof player.isHls!=='function'||!player.isHls())return 0;
+    const external=(player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===player.getSelectedSubtitleStreamId());
+    if(!external)return 0;
+    const streams=player.getStreams();
+    const selected=streams.find(stream=>stream.id===player.getSelectedAudioStreamId())||streams.find(stream=>stream.id===player.getSelectedVideoStreamId());
+    const start=selected?.startTime,base=selected?.timeBase;
+    if(start==null||start===-9223372036854775808n||!base?.den)return 0;
+    const seconds=Number(start)*base.num/base.den;
+    return Number.isFinite(seconds)?seconds:0;
+  }
+
+  private applySubtitleDelay(player=this.player):void{
+    if(player)player.setSubtitleDelay(Math.round((this.currentSubtitleDelay+this.subtitleTimelineOffset(player))*1000));
+  }
+
   setSubtitleDelay(seconds: number): void {
     this.currentSubtitleDelay = seconds;
     if (this.player) {
-      this.player.setSubtitleDelay(Math.round(seconds * 1000));
+      this.applySubtitleDelay();
     }
     this.emitState({ subtitleDelay: seconds });
   }
@@ -568,7 +585,7 @@ export class LibmediaEngine implements PlayerEngine {
     });
     const externalSubtitleSelected=(this.player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===this.player!.getSelectedSubtitleStreamId());
     return {
-      streamStartTimes,externalSubtitleSelected,subtitleDelaySeconds:this.currentSubtitleDelay,
+      streamStartTimes,externalSubtitleSelected,subtitleDelaySeconds:this.currentSubtitleDelay,subtitleTimelineOffsetSeconds:this.subtitleTimelineOffset(),
       currentTime,
       duration,
       buffered: 0, // No buffered-range measurement is currently integrated.
@@ -874,7 +891,7 @@ export class LibmediaEngine implements PlayerEngine {
       // Public seek resets both decoders/renderers and refills subtitle cues.
       if (!player.isLive()) await player.seek(position);
     } finally {
-      player.setSubtitleDelay(Math.round(this.currentSubtitleDelay * 1000));
+      this.applySubtitleDelay(player);
       if (wasPlaying) await player.play();
       // Both seek() and unpausing restart libmedia's subtitle loop.
       if (!this.isSubtitleEnabled) player.setSubtitleEnable(false);

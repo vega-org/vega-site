@@ -596,3 +596,23 @@ test('VOD HLS audio switching does not wait for the smooth future-segment path',
   assert.equal(state.selectedAudioTrackId,1);assert.equal(state.status,'playing');
  }finally{await engine.destroy();}
 });
+
+
+test('zero-based external subtitles compensate HLS audio timestamp origin without changing manual delay',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  player.streams.find(stream=>stream.id===51).startTime=126000n;
+  player.streams.find(stream=>stream.id===51).timeBase={num:1,den:90000};
+  player.streams.find(stream=>stream.id===72).startTime=39289n;
+  player.getExternalSubtitle=()=>[{streamId:72,source:'https://test.invalid/sub.srt'}];
+  engine.setSubtitleDelay(0);assert.equal(player.subtitleDelay,1400);
+  assert.equal(state.subtitleDelay,0);
+  engine.setSubtitleDelay(0.5);assert.equal(player.subtitleDelay,1900);
+  await engine.seek(120);assert.equal(player.subtitleDelay,1900);
+  player.getExternalSubtitle=()=>[];
+  engine.setSubtitleDelay(0.5);assert.equal(player.subtitleDelay,500);
+  player.getExternalSubtitle=()=>[{streamId:72}];player.isHls=()=>false;
+  engine.setSubtitleDelay(0);assert.equal(player.subtitleDelay,0);
+ }finally{await engine.destroy();}
+});

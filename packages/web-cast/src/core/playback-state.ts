@@ -14,6 +14,7 @@ export type PlaybackStatus =
 export interface DiagnosticsStats {
   streamStartTimes?:{type:string;id:number;startSeconds:number|null}[];
   subtitleDelaySeconds?:number;
+  subtitleTimelineOffsetSeconds?:number;
   externalSubtitleSelected?:boolean;
   videoCodec?: string;
   audioCodec?: string;

@@ -35,5 +35,11 @@ test('unconfigured self-host does not redirect to Vega and custom domains are co
   const redirect=await custom.dispatchFetch('https://site.example/cast/?keep=1',{redirect:'manual'});
   assert.equal(redirect.headers.get('Location'),'https://screen.example/?keep=1');
   const other=await custom.dispatchFetch('https://other.example/cast/');assert.equal(other.status,200);assert.equal(other.headers.get('Location'),null);
+  for(const host of ['vega.8man.in','self.example','vega-app.in.example']){
+   for(const path of ['/add-provider','/add-source','/zenda-x']){
+    const response=await plain.dispatchFetch(`https://${host}${path}`);
+    assert.equal(response.status,200,`${host}${path} must remain available`);
+   }
+  }
  }finally{await plain.dispose();await custom.dispose();}
 });

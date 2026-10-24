@@ -8,6 +8,10 @@ import HeaderNav from "../components/sections/HeaderNav.astro";
 import HeroSection from "../components/sections/HeroSection.astro";
 import SiteFooter from "../components/sections/SiteFooter.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import AddSourceCard from "../components/sections/AddSourceCard.astro";
+import {isOfficialDomain} from "../lib/domainPolicy";
+export const prerender=false;
+const showProviderSource=!isOfficialDomain(Astro.url.hostname);
 ---
 
 <BaseLayout
@@ -55,6 +59,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <main>
     <HeroSection />
     <FeaturesSection />
+    {showProviderSource && <section id="add-source" class="bg-vega-bg px-4 py-16 md:px-6"><AddSourceCard /></section>}
     <DownloadSection server:defer>
       <section
         slot="fallback"

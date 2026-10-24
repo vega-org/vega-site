@@ -30,6 +30,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  useEffect(()=>{
+    if(!active)return;
+    document.documentElement.classList.add('vega-player-active');
+    return()=>document.documentElement.classList.remove('vega-player-active');
+  },[active]);
+
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);

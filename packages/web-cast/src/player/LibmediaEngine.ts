@@ -63,6 +63,17 @@ export class LibmediaEngine implements PlayerEngine {
     });
   }
 
+  private adaptiveAudio?:{player:AVPlayer;list:{lang:string;codec:string;bandwidth?:number}[];selectedIndex:number};
+  private adaptiveAudioRequest=0;
+  private async refreshAdaptiveAudio():Promise<void>{
+    const player=this.player,generation=this.sourceGeneration;
+    if(!player||typeof player.isHls!=='function'||(!player.isHls()&&!player.isDash()))return;
+    const request=++this.adaptiveAudioRequest;
+    const info=await player.getAudioList();
+    if(this.player!==player||this.sourceGeneration!==generation||request!==this.adaptiveAudioRequest||!info?.list)return;
+    this.adaptiveAudio=info.list.length?{player,...info}:undefined;this.extractTracks();
+  }
+
   private activeAudioTrackId: number | null = null;
   private activeSubtitleTrackId: number | null = null;
   private cachedTracks: { audio: MediaTrack[]; subtitle: MediaTrack[]; video: MediaTrack[] } = {
@@ -168,6 +179,7 @@ export class LibmediaEngine implements PlayerEngine {
       // Extract tracks once file is analyzed
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
 
       // Restore volume & rate before playback starts.
       this.player.setVolume(this.isMuted ? 0 : this.currentVolume);
@@ -226,6 +238,7 @@ export class LibmediaEngine implements PlayerEngine {
         if (!this.isSubtitleEnabled) player.setSubtitleEnable(false);
         this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
         this.emitState({
           status: 'playing',
           audioNeedsUserGesture: player.isSuspended(),
@@ -332,6 +345,16 @@ export class LibmediaEngine implements PlayerEngine {
 
   async selectAudioTrack(trackId: number): Promise<void> {
     await this.runTimelineOperation(async (player) => {
+      if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())){
+        const info=await player.getAudioList();
+        if(info?.list?.length){
+          if(!Number.isInteger(trackId)||!info.list[trackId])throw new Error(`Audio rendition ${trackId} is unavailable`);
+          if(info.selectedIndex!==trackId)await player.selectAudio(trackId,true);
+          await this.refreshAdaptiveAudio();
+          if(this.adaptiveAudio?.selectedIndex!==trackId)throw new Error(`Audio rendition ${trackId} was not selected by libmedia`);
+          return;
+        }
+      }
       if (player.getSelectedAudioStreamId() === trackId) return;
       if (!this.cachedTracks.audio.some((track) => track.id === trackId)) {
         throw new Error(`Audio track ${trackId} is unavailable`);
@@ -364,6 +387,7 @@ export class LibmediaEngine implements PlayerEngine {
       }
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
       this.emitState({ subtitleEnabled: this.isSubtitleEnabled });
     });
   }
@@ -527,6 +551,7 @@ export class LibmediaEngine implements PlayerEngine {
     }
     if(this.player!==player)return;
     this.player=null;
+    this.adaptiveAudio=undefined;
     this.activeAudioTrackId = null;
     this.activeSubtitleTrackId = null;
     this.cachedTracks = { audio: [], subtitle: [], video: [] };
@@ -547,6 +572,7 @@ export class LibmediaEngine implements PlayerEngine {
       if(!current())return;
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
       const durationMs = Number(this.player?.getDuration() ?? 0);
       this.emitState({
         status: 'loaded',
@@ -558,6 +584,7 @@ export class LibmediaEngine implements PlayerEngine {
       if(!current())return;
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
       this.emitState({
         status: 'playing',
         audioNeedsUserGesture: this.player?.isSuspended() ?? false,
@@ -605,12 +632,14 @@ export class LibmediaEngine implements PlayerEngine {
       if(!current())return;
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
     });
 
     this.player.on(Events.CHANGED, () => {
       if(!current())return;
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
     });
 
     this.player.on(Events.ERROR, (error: Error) => {
@@ -694,6 +723,15 @@ export class LibmediaEngine implements PlayerEngine {
         }
       });
 
+      if(this.adaptiveAudio?.player===this.player){
+        const renditions=this.adaptiveAudio;
+        this.activeAudioTrackId=renditions.selectedIndex>=0?renditions.selectedIndex:null;
+        audio.splice(0,audio.length,...renditions.list.map((entry,index):MediaTrack=>({
+          id:index,index,type:'audio',language:entry.lang||undefined,
+          label:entry.lang||`Audio ${index+1}`,codec:entry.codec||undefined,
+          selected:index===this.activeAudioTrackId,
+        })));
+      }
       this.cachedTracks = { audio, subtitle, video };
       this.events.onTracksChange?.(this.cachedTracks);
       this.emitState({
@@ -745,6 +783,7 @@ export class LibmediaEngine implements PlayerEngine {
       if (!this.isSubtitleEnabled) player.setSubtitleEnable(false);
       this.extractTracks();
       void this.refreshQualities().catch(()=>{});
+      void this.refreshAdaptiveAudio().catch(()=>{});
       this.emitState({
         status: wasPlaying ? 'playing' : 'paused',
         subtitleEnabled: this.isSubtitleEnabled,

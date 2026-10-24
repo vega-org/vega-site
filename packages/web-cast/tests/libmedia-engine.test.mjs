@@ -477,3 +477,24 @@ test('HLS quality uses rendition indices, libmedia smooth switching and preserve
  assert.equal(state.qualityChanging,false);
  await engine.destroy();
 });
+
+
+test('HLS alternate audio uses rendition indices and survives demux track refreshes',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  let selectedIndex=0;
+  player.getAudioList=async()=>({list:[{lang:'eng',codec:'aac'},{lang:'hin',codec:'aac'},{lang:'tam',codec:'aac'}],selectedIndex});
+  const switches=[];
+  player.selectAudio=async(id,smooth)=>{switches.push([id,smooth]);selectedIndex=id;};
+  player.currentTime=45000n;
+  await engine.refreshAdaptiveAudio();
+  assert.deepEqual(state.audioTracks.map(track=>[track.id,track.language]),[[0,'eng'],[1,'hin'],[2,'tam']]);
+  assert.equal(state.selectedAudioTrackId,0);
+  engine.extractTracks();assert.equal(state.audioTracks.length,3);
+  await engine.selectAudioTrack(2);
+  assert.deepEqual(switches,[[2,true]]);assert.equal(state.selectedAudioTrackId,2);
+  assert.equal(player.currentTime,45000n);
+  await engine.selectAudioTrack(99);assert.match(state.error.message,/rendition 99 is unavailable/);
+ }finally{await engine.destroy();}
+});

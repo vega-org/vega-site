@@ -363,3 +363,17 @@ test('quality menu only appears for multiple renditions and remote OK selects an
  await expect(page.getByRole('dialog',{name:'Video quality',exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Video quality',exact:true})).toContainText('1080p');
 });
+
+
+test('active player locks page scrolling while long track menus retain thin scrollbars',async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ await page.evaluate(()=>{
+  const tall=document.createElement('div');tall.style.height='2000px';document.body.append(tall);
+  window.controlTest.update({audioTracks:Array.from({length:50},(_,id)=>({id,index:id,type:'audio',label:'Track '+id,language:'eng'}))});
+ });
+ expect(await page.evaluate(()=>[getComputedStyle(document.documentElement).overflowY,getComputedStyle(document.body).overflowY])).toEqual(['hidden','hidden']);
+ await page.getByRole('button',{name:'Audio tracks',exact:true}).focus();await page.keyboard.press('Enter');
+ const menu=page.getByRole('dialog',{name:'Audio tracks',exact:true});
+ await expect(menu).toBeVisible();
+ expect(await menu.evaluate(element=>({scrollable:element.scrollHeight>element.clientHeight,overflow:getComputedStyle(element).overflowY,width:getComputedStyle(element).scrollbarWidth}))).toEqual({scrollable:true,overflow:'auto',width:'thin'});
+});

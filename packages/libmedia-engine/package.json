@@ -1,0 +1,23 @@
+{
+  "name": "@vega/libmedia-engine",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "src",
+    "scripts"
+  ],
+  "exports": {
+    ".": "./src/player/LibmediaEngine.ts",
+    "./LibmediaEngine": "./src/player/LibmediaEngine.ts",
+    "./PlayerEngine": "./src/player/PlayerEngine.ts",
+    "./errors": "./src/player/errors.ts",
+    "./capabilities": "./src/player/capabilities.ts",
+    "./core/media": "./src/core/media.ts",
+    "./core/playback-state": "./src/core/playback-state.ts",
+    "./patch": "./scripts/patch-libmedia.mjs",
+    "./assets": "./scripts/assets.mjs"
+  },
+  "dependencies": {
+    "@libmedia/avplayer": "1.3.1"
+  }
+}

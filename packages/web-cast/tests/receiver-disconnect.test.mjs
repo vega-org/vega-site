@@ -5,7 +5,7 @@ import ts from 'typescript';
 const dataUrl=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
 const hostSource=await readFile(new URL('../src/platform/receiverHost.ts',import.meta.url),'utf8');
 const host=dataUrl(ts.transpileModule(hostSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
-const errorsSource=await readFile(new URL('../src/player/errors.ts',import.meta.url),'utf8');
+const errorsSource=await readFile(new URL('../../libmedia-engine/src/player/errors.ts',import.meta.url),'utf8');
 const errors=dataUrl(ts.transpileModule(errorsSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
 const secureSource=await readFile(new URL('../src/cast/SecurePhoneTransport.ts',import.meta.url),'utf8');
 const secure=dataUrl(ts.transpileModule(secureSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText.replaceAll('import.meta.env.BASE_URL',JSON.stringify('/')));

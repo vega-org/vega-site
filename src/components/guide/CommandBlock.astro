@@ -1,0 +1,38 @@
+---
+interface Props {
+  label: string;
+  command: string;
+}
+const { label, command } = Astro.props;
+---
+
+<div class="command-block mt-4 min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black/30" data-command-block>
+  <div class="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2">
+    <span class="min-w-0 text-xs font-semibold text-vega-muted">{label}</span>
+    <button type="button" class="shrink-0 rounded px-2 py-1 text-xs font-bold text-vega-accent transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-vega-accent" data-copy-command aria-label={`Copy ${label}`}>
+      Copy
+    </button>
+  </div>
+  <pre class="m-0 max-w-full overflow-x-auto p-4 text-[13px] leading-6 text-white/90" tabindex="0" aria-label={label}><code>{command}</code></pre>
+  <p class="sr-only" aria-live="polite" data-copy-status></p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy-command]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const block = button.closest("[data-command-block]");
+      const text = block?.querySelector("code")?.textContent;
+      const status = block?.querySelector("[data-copy-status]");
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied";
+        if (status) status.textContent = "Command copied to clipboard.";
+      } catch {
+        if (status) status.textContent = "Select the command text and copy it manually.";
+        button.textContent = "Select & copy";
+      }
+      window.setTimeout(() => { button.textContent = "Copy"; }, 2500);
+    });
+  });
+</script>

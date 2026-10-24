@@ -1,8 +1,7 @@
 import { defineConfig, type Plugin,type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import fs from 'fs';
 import path from 'path';
-import {fileURLToPath} from 'node:url';
+import {libmediaChunkPlugin} from '@vega/libmedia-engine/assets';
 import {createCastBroker} from './server/castBroker.mjs';
 import {startLanDiscovery} from './server/lanDiscovery.mjs';
 
@@ -14,28 +13,6 @@ function vegaCastPlugin(): Plugin {
     http?.once('listening',()=>{const address=http.address();if(!address||typeof address==='string')return;const stop=startLanDiscovery({port:address.port,publicUrl:process.env.VEGA_CAST_PUBLIC_URL,onError:()=>{}});http.once('close',stop);});
   };
   return {name:'vega-cast-control', configureServer:mount,configurePreviewServer:mount};
-}
-
-function libmediaChunkPlugin(): Plugin {
-  return {
-    name: 'vite-plugin-libmedia-chunks',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (req.url && req.url.includes('.avplayer.js')) {
-          const fileName = req.url.split('/').pop()?.split('?')[0];
-          if (fileName) {
-            const filePath = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('@libmedia/avplayer'))), fileName);
-            if (fs.existsSync(filePath)) {
-              res.setHeader('Content-Type', 'application/javascript');
-              res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-              return fs.createReadStream(filePath).pipe(res);
-            }
-          }
-        }
-        next();
-      });
-    },
-  };
 }
 
 // https://vite.dev/config/

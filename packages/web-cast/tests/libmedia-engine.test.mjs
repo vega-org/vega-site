@@ -67,7 +67,8 @@ const mockUrl = dataUrl(`
     isMSE() { return false; }
     setVolume() {}
     setPlaybackRate() {}
-    resize(width,height) { this.viewport=[width,height]; }
+    setRenderMode(mode) {this.renderMode=mode;}
+    resize(width,height) { this.resizeCalls=(this.resizeCalls||0)+1;this.viewport=[width,height]; }
     setSubtitleEnable(enabled) { this.calls.push('subtitle-enable:' + enabled); this.subtitleEnabled = enabled; }
     setSubtitleDelay(delay) { this.subtitleDelay = delay; }
     async seek(time) {
@@ -97,9 +98,9 @@ const mockUrl = dataUrl(`
   }
 `);
 const { default: MockAVPlayer, Events } = await import(mockUrl);
-const errorsUrl = await sourceModule('../src/player/errors.ts');
-const playbackStateUrl = await sourceModule('../src/core/playback-state.ts');
-const engineUrl = await sourceModule('../src/player/LibmediaEngine.ts', {
+const errorsUrl = await sourceModule('../../libmedia-engine/src/player/errors.ts');
+const playbackStateUrl = await sourceModule('../../libmedia-engine/src/core/playback-state.ts');
+const engineUrl = await sourceModule('../../libmedia-engine/src/player/LibmediaEngine.ts', {
   '@libmedia/avplayer': mockUrl,
   '../core/playback-state': playbackStateUrl,
   './errors': errorsUrl,
@@ -392,11 +393,16 @@ test('renderer follows viewport changes and releases its observer on destroy', a
   const engine=new LibmediaEngine();
   try {
     const container={clientWidth:960,clientHeight:540};
+      engine.setAspectFit(true);
     MockAVPlayer.nextStreams=tracks;
     engine.attach(container);
     await engine.load({id:'viewport',source:'https://test.invalid/video.mkv'});
     const player=MockAVPlayer.latest;
+      assert.equal(player.renderMode,1);
     assert.deepEqual(player.viewport,[960,540]);
+      const resizeCalls=player.resizeCalls;
+      observer.callback();
+      assert.equal(player.resizeCalls,resizeCalls,'Unchanged dimensions must not trigger a ResizeObserver feedback loop');
     container.clientWidth=2048;container.clientHeight=1024;
     observer.callback();
     assert.deepEqual(player.viewport,[2048,1024]);

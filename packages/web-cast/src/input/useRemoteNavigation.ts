@@ -1,4 +1,5 @@
 import {useEffect,useRef} from 'react';
+import {startGamepadNavigation} from './gamepadNavigation';
 /** DOM geometry keeps remote focus independent of a TV SDK or UI framework. */
 export function useRemoteNavigation(onBack:()=>void) {
   const backRef=useRef(onBack);
@@ -98,6 +99,7 @@ export function useRemoteNavigation(onBack:()=>void) {
     document.addEventListener('keyup',keyup,true);
     document.addEventListener('focusout',focusout,true);
     window.addEventListener('blur',blur);
-    return()=>{document.removeEventListener('pointerdown',pointer,true);document.removeEventListener('click',click,true);window.removeEventListener('gamepadconnected',gamepad);finishEditing();document.removeEventListener('keydown',keydown,true);document.removeEventListener('keyup',keyup,true);document.removeEventListener('focusout',focusout,true);window.removeEventListener('blur',blur);};
+    const stopGamepad=startGamepadNavigation();
+    return()=>{stopGamepad();document.removeEventListener('pointerdown',pointer,true);document.removeEventListener('click',click,true);window.removeEventListener('gamepadconnected',gamepad);finishEditing();document.removeEventListener('keydown',keydown,true);document.removeEventListener('keyup',keyup,true);document.removeEventListener('focusout',focusout,true);window.removeEventListener('blur',blur);};
   },[]);
 }

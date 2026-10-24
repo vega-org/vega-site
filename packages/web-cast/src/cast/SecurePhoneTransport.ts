@@ -8,6 +8,10 @@ export class SecurePhoneTransport {
  private pending=new Map<string,Pending>();
  private closed=false;
  private rejectOpen?: (error:Error)=>void;
+ private answerReceived=false;
+ private localCandidates=0;
+ private remoteCandidates=0;
+ private signalErrors=0;
  private signal:(message:Signal)=>Promise<unknown>;
  private mediaId:string;
  private iceServers:RTCIceServer[];
@@ -44,13 +48,13 @@ export class SecurePhoneTransport {
   this.id=crypto.randomUUID();
   navigator.serviceWorker.addEventListener('message',this.workerMessage);
   const peer=this.peer=new RTCPeerConnection({iceServers:this.iceServers});
-  peer.onicecandidate=event=>{if(event.candidate)void this.signal({type:'RTC_ICE',transportId:this.id,mediaId:this.mediaId,candidate:event.candidate.toJSON()}).catch(()=>{});};
+  peer.onicecandidate=event=>{if(event.candidate){this.localCandidates++;void this.signal({type:'RTC_ICE',transportId:this.id,mediaId:this.mediaId,candidate:event.candidate.toJSON()}).catch(()=>{this.signalErrors++;});}};
   const channel=this.channel=peer.createDataChannel('vega-media-v1',{ordered:true});
   channel.onmessage=event=>this.receive(event.data);
   channel.onclose=()=>this.failPending(new Error('Encrypted phone delivery disconnected'));
   const opened=new Promise<void>((resolve,reject)=>{
    const fail=(error:Error)=>{clearTimeout(timer);this.rejectOpen=undefined;reject(error);};
-   const timer=setTimeout(()=>{channel.onopen=null;fail(new Error('Encrypted phone connection timed out. Keep both devices on the same Wi-Fi, or configure a TURN relay.'));},25_000);
+   const timer=setTimeout(()=>{channel.onopen=null;fail(new Error(`Encrypted phone connection timed out (answer: ${this.answerReceived?'received':'missing'}, ICE: ${peer.iceConnectionState}, candidates: ${this.localCandidates} local / ${this.remoteCandidates} remote, signaling failures: ${this.signalErrors}). Keep both devices on the same Wi-Fi or configure a TURN relay.`));},25_000);
    this.rejectOpen=fail;
    channel.onopen=()=>{clearTimeout(timer);this.rejectOpen=undefined;resolve();};
    channel.onerror=()=>fail(new Error('Encrypted phone connection failed'));
@@ -64,8 +68,8 @@ export class SecurePhoneTransport {
  private candidates:RTCIceCandidateInit[]=[];
  async receiveSignal(message:Signal):Promise<void>{
   if(message.transportId!==this.id||!this.peer)return;
-  if(message.type==='RTC_ANSWER'&&message.sdp){await this.peer.setRemoteDescription(message.sdp);for(const candidate of this.candidates)await this.peer.addIceCandidate(candidate);this.candidates=[];}
-  if(message.type==='RTC_ICE'&&message.candidate){if(this.peer.remoteDescription)await this.peer.addIceCandidate(message.candidate);else this.candidates.push(message.candidate);}
+  if(message.type==='RTC_ANSWER'&&message.sdp){await this.peer.setRemoteDescription(message.sdp);this.answerReceived=true;for(const candidate of this.candidates)await this.peer.addIceCandidate(candidate);this.candidates=[];}
+  if(message.type==='RTC_ICE'&&message.candidate){this.remoteCandidates++;if(this.peer.remoteDescription)await this.peer.addIceCandidate(message.candidate);else this.candidates.push(message.candidate);}
  }
  url(source:string):string{
   const url=new URL(import.meta.env.BASE_URL+'phone-media',location.origin);url.searchParams.set('transport',this.id);url.searchParams.set('url',source);return url.toString();

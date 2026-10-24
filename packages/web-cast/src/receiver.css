@@ -83,3 +83,5 @@
 html[data-navigation-mode="pointer"] :is(.receiver-app,.video-player-wrapper) :is(button,a,[role="slider"],[tabindex="0"]):focus,
 html[data-navigation-mode="pointer"] :is(.receiver-app,.video-player-wrapper) .vega-slider[data-focus]{outline:none!important;box-shadow:none!important}
 html:not([data-navigation-mode="remote"]) .remote-control-hint{visibility:hidden!important}
+
+.track-switch-status{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#ddd;font-size:13px}.track-switch-status .spinner-orbit{width:18px;height:18px;flex-shrink:0}.track-list[aria-busy="true"] .track-item-btn{opacity:.65;cursor:wait}

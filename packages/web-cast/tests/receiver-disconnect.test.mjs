@@ -232,3 +232,23 @@ test('HTTPS receiver rejects unencrypted phone delivery from older mobile versio
  assert.equal(f.calls.length,0);
  assert.match(messages.find(message=>message.type==='ACK').error,/encrypted phone delivery/);
 });
+
+
+test('explicit stop interrupts a buffering load and clears direct media',async()=>{
+ const f=fixture();let finish;
+ f.session.manager.load=()=>new Promise(resolve=>{finish=resolve;});
+ const loading=load(f.session);
+ await new Promise(resolve=>setImmediate(resolve));
+ await f.session.receive({type:'CONTROLLER_DISCONNECT',controllerId:'phone',stopPlayback:true});
+ assert.equal(f.session.media,null);assert.equal(f.snapshot().disconnectedMedia,undefined);
+ assert.deepEqual(f.calls.map(call=>call[0]),['unload']);
+ finish();await loading;
+ assert.equal(f.session.media,null);
+});
+
+test('STOP command cancels media while ordinary direct disconnect preserves it',async()=>{
+ const f=fixture();await load(f.session);
+ await f.session.receive({type:'COMMAND',id:'stop',controllerId:'phone',command:'STOP'});
+ assert.equal(f.session.media,null);assert.equal(f.session.loadedMediaId,undefined);
+ assert.deepEqual(f.calls.map(call=>call[0]),['load','unload']);
+});

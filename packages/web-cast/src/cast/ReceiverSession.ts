@@ -68,7 +68,7 @@ export class ReceiverSession {
         const media=this.media;
         if(state.error&&media?.proxy&&media.delivery!=='phone-proxy'&&this.accessError(state.error)&&this.queuedProxyId!==media.id){
           this.queuedProxyId=media.id;
-          this.commands=this.commands.then(()=>this.useProvidedProxy(media,state.error!.category)).then(()=>{}).catch(error=>this.update({error:error instanceof Error?error.message:'Proxy playback failed'})).finally(()=>{if(this.queuedProxyId===media.id)this.queuedProxyId=undefined;});
+          this.commands=this.commands.then(()=>this.media===media?this.useProvidedProxy(media,state.error!.category):undefined).then(()=>{}).catch(error=>this.update({error:error instanceof Error?error.message:'Proxy playback failed'})).finally(()=>{if(this.queuedProxyId===media.id)this.queuedProxyId=undefined;});
         }
         if (this.controllerId && (state.status!==this.lastReportedStatus||Date.now()-this.lastStateAt>800)) {this.lastStateAt=Date.now();this.lastReportedStatus=state.status;void this.reportState(state).catch(()=>{});}
       });
@@ -84,10 +84,11 @@ export class ReceiverSession {
         if(this.state.error)this.update({error:undefined});
         delay=1000;
         for(const message of result.messages) {
-          if(['PAIR_REQUEST','CONTROLLER_CONNECTED','RTC_ANSWER','RTC_ICE'].includes(message.type))await this.receive(message);
+          if(['PAIR_REQUEST','CONTROLLER_CONNECTED','RTC_ANSWER','RTC_ICE','CONTROLLER_DISCONNECT'].includes(message.type)||(message.type==='COMMAND'&&message.command==='STOP'))void this.receive(message).catch(error=>this.update({error:String(error)}));
           else {
             // Keep heartbeats/pairing alive while AVPlayer opens a slow source.
-            this.commands=this.commands.then(()=>this.stopped?undefined:this.receive(message)).catch(error=>this.update({error:error instanceof Error?error.message:'Playback command failed'}));
+            const epoch=this.mediaEpoch;
+            this.commands=this.commands.then(()=>this.stopped||epoch!==this.mediaEpoch?undefined:this.receive(message)).catch(error=>this.update({error:error instanceof Error?error.message:'Playback command failed'}));
           }
         }
       } catch(error) {
@@ -106,7 +107,8 @@ export class ReceiverSession {
     this.update({phones:this.state.phones.filter(phone=>phone.id!==controllerId)});
   }
 
-  releaseMedia(){this.secureTransport?.close();this.secureTransport=undefined;this.media=null;this.loadedMediaId=undefined;this.updateServers();this.update({disconnectedMedia:undefined});}
+  private mediaEpoch=0;
+  releaseMedia(){this.mediaEpoch++;this.secureTransport?.close();this.secureTransport=undefined;this.media=null;this.loadedMediaId=undefined;this.updateServers();this.update({disconnectedMedia:undefined});}
   private updateServers(){
     if(this.serverTimer)clearTimeout(this.serverTimer);this.serverTimer=undefined;this.serverRequest=undefined;
     const media=this.media;
@@ -173,7 +175,7 @@ export class ReceiverSession {
       if(message.controllerId===this.controllerId){
         this.controllerId=undefined;
         this.updateServers();
-        if(message.stopPlayback===true&&this.media?.delivery==='phone-proxy')await this.manager.unload();
+        if(message.stopPlayback===true){this.releaseMedia();await this.manager.unload();}
         const ongoing=!['idle','ended','error'].includes(this.manager.getState().status);
         this.update({status:'ready',disconnectedMedia:this.media&&this.media.delivery!=='phone-proxy'&&ongoing?{id:this.media.id,title:this.media.title}:undefined});
       }
@@ -211,7 +213,7 @@ export class ReceiverSession {
           case 'SUBTITLE': if(!Number.isInteger(value)) throw new Error('Invalid subtitle track');await this.manager.selectSubtitleTrack(value);break;
           case 'SUBTITLE_DELAY': if(!Number.isFinite(value)) throw new Error('Invalid subtitle delay');this.manager.setSubtitleDelay(value);break;
           case 'EXTERNAL_SUBTITLE': if(typeof message.value!=='string'||!/^https?:\/\//i.test(message.value)) throw new Error('Invalid subtitle URL');await this.manager.loadExternalSubtitle({source:this.secureTransport?this.secureTransport.url(message.value):message.value});break;
-          case 'STOP': await this.manager.unload();break;
+          case 'STOP': this.releaseMedia();await this.manager.unload();break;
           case 'GET_STATE': break;
           default: throw new Error('Unknown playback command');
         }
@@ -260,19 +262,30 @@ export class ReceiverSession {
         const transport=this.secureTransport=new SecurePhoneTransport(message=>this.send(message,this.controllerId),media.id,media.proxy.iceServers);
         const controller=this.controllerId;
         let controls=Promise.resolve();
-        transport.onControl=message=>{if(this.secureTransport!==transport||this.controllerId!==controller)return;controls=controls.then(()=>this.receive({...message,controllerId:controller} as CastMessage)).catch(()=>{});};
+        transport.onControl=message=>{
+          if(this.secureTransport!==transport||this.controllerId!==controller)return;
+          const command={...message,controllerId:controller} as CastMessage;
+          if(message.command==='STOP'){void this.receive(command).catch(()=>{});return;}
+          const epoch=this.mediaEpoch;
+          controls=controls.then(()=>epoch===this.mediaEpoch?this.receive(command):undefined).catch(()=>{});
+        };
         try{await transport.open();}catch(error){transport.close();throw error;}
+        if(this.media!==media){transport.close();return;}
         source.source=transport.url(source.source);
         source.headers=undefined;
         source.externalSubtitles=source.externalSubtitles?.map(track=>({...track,source:transport.url(track.source,track.format)}));
       }
+      if(this.media!==media)return;
       const prepared=receiverHost() ? await receiverHost()!.prepareSource(source):source;
+      if(this.media!==media)return;
       await this.onMedia(media);if(this.media!==media)return;this.loadedMediaId=media.id;await this.manager.load(prepared);
     }catch(error){
+      if(this.media!==media)return;
       const normalized=normalizePlaybackError(error);
       if(this.accessError(normalized)&&await this.useProvidedProxy(media,normalized.category))return;
       throw error;
     }
+    if(this.media!==media)return;
     const error=this.manager.getState().error;
     if(error) {
       if(this.accessError(error)&&await this.useProvidedProxy(media,error.category))return;

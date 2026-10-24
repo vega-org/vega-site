@@ -27,8 +27,8 @@ const manager={
  setVolume(value){calls.push(['volume',value]);update({volume:value});},
  setPlaybackRate(value){calls.push(['rate',value]);update({playbackRate:value});},
  selectQuality(id){calls.push(['quality',id]);update({selectedQualityId:id});return Promise.resolve();},
- selectAudioTrack(id){calls.push(['audio',id]);update({selectedAudioTrackId:id});return Promise.resolve();},
- selectSubtitleTrack(id){calls.push(['subtitle',id]);update({selectedSubtitleTrackId:id,subtitleEnabled:id!==-1});return Promise.resolve();},
+ selectAudioTrack(id){calls.push(['audio',id]);update({trackSwitching:{type:'audio',id}});return new Promise(resolve=>setTimeout(()=>{update({selectedAudioTrackId:id,trackSwitching:null});resolve();},window.controlTest?.switchDelay||0));},
+ selectSubtitleTrack(id){calls.push(['subtitle',id]);update({trackSwitching:{type:'subtitle',id}});return new Promise(resolve=>setTimeout(()=>{update({selectedSubtitleTrackId:id,subtitleEnabled:id!==-1,trackSwitching:null});resolve();},window.controlTest?.switchDelay||0));},
 };
 const receiver=new ReceiverSession(manager,async()=>{});
 receiver.send=async message=>{if(message.type==='SERVER_CHANGE')calls.push(['server-change',message.serverId,message.position]);return {ok:true};};

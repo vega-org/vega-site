@@ -4,6 +4,7 @@ import type { MediaTrack } from '../core/media';
 import {formatLanguage} from '../utils/formatters';
 
 interface AudioTrackMenuProps {
+  switching?:number;
   tracks: MediaTrack[];
   selectedId: number | null;
   onSelectTrack: (trackId: number) => void;
@@ -11,6 +12,7 @@ interface AudioTrackMenuProps {
 }
 
 export const AudioTrackMenu: React.FC<AudioTrackMenuProps> = ({
+  switching,
   tracks,
   selectedId,
   onSelectTrack,
@@ -29,7 +31,8 @@ export const AudioTrackMenu: React.FC<AudioTrackMenuProps> = ({
           </button>
         </div>
 
-        <div className="track-list">
+        {switching!==undefined&&<div className="track-switch-status" role="status"><span className="spinner-orbit"/>Switching audio…</div>}
+        <div className="track-list" aria-busy={switching!==undefined}>
           {tracks.length === 0 ? (
             <div className="track-empty-state">No audio tracks detected</div>
           ) : (
@@ -37,11 +40,12 @@ export const AudioTrackMenu: React.FC<AudioTrackMenuProps> = ({
               const isSelected = track.id === selectedId || track.selected;
               return (
                 <button
-                  key={track.id}
+                  disabled={switching!==undefined}
+                key={track.id}
                   className={`track-item-btn ${isSelected ? 'active' : ''}`}
                   onClick={() => {
                     onSelectTrack(track.id);
-                    onClose();
+
                   }}
                 >
                   <div className="track-item-info">

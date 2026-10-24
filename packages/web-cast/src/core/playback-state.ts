@@ -68,6 +68,7 @@ export interface PlaybackState {
   qualities:VideoQuality[];
   selectedQualityId:number|null;
   qualityChanging:boolean;
+  trackSwitching:{type:"audio"|"subtitle";id:number}|null;
   status: PlaybackStatus;
   currentTime: number;
   duration: number;
@@ -88,7 +89,7 @@ export interface PlaybackState {
 }
 
 export const initialPlaybackState: PlaybackState = {
-  qualities:[],selectedQualityId:null,qualityChanging:false,
+  trackSwitching:null,qualities:[],selectedQualityId:null,qualityChanging:false,
   status: 'idle',
   currentTime: 0,
   duration: 0,

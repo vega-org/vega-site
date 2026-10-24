@@ -237,11 +237,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
       )}
 
       {/* Loading & Buffering Spinner */}
-      {(isLoading || isBuffering) && (
+      {(isLoading || isBuffering || !!state.trackSwitching) && (
         <div className="player-overlay-center">
           <div className="spinner-orbit" />
           <span className="spinner-text">
-            {isLoading ? 'Demuxing & analyzing streams...' : 'Buffering media...'}
+            {state.trackSwitching?`Switching ${state.trackSwitching.type}…`:isLoading ? 'Demuxing & analyzing streams...' : 'Buffering media...'}
           </span>
         </div>
       )}
@@ -286,6 +286,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
       {/* Audio Track Selector Modal */}
       {showAudioMenu && (
         <AudioTrackMenu
+          switching={state.trackSwitching?.type==='audio'?state.trackSwitching.id:undefined}
           tracks={state.audioTracks}
           selectedId={state.selectedAudioTrackId}
           onSelectTrack={(id) => playerManager.selectAudioTrack(id)}
@@ -296,6 +297,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
       {/* Subtitle Track Selector Modal */}
       {showSubtitleMenu && (
         <SubtitleTrackMenu
+          switching={state.trackSwitching?.type==='subtitle'?state.trackSwitching.id:undefined}
           tracks={state.subtitleTracks}
           selectedId={state.selectedSubtitleTrackId}
           subtitleEnabled={state.subtitleEnabled}

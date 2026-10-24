@@ -4,6 +4,7 @@ import type { MediaTrack } from '../core/media';
 import {formatLanguage} from '../utils/formatters';
 
 interface SubtitleTrackMenuProps {
+  switching?:number;
   tracks: MediaTrack[];
   selectedId: number | null;
   subtitleEnabled: boolean;
@@ -16,6 +17,7 @@ interface SubtitleTrackMenuProps {
 }
 
 export const SubtitleTrackMenu: React.FC<SubtitleTrackMenuProps> = ({
+  switching,
   tracks,
   selectedId,
   subtitleEnabled,
@@ -90,9 +92,11 @@ export const SubtitleTrackMenu: React.FC<SubtitleTrackMenuProps> = ({
           </div>
         </div>
 
-        <div className="track-list">
+        {switching!==undefined&&<div className="track-switch-status" role="status"><span className="spinner-orbit"/>Switching subtitle…</div>}
+        <div className="track-list" aria-busy={switching!==undefined}>
           {/* Off option */}
           <button
+            disabled={switching!==undefined}
             className={`track-item-btn ${selectedId === null || !subtitleEnabled ? 'active' : ''}`}
             onClick={() => {
               onSelectTrack(-1);
@@ -114,6 +118,7 @@ export const SubtitleTrackMenu: React.FC<SubtitleTrackMenuProps> = ({
             const isSelected = subtitleEnabled && (track.id === selectedId || track.selected);
             return (
               <button
+                disabled={switching!==undefined}
                 key={track.id}
                 className={`track-item-btn ${isSelected ? 'active' : ''}`}
                 onClick={() => {

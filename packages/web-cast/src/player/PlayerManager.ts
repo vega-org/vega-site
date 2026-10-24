@@ -41,7 +41,7 @@ export class PlayerManager {
     const seq = ++this.loadSequence;
 
     this.updateState({
-      qualities:[],selectedQualityId:null,qualityChanging:false,
+      trackSwitching:null,qualities:[],selectedQualityId:null,qualityChanging:false,
       status: 'loading',
       currentTime: 0,
       duration: 0,
@@ -119,16 +119,23 @@ export class PlayerManager {
     this.engine.setPlaybackRate(rate);
   }
 
+  private async switchTrack(type:'audio'|'subtitle',id:number,operation:()=>Promise<void>):Promise<void>{
+    const pending={type,id};const source=this.loadSequence;
+    this.updateState({trackSwitching:pending,error:null});
+    try{await operation();}catch(error){if(source===this.loadSequence)this.updateState({error:normalizePlaybackError(error)});}
+    finally{if(this.state.trackSwitching===pending)this.updateState({trackSwitching:null});}
+  }
+
   async selectAudioTrack(trackId: number): Promise<void> {
-    await this.engine.selectAudioTrack(trackId);
+    await this.switchTrack('audio',trackId,()=>this.engine.selectAudioTrack(trackId));
   }
 
   async selectSubtitleTrack(trackId: number): Promise<void> {
-    await this.engine.selectSubtitleTrack(trackId);
+    await this.switchTrack('subtitle',trackId,()=>this.engine.selectSubtitleTrack(trackId));
   }
 
   async setSubtitleEnabled(enabled: boolean): Promise<void> {
-    await this.engine.setSubtitleEnabled(enabled);
+    await this.switchTrack('subtitle',enabled?this.state.selectedSubtitleTrackId??0:-1,()=>this.engine.setSubtitleEnabled(enabled));
   }
 
   setSubtitleDelay(seconds: number): void {

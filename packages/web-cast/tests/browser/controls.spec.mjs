@@ -201,6 +201,8 @@ test('audio and subtitle selection buttons activate once per held OK',async({pag
  await holdOk(page,audio);
  await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true}).locator('.track-item-title')).toHaveText('English');
  await holdOk(page,page.getByRole('button',{name:'English English audio ENG',exact:true}));
+ await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true})).toBeVisible();
+ await holdOk(page,page.getByRole('button',{name:'Close audio tracks menu',exact:true}));
  await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true})).toHaveCount(0);
  await expect(audio).toBeFocused();
  expect(await page.evaluate(()=>window.controlTest.calls.filter(call=>call[0]==='audio'))).toEqual([['audio',1]]);
@@ -376,4 +378,17 @@ test('active player locks page scrolling while long track menus retain thin scro
  const menu=page.getByRole('dialog',{name:'Audio tracks',exact:true});
  await expect(menu).toBeVisible();
  expect(await menu.evaluate(element=>({scrollable:element.scrollHeight>element.clientHeight,overflow:getComputedStyle(element).overflowY,width:getComputedStyle(element).scrollbarWidth}))).toEqual({scrollable:true,overflow:'auto',width:'thin'});
+});
+
+
+for(const kind of ['audio','subtitle'])test(`${kind} switching displays pending feedback until completion`,async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ await page.evaluate(kind=>{window.controlTest.switchDelay=1200;window.controlTest.update({[kind==='audio'?'audioTracks':'subtitleTracks']:[{id:7,index:0,type:kind,language:'eng',label:'English'}]});},kind);
+ await page.getByRole('button',{name:kind==='audio'?'Audio tracks':'Subtitles',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:kind==='audio'?'Audio tracks':'Subtitle tracks',exact:true});
+ await dialog.getByRole('button',{name:/English/}).click();
+ await expect(dialog.getByRole('status')).toHaveText(`Switching ${kind}…`);
+ await expect(dialog.getByRole('button',{name:/English/})).toBeDisabled();
+ await expect(dialog.getByRole('status')).toHaveCount(0);
+ await expect(dialog.getByRole('button',{name:/English/})).toBeEnabled();
 });

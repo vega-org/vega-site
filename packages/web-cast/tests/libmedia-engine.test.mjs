@@ -336,7 +336,7 @@ test('an ignored subtitle selection is reported instead of displaying a false se
   ] });
   player.selectSubtitle = async () => {};
   await engine.selectSubtitleTrack(88);
-  assert.match(state.error.message, /codec 94214.*decoder may be unsupported/);
+  assert.match(state.error.message, /codec 94214.*libmedia did not confirm/);
   assert.equal(state.selectedSubtitleTrackId, 72);
   await engine.destroy();
 });
@@ -496,5 +496,23 @@ test('HLS alternate audio uses rendition indices and survives demux track refres
   assert.deepEqual(switches,[[2,true]]);assert.equal(state.selectedAudioTrackId,2);
   assert.equal(player.currentTime,45000n);
   await engine.selectAudioTrack(99);assert.match(state.error.message,/rendition 99 is unavailable/);
+ }finally{await engine.destroy();}
+});
+
+
+test('HLS subtitle rendition switches use playlist indices instead of demux IDs',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  let selectedIndex=0;
+  player.getSubtitleList=async()=>({list:[{lang:'eng',codec:'webvtt'},{lang:'hin',codec:'webvtt'}],selectedIndex});
+  const switches=[];player.selectSubtitle=async id=>{switches.push(id);selectedIndex=id;};
+  await engine.refreshAdaptiveSubtitles();
+  assert.deepEqual(state.subtitleTracks.map(track=>track.id),[0,1]);
+  await engine.selectSubtitleTrack(1);
+  assert.deepEqual(switches,[1]);assert.equal(state.selectedSubtitleTrackId,1);
+  await engine.selectSubtitleTrack(-1);assert.equal(state.selectedSubtitleTrackId,null);
+  await engine.selectSubtitleTrack(1);assert.equal(state.selectedSubtitleTrackId,1);
+  assert.equal(state.subtitleEnabled,true);
  }finally{await engine.destroy();}
 });

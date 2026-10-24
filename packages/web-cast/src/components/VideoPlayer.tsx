@@ -37,6 +37,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
     return()=>document.documentElement.classList.remove('vega-player-active');
   },[active]);
 
+  const [audioPromptReady,setAudioPromptReady]=useState(false);
+  useEffect(()=>{
+    if(!state.audioNeedsUserGesture){setAudioPromptReady(false);return;}
+    const timer=setTimeout(()=>setAudioPromptReady(true),600);return()=>clearTimeout(timer);
+  },[state.audioNeedsUserGesture]);
   const [audioDialogDismissed,setAudioDialogDismissed]=useState(false);
   const [allowingAudio,setAllowingAudio]=useState(false);
   const [audioDialogError,setAudioDialogError]=useState('');
@@ -235,7 +240,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
         
       </div>
 
-      {active&&state.audioNeedsUserGesture&&!isError&&!audioDialogDismissed&&(
+      {active&&audioPromptReady&&state.audioNeedsUserGesture&&!isError&&!audioDialogDismissed&&(
         <FocusDialog title="Allow audio" onClose={()=>setAudioDialogDismissed(true)}>
           <p className="dialog-description">Allow sound to continue watching.</p>
           {audioDialogError&&<p role="alert">{audioDialogError}</p>}

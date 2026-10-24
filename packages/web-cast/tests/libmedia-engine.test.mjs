@@ -494,7 +494,7 @@ test('HLS alternate audio uses rendition indices and survives demux track refres
   assert.equal(state.selectedAudioTrackId,0);
   engine.extractTracks();assert.equal(state.audioTracks.length,3);
   await engine.selectAudioTrack(2);
-  assert.deepEqual(switches,[[2,true]]);assert.equal(state.selectedAudioTrackId,2);
+  assert.deepEqual(switches,[[2,false]]);assert.equal(state.selectedAudioTrackId,2);
   assert.equal(player.currentTime,45000n);
   await engine.selectAudioTrack(99);assert.match(state.error.message,/rendition 99 is unavailable/);
  }finally{await engine.destroy();}
@@ -556,5 +556,43 @@ test('external subtitle files on HLS select their stream ID without requiring pl
   assert.deepEqual(calls,[14]);assert.equal(state.selectedSubtitleTrackId,14);
   assert.equal(player.calls.some(call=>String(call).startsWith('seek')),false);
   assert.equal(player.calls.includes('pause'),false);
+ }finally{await engine.destroy();}
+});
+
+
+test('MSE audio does not request permission because an unused shared AudioContext is suspended',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isMSE=()=>true;player.suspended=true;
+  player.emit(Events.PLAYING);assert.equal(state.audioNeedsUserGesture,false);
+  player.emit(Events.RESUME);assert.equal(state.audioNeedsUserGesture,true);
+  player.resume=async()=>{};await engine.resumeAudio();
+  assert.equal(state.audioNeedsUserGesture,false);
+  player.emit(Events.PLAYING);assert.equal(state.audioNeedsUserGesture,false);
+ }finally{await engine.destroy();}
+});
+
+test('audio resume waits for delayed browser context activation without asking for another click',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.suspended=true;player.emit(Events.RESUME);
+  player.resume=async()=>{setTimeout(()=>{player.suspended=false;},120);};
+  await engine.resumeAudio();assert.equal(state.audioNeedsUserGesture,false);
+ }finally{await engine.destroy();}
+});
+
+
+test('VOD HLS audio switching does not wait for the smooth future-segment path',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;player.isLive=()=>false;
+  let selectedIndex=0;
+  player.getAudioList=async()=>({list:[{lang:'eng',codec:'aac'},{lang:'hin',codec:'aac'}],selectedIndex});
+  player.selectAudio=async(id,smooth)=>{
+   if(smooth)await new Promise(()=>{});
+   selectedIndex=id;
+  };
+  await engine.selectAudioTrack(1);
+  assert.equal(state.selectedAudioTrackId,1);assert.equal(state.status,'playing');
  }finally{await engine.destroy();}
 });

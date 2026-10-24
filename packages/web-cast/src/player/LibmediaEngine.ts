@@ -20,6 +20,13 @@ export class LibmediaEngine implements PlayerEngine {
   private currentSource: MediaSourceDescriptor | null = null;
 
   private isDestroyed = false;
+  private nativeAudioGestureRequired=false;
+  private needsAudioGesture():boolean{
+    if(!this.player)return false;
+    // MSE uses its media element for sound; the shared Web Audio context can
+    // remain suspended even while MSE audio is audible.
+    return this.player.isMSE()?this.nativeAudioGestureRequired:this.player.isSuspended();
+  }
   private currentVolume = 1;
   private isMuted = false;
   private currentPlaybackRate = 1;
@@ -46,6 +53,7 @@ export class LibmediaEngine implements PlayerEngine {
   private inspectProgress(now=performance.now()):void {
     const player=this.player;
     if(!player||!['playing','buffering'].includes(this.playbackStatus))return;
+    this.emitState({audioNeedsUserGesture:this.needsAudioGesture()});
     const status=player.getStatus();
     if(status===0||status===7){this.emitState({status:'ended'});return;}
     if(status===8){this.emitState({status:'paused'});return;}
@@ -254,7 +262,7 @@ export class LibmediaEngine implements PlayerEngine {
       void this.refreshAdaptiveSubtitles().catch(()=>{});
         this.emitState({
           status: 'playing',
-          audioNeedsUserGesture: player.isSuspended(),
+          audioNeedsUserGesture: this.needsAudioGesture(),
           diagnostics: this.getDiagnostics(),
         });
       } catch (err) {
@@ -275,8 +283,14 @@ export class LibmediaEngine implements PlayerEngine {
   async resumeAudio(): Promise<void> {
     if (!this.player) return;
     try {
-      await this.player.resume();
-      this.emitState({ audioNeedsUserGesture: this.player.isSuspended() });
+      const player=this.player;
+      await player.resume();
+      // resume() races the browser operation against a 100ms timer. Give the
+      // actual context state time to settle instead of requiring another click.
+      if(!player.isMSE())for(let attempt=0;attempt<20&&player.isSuspended()&&this.player===player;attempt++)await new Promise(resolve=>setTimeout(resolve,50));
+      if(this.player!==player)return;
+      this.nativeAudioGestureRequired=false;
+      this.emitState({ audioNeedsUserGesture: this.needsAudioGesture() });
     } catch (err) {
       const error = normalizePlaybackError(err);
       this.events.onError?.(error);
@@ -362,7 +376,14 @@ export class LibmediaEngine implements PlayerEngine {
         const info=await player.getAudioList();
         if(info?.list?.length){
           if(!Number.isInteger(trackId)||!info.list[trackId])throw new Error(`Audio rendition ${trackId} is unavailable`);
-          if(info.selectedIndex!==trackId)await player.selectAudio(trackId,true);
+          if(info.selectedIndex!==trackId){
+            // Smooth switching waits for a future segment boundary and may not
+            // complete while a VOD source is starved or paused. Libmedia's
+            // immediate VOD path seeks/reconnects the rendition at current time.
+            this.emitState({status:'buffering',error:null});
+            try{await player.selectAudio(trackId,player.isLive());}
+            finally{if(this.player===player)this.emitState({status:player.getStatus()===8?'paused':'playing'});}
+          }
           await this.refreshAdaptiveAudio();
           if(this.adaptiveAudio?.selectedIndex!==trackId)throw new Error(`Audio rendition ${trackId} was not selected by libmedia`);
           return;
@@ -609,7 +630,7 @@ export class LibmediaEngine implements PlayerEngine {
       }
     }
     if(this.player!==player)return;
-    this.player=null;
+    this.player=null;this.nativeAudioGestureRequired=false;
     this.adaptiveAudio=undefined;this.adaptiveSubtitles=undefined;
     this.activeAudioTrackId = null;
     this.activeSubtitleTrackId = null;
@@ -648,13 +669,14 @@ export class LibmediaEngine implements PlayerEngine {
       void this.refreshAdaptiveSubtitles().catch(()=>{});
       this.emitState({
         status: 'playing',
-        audioNeedsUserGesture: this.player?.isSuspended() ?? false,
+        audioNeedsUserGesture: this.needsAudioGesture(),
       });
     });
 
     this.player.on(Events.RESUME, () => {
       if(!current())return;
-      this.emitState({ audioNeedsUserGesture: true });
+      if(player.isMSE())this.nativeAudioGestureRequired=true;
+      this.emitState({ audioNeedsUserGesture: this.needsAudioGesture() });
     });
 
     this.player.on(Events.AUDIO_CONTEXT_RUNNING, () => {
@@ -863,7 +885,7 @@ export class LibmediaEngine implements PlayerEngine {
       this.emitState({
         status: wasPlaying ? 'playing' : 'paused',
         subtitleEnabled: this.isSubtitleEnabled,
-        audioNeedsUserGesture: player.isSuspended(),
+        audioNeedsUserGesture: this.needsAudioGesture(),
         diagnostics: this.getDiagnostics(),
       });
     }

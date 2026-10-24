@@ -1,6 +1,6 @@
 ---
 import { Terminal } from "@lucide/astro";
-import { REPO } from "../../../config/site";
+import { DESKTOP_REPO } from "../../../config/site";
 import CommandBlock from "../CommandBlock.astro";
 
 const distributions = [
@@ -81,7 +81,7 @@ uname -m`} />
   </div>
 
   <h2 class="mt-9" id="install-vega">2. Install Vega</h2>
-  <p>Download the latest matching asset from the <a href={REPO.releasesUrl} target="_blank" rel="noreferrer">official desktop releases</a>. Run the relevant command from the folder containing your download, with only one matching Vega installer in that folder.</p>
+  <p>Download the latest matching asset from the <a href={DESKTOP_REPO.releasesUrl} target="_blank" rel="noreferrer">official desktop releases</a>. Run the relevant command from the folder containing your download, with only one matching Vega installer in that folder.</p>
   <CommandBlock label="Ubuntu / Debian — install the .deb" command="sudo apt install ./Vega_*.deb" />
   <CommandBlock label="Fedora — install the .rpm" command="sudo dnf install ./Vega*.rpm" />
   <p>Launch Vega from your applications menu as your normal desktop user.</p>

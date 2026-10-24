@@ -51,7 +51,7 @@ export class ReceiverSession {
     } finally {if(timer)clearTimeout(timer);}
   }
   private auth() {return {...this.identity,kind:'receiver'};}
-  private send(message:CastMessage, controllerId?:string) {return this.request({op:'send',auth:this.auth(),message,controllerId});}
+  private send(message:CastMessage, controllerId?:string) {if(controllerId===this.controllerId&&['ACK','STATE'].includes(message.type)&&this.secureTransport?.sendControl(message))return Promise.resolve();return this.request({op:'send',auth:this.auth(),message,controllerId});}
   async start(name:string,useDeviceName=false):Promise<void> {
     if (!this.stopped) return;
     this.stopped = false;
@@ -143,7 +143,16 @@ export class ReceiverSession {
     const registration=await this.request({op:'register',identity:this.identity,name,capabilities:receiverCapabilities()});
     this.update({name:registration.name,code:registration.code,expiresAt:registration.expiresAt,invitation:`vega-cast://pair?server=${encodeURIComponent(registration.serviceUrl || this.endpoint)}&code=${registration.code}`});
   }
-  private async receive(message:CastMessage) {
+  private activeCommands=new Map<string,Promise<void>>();
+  private async receive(message:CastMessage):Promise<void> {
+    if(message.type!=='COMMAND'||!message.id)return this.handleMessage(message);
+    const active=this.activeCommands.get(message.id);
+    if(active){await active;const ack=this.seen.get(message.id);if(ack)await this.send(ack,message.controllerId);return;}
+    const operation=this.handleMessage(message);
+    this.activeCommands.set(message.id,operation);
+    try{await operation;}finally{this.activeCommands.delete(message.id);}
+  }
+  private async handleMessage(message:CastMessage) {
     if(['RTC_ANSWER','RTC_ICE'].includes(message.type)){
       if(message.controllerId===this.controllerId)await this.secureTransport?.receiveSignal(message as Parameters<SecurePhoneTransport['receiveSignal']>[0]);
       return;
@@ -249,6 +258,9 @@ export class ReceiverSession {
       this.secureTransport?.close();this.secureTransport=undefined;
       if(media.delivery==='phone-proxy'&&media.proxy?.secure&&!receiverCapabilities().nativeNetworking){
         const transport=this.secureTransport=new SecurePhoneTransport(message=>this.send(message,this.controllerId),media.id,media.proxy.iceServers);
+        const controller=this.controllerId;
+        let controls=Promise.resolve();
+        transport.onControl=message=>{if(this.secureTransport!==transport||this.controllerId!==controller)return;controls=controls.then(()=>this.receive({...message,controllerId:controller} as CastMessage)).catch(()=>{});};
         try{await transport.open();}catch(error){transport.close();throw error;}
         source.source=transport.url(source.source);
         source.headers=undefined;

@@ -4,6 +4,12 @@ interface Pending {resolve:(value:PhoneResponse)=>void;reject:(error:Error)=>voi
 export class SecurePhoneTransport {
  private peer:RTCPeerConnection|null=null;
  private channel:RTCDataChannel|null=null;
+ private controls:RTCDataChannel|null=null;
+ onControl?: (message:Record<string,unknown>)=>void;
+ sendControl(message:Record<string,unknown>):boolean{
+  if(this.controls?.readyState!=='open'||this.controls.bufferedAmount>64*1024)return false;
+  try{this.controls.send(JSON.stringify(message));return true;}catch{return false;}
+ }
  private id='';
  private pending=new Map<string,Pending>();
  private closed=false;
@@ -62,6 +68,11 @@ export class SecurePhoneTransport {
   navigator.serviceWorker.addEventListener('message',this.workerMessage);
   const peer=this.peer=new RTCPeerConnection({iceServers:this.iceServers});
   peer.onicecandidate=event=>{if(event.candidate){this.localCandidates++;void this.signal({type:'RTC_ICE',transportId:this.id,mediaId:this.mediaId,candidate:event.candidate.toJSON()}).catch(()=>{this.signalErrors++;});}};
+  const controls=this.controls=peer.createDataChannel('vega-controls-v1',{ordered:true});
+  controls.onmessage=event=>{
+   if(this.controls!==controls||typeof event.data!=='string'||event.data.length>8192)return;
+   try{const message=JSON.parse(event.data);if(message.type==='COMMAND'&&typeof message.id==='string')this.onControl?.(message);}catch{}
+  };
   const channel=this.channel=peer.createDataChannel('vega-media-v1',{ordered:true});
   channel.onmessage=event=>this.receive(event.data);
   channel.onclose=()=>this.failPending(new Error('Encrypted phone delivery disconnected'));
@@ -112,5 +123,5 @@ export class SecurePhoneTransport {
  }
  private finish(id:string,error:Error){const pending=this.pending.get(id);if(pending){clearTimeout(pending.timer);this.pending.delete(id);pending.reject(error);}}
  private failPending(error:Error){for(const id of this.pending.keys())this.finish(id,error);}
- close(){this.closed=true;navigator.serviceWorker?.removeEventListener('message',this.workerMessage);this.rejectOpen?.(new Error('Phone delivery closed'));this.failPending(new Error('Phone delivery closed'));this.channel?.close();this.peer?.close();this.channel=null;this.peer=null;}
+ close(){this.closed=true;navigator.serviceWorker?.removeEventListener('message',this.workerMessage);this.rejectOpen?.(new Error('Phone delivery closed'));this.failPending(new Error('Phone delivery closed'));this.controls?.close();this.controls=null;this.channel?.close();this.peer?.close();this.channel=null;this.peer=null;}
 }

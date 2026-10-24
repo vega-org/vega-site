@@ -27,6 +27,16 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  await page.reload();
  await page.waitForFunction(()=>window.secureTest);
  await page.evaluate(()=>window.secureTest.start());
+ const control=await page.evaluate(async()=>{
+  const {receiver,sender}=window.secureTest.connection;
+  return new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>reject(new Error('Direct control acknowledgement missing')),3000);
+   receiver.onControl=message=>receiver.sendControl({type:'ACK',id:message.id,ok:true});
+   sender.onControl=message=>{clearTimeout(timer);resolve(message);};
+   const send=()=>{if(!sender.sendControl({type:'COMMAND',id:'volume-control',command:'VOLUME',value:0.4}))setTimeout(send,20);};send();
+  });
+ });
+ expect(control).toEqual({type:'ACK',id:'volume-control',ok:true});
  const result=await page.evaluate(async()=>{
   const connection=window.secureTest.connection;
   const seek=await fetch(connection.url('video.mkv'),{headers:{Range:'bytes=65536-69631'}});

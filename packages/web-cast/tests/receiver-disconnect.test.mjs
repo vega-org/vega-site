@@ -221,3 +221,11 @@ test('repeated pairing notifications keep one confirmation dialog request',async
  await f.session.receive(message);await f.session.receive(message);
  assert.equal(f.snapshot().pending.length,1);
 });
+
+test('HTTPS receiver permits browser-managed HTTP phone delivery instead of rejecting before permission',async()=>{
+ const f=fixture();globalThis.location={origin:'https://receiver.test',protocol:'https:'};
+ await dualLoad(f.session,{...dualMedia,source:{...dualMedia.source,headers:{Cookie:'provider-cookie'}}});
+ assert.equal(f.calls.length,1);
+ assert.equal(f.calls[0][1].source,dualMedia.proxy.source.url);
+ assert.equal(f.session.media.delivery,'phone-proxy');
+});

@@ -36,5 +36,5 @@ export function receiverCapabilities(): ReceiverCapabilities {
 export function needsPhoneAccess(media:CastMedia, caps:ReceiverCapabilities): boolean {
   if(/^(file:|content:|\/)|^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/)/i.test(media.source.url))return true;
   const restricted = Object.keys(media.source.headers || {}).some(key => /^(cookie|cookie2|origin|referer|user-agent|host|connection|content-length|accept-encoding|sec-.*|proxy-.*)$/i.test(key));
-  return (restricted&&!(caps.nativeNetworking&&caps.customHeaders)) || (!caps.nativeNetworking&&location.protocol === 'https:' && media.source.url.startsWith('http:'));
+  return restricted&&!(caps.nativeNetworking&&caps.customHeaders);
 }

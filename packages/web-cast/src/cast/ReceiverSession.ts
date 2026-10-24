@@ -229,7 +229,8 @@ export class ReceiverSession {
     return true;
   }
   private async loadMedia(media:CastMedia) {
-    if(location.protocol==='https:' && media.source.url.startsWith('http:') && !receiverCapabilities().nativeNetworking) throw new Error('This HTTPS receiver cannot access an insecure phone stream. Use a secure delivery endpoint or an app host.');
+    // Let the browser enforce mixed content and Local Network Access. Modern
+    // Chrome can permit HTTP LAN delivery after the user grants local access.
     const checkAccess=media.delivery!=='phone-proxy'&&!!media.proxy&&!receiverCapabilities().nativeNetworking;
     const source={id:media.id,title:media.title,source:media.source.url,format:media.source.format==='hls'?'m3u8':media.source.format,headers:media.source.headers,networkRetryCount:checkAccess?0:undefined,startPosition:media.startPosition,audioTrackId:media.audioTrack,subtitleTrackId:media.subtitleTrack,
       externalSubtitles:media.subtitles?.filter(track=>/^https?:\/\//i.test(track.uri)).map(track=>({source:track.uri,lang:track.language,title:track.title}))};
@@ -245,6 +246,9 @@ export class ReceiverSession {
     }
     const error=this.manager.getState().error;
     if(error) {
+      if(media.delivery==='phone-proxy'&&location.protocol==='https:'&&media.source.url.startsWith('http:')&&this.accessError(error)){
+        error.message='Unable to access the phone stream. Allow local network access for this site in your browser and keep the phone on the same Wi-Fi. If the browser does not support HTTP local-network access, use secure delivery or an app host.';
+      }
       if(this.accessError(error)&&await this.useProvidedProxy(media,error.category))return;
       await this.send({type:'PLAYBACK_ERROR',category:error.category,message:error.message,mediaId:media.id},this.controllerId);
       if(media.delivery!=='phone-proxy'||['UNSUPPORTED_AUDIO_CODEC','UNSUPPORTED_CONTAINER'].includes(error.category))await this.requestFallback(error.category);

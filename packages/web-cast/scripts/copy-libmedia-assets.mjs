@@ -1,3 +1,4 @@
+import './patch-libmedia.mjs';
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'node:url';

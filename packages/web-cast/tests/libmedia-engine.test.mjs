@@ -55,6 +55,7 @@ const mockUrl = dataUrl(`
     async resume() { this.resumeCalls++; this.suspended = false; this.emit(Events.AUDIO_CONTEXT_RUNNING); }
     isSuspended() { return this.suspended; }
     getStreams() { return this.streams; }
+    getExternalSubtitle(){return [];}
     getSelectedAudioStreamId() { return this.audioId; }
     getSelectedVideoStreamId() { return this.videoId; }
     getSelectedSubtitleStreamId() { return this.subtitleId; }
@@ -534,10 +535,24 @@ test('embedded-only HLS subtitles report the loader limitation without sending a
  const {engine,player,state}=await loaded();
  try{
   player.isHls=()=>true;player.isDash=()=>false;
-  player.getSubtitleList=async()=>({list:[],selectedIndex:-1});
+  player.getSubtitleList=async()=>({list:[],selectedIndex:-1});player.getExternalSubtitle=()=>[];
   player.streams.push({...tracks[2],id:14});
   engine.extractTracks();const calls=[];player.selectSubtitle=async id=>calls.push(id);
   await engine.selectSubtitleTrack(14);
   assert.deepEqual(calls,[]);assert.match(state.error.message,/no selectable subtitle renditions/);
+ }finally{await engine.destroy();}
+});
+
+
+test('external subtitle files on HLS select their stream ID without requiring playlist renditions',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  player.getSubtitleList=async()=>({list:[],selectedIndex:-1});
+  player.getExternalSubtitle=()=>[{source:'https://test.invalid/sub.srt',streamId:14}];
+  player.streams.push({...tracks[2],id:14});engine.extractTracks();
+  const calls=[];player.selectSubtitle=async id=>{calls.push(id);player.subtitleId=id;};
+  await engine.selectSubtitleTrack(14);
+  assert.deepEqual(calls,[14]);assert.equal(state.selectedSubtitleTrackId,14);
  }finally{await engine.destroy();}
 });

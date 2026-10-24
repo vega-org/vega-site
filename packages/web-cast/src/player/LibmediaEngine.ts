@@ -386,7 +386,7 @@ export class LibmediaEngine implements PlayerEngine {
       if (trackId < 0) {
         player.setSubtitleEnable(false);
         this.isSubtitleEnabled = false;
-      } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())){
+      } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())&&!(player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===trackId)){
         // The loader list can arrive after the initial demuxed tracks. Resolve
         // against the current playlist rather than treating stream IDs as indices.
         const previous=this.cachedTracks.subtitle.find(track=>track.id===trackId);
@@ -396,7 +396,7 @@ export class LibmediaEngine implements PlayerEngine {
           if(player.getSelectedSubtitleStreamId()===trackId){
             if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
             this.isSubtitleEnabled=true;
-          }else throw new Error('Libmedia exposes embedded subtitles in this HLS stream, but no selectable subtitle renditions. Switching these embedded HLS subtitles is unavailable.');
+          }else throw new Error('This HLS source has no selectable subtitle renditions; the requested track is not a registered external subtitle.');
         }else{
           let index=wasRendition?trackId:-1;
           if(!wasRendition&&previous?.language){
@@ -783,10 +783,14 @@ export class LibmediaEngine implements PlayerEngine {
       if(this.adaptiveSubtitles?.player===this.player){
         const renditions=this.adaptiveSubtitles;
         this.activeSubtitleTrackId=this.isSubtitleEnabled&&renditions.selectedIndex>=0?renditions.selectedIndex:null;
+        const externalIds=new Set((this.player.getExternalSubtitle() as {streamId?:number}[]).map(track=>track.streamId));
+        const externalTracks=subtitle.filter(track=>externalIds.has(track.id));
+        const externalSelected=externalIds.has(activeSubtitleId)&&this.isSubtitleEnabled;
+        if(externalSelected)this.activeSubtitleTrackId=activeSubtitleId;
         subtitle.splice(0,subtitle.length,...renditions.list.map((entry,index):MediaTrack=>({
           id:index,index,type:'subtitle',language:entry.lang||undefined,label:entry.lang||`Subtitle ${index+1}`,
-          codec:entry.codec||undefined,selected:index===this.activeSubtitleTrackId,
-        })));
+          codec:entry.codec||undefined,selected:!externalSelected&&index===this.activeSubtitleTrackId,
+        })),...externalTracks);
       }
       this.cachedTracks = { audio, subtitle, video };
       this.events.onTracksChange?.(this.cachedTracks);

@@ -6,7 +6,7 @@ self.addEventListener('message',event=>{
 });
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);
- if(url.origin!==self.location.origin||!url.pathname.endsWith('/phone-media'))return;
+ if(url.origin!==self.location.origin||!(/\/phone-media(?:\/subtitle\.(?:srt|vtt|ass|ssa|ttml))?$/.test(url.pathname)))return;
  event.respondWith((async()=>{
   const clients=await self.clients.matchAll({type:'window'});
   return new Promise(resolve=>{

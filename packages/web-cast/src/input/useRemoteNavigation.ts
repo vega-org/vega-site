@@ -4,6 +4,21 @@ export function useRemoteNavigation(onBack:()=>void) {
   const backRef=useRef(onBack);
   useEffect(()=>{backRef.current=onBack;},[onBack]);
   useEffect(()=>{
+    const root=document.documentElement;
+    const tv=/webos|web0s|tizen|smart-tv|smarttv|android.*tv|aftb|aftm|aftt|vega.?os/i.test(navigator.userAgent);
+    root.dataset.navigationMode=root.dataset.navigationMode||(tv?'remote':'pointer');
+    const pointer=(event:PointerEvent)=>{
+      if(event.pointerType==='mouse'||event.pointerType==='touch')root.dataset.navigationMode='pointer';
+    };
+    const click=(event:MouseEvent)=>{
+      if(root.dataset.navigationMode==='remote')return;
+      const button=(event.target as HTMLElement).closest('button');
+      queueMicrotask(()=>{if(button===document.activeElement)button?.blur();});
+    };
+    const gamepad=()=>{root.dataset.navigationMode='remote';};
+    document.addEventListener('pointerdown',pointer,true);
+    document.addEventListener('click',click,true);
+    window.addEventListener('gamepadconnected',gamepad);
     let editing:HTMLElement|null=null;
     let okHeld=false;
     const navigationKeys=new Set<string>();
@@ -11,7 +26,11 @@ export function useRemoteNavigation(onBack:()=>void) {
     const focusout=(event:FocusEvent)=>{if(event.target===editing)finishEditing();};
     const keydown=(event:KeyboardEvent)=>{
       if(event.defaultPrevented)return;
+      if(event.key==='Select'||event.keyCode===23||tv)root.dataset.navigationMode='remote';
+      if(event.key==='Tab')root.dataset.navigationMode='keyboard';
       const active=document.activeElement as HTMLElement|null;
+      if(root.dataset.navigationMode!=='remote'&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)&&active?.closest('.video-player-wrapper'))return;
+      if(root.dataset.navigationMode!=='remote'&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)&&!document.querySelector('[role="dialog"]'))return;
       const adjustable=!!active?.closest('.cinema-controls')&&active.matches('[role="slider"],input[type="range"],select');
       const isBack=event.key==='Escape'||event.key==='BrowserBack'||[4,10009,461].includes(event.keyCode);
       const isOk=event.key==='Enter'||event.key==='Select'||event.keyCode===23;
@@ -79,6 +98,6 @@ export function useRemoteNavigation(onBack:()=>void) {
     document.addEventListener('keyup',keyup,true);
     document.addEventListener('focusout',focusout,true);
     window.addEventListener('blur',blur);
-    return()=>{finishEditing();document.removeEventListener('keydown',keydown,true);document.removeEventListener('keyup',keyup,true);document.removeEventListener('focusout',focusout,true);window.removeEventListener('blur',blur);};
+    return()=>{document.removeEventListener('pointerdown',pointer,true);document.removeEventListener('click',click,true);window.removeEventListener('gamepadconnected',gamepad);finishEditing();document.removeEventListener('keydown',keydown,true);document.removeEventListener('keyup',keyup,true);document.removeEventListener('focusout',focusout,true);window.removeEventListener('blur',blur);};
   },[]);
 }

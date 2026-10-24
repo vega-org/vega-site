@@ -251,7 +251,7 @@ export class ReceiverSession {
     // Chrome can permit HTTP LAN delivery after the user grants local access.
     const checkAccess=media.delivery!=='phone-proxy'&&!!media.proxy&&!receiverCapabilities().nativeNetworking;
     const source={id:media.id,title:media.title,source:media.source.url,format:media.source.format==='hls'?'m3u8':media.source.format,headers:media.source.headers,networkRetryCount:checkAccess?0:undefined,startPosition:media.startPosition,audioTrackId:media.audioTrack,subtitleTrackId:media.subtitleTrack,
-      externalSubtitles:media.subtitles?.filter(track=>/^https?:\/\//i.test(track.uri)).map(track=>({source:track.uri,lang:track.language,title:track.title}))};
+      externalSubtitles:media.subtitles?.filter(track=>/^https?:\/\//i.test(track.uri)).map(track=>({source:track.uri,lang:track.language,title:track.title,format:track.type}))};
     try{
       if(checkAccess)await this.checkDirectAccess(media);
       if(this.media!==media)return;
@@ -264,7 +264,7 @@ export class ReceiverSession {
         try{await transport.open();}catch(error){transport.close();throw error;}
         source.source=transport.url(source.source);
         source.headers=undefined;
-        source.externalSubtitles=source.externalSubtitles?.map(track=>({...track,source:transport.url(track.source)}));
+        source.externalSubtitles=source.externalSubtitles?.map(track=>({...track,source:transport.url(track.source,track.format)}));
       }
       const prepared=receiverHost() ? await receiverHost()!.prepareSource(source):source;
       await this.onMedia(media);if(this.media!==media)return;this.loadedMediaId=media.id;await this.manager.load(prepared);

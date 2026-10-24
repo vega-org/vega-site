@@ -17,6 +17,7 @@ const manager={
  unload:async()=>{calls.push(['unload']);update({status:'idle'});},
  attach(){},detach(){},subscribe(fn){listeners.add(fn);fn(state);return()=>listeners.delete(fn);},
  play(){calls.push(['play']);update({status:'playing'});return Promise.resolve();},
+ resumeAudio(){calls.push(['resume-audio']);update({audioNeedsUserGesture:false});return Promise.resolve();},
  pause(){calls.push(['pause']);update({status:'paused'});return Promise.resolve();},
  togglePlay(){return state.status==='playing'?this.pause():this.play();},
  seek(time){calls.push(['seek',time]);update({currentTime:time});return Promise.resolve();},
@@ -25,6 +26,7 @@ const manager={
  toggleMute(){this.setMuted(!state.isMuted);},
  setVolume(value){calls.push(['volume',value]);update({volume:value});},
  setPlaybackRate(value){calls.push(['rate',value]);update({playbackRate:value});},
+ selectQuality(id){calls.push(['quality',id]);update({selectedQualityId:id});return Promise.resolve();},
  selectAudioTrack(id){calls.push(['audio',id]);update({selectedAudioTrackId:id});return Promise.resolve();},
  selectSubtitleTrack(id){calls.push(['subtitle',id]);update({selectedSubtitleTrackId:id,subtitleEnabled:id!==-1});return Promise.resolve();},
 };

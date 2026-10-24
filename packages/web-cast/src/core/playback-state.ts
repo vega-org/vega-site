@@ -62,7 +62,12 @@ export interface PlaybackError {
   rawDetails?: string;
 }
 
+export interface VideoQuality {id:number;label:string;width:number;height:number;bandwidth?:number;frameRate?:number;codec?:string}
+
 export interface PlaybackState {
+  qualities:VideoQuality[];
+  selectedQualityId:number|null;
+  qualityChanging:boolean;
   status: PlaybackStatus;
   currentTime: number;
   duration: number;
@@ -83,6 +88,7 @@ export interface PlaybackState {
 }
 
 export const initialPlaybackState: PlaybackState = {
+  qualities:[],selectedQualityId:null,qualityChanging:false,
   status: 'idle',
   currentTime: 0,
   duration: 0,

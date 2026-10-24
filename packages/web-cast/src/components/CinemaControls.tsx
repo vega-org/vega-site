@@ -4,13 +4,13 @@ import {PlayIcon,PauseIcon,SeekBackward10Icon,SeekForward10Icon,VolumeHighIcon,M
 import type {PlaybackState} from '../core/playback-state';
 import {formatTime} from '../utils/formatters';
 interface ControlsProps {
- state:PlaybackState;onOpenSpeedMenu:()=>void;
+ onOpenQualityMenu?:()=>void;state:PlaybackState;onOpenSpeedMenu:()=>void;
  onOpenServerMenu?:()=>void;changingServer?:boolean;
  onOpenAudioMenu:()=>void;onOpenSubtitleMenu:()=>void;onOpenDiagnostics:()=>void;onToggleFullscreen:()=>void;isFullscreen:boolean;
 }
 export function CinemaControls(props:ControlsProps){
  const {state}=props;
- const playing=state.status==='playing'||state.status==='buffering';
+ const playing=!state.audioNeedsUserGesture&&(state.status==='playing'||state.status==='buffering');
  return <div className="cinema-controls">
   <div className="timeline-row"><TimeSlider.Root className="vega-slider cinema-timeline" aria-label="Playback position" keyStep={5} shiftKeyMultiplier={2}><TimeSlider.Track className="vega-slider-track"/><TimeSlider.TrackFill className="vega-slider-fill"/><TimeSlider.Progress className="vega-slider-buffer"/><TimeSlider.Thumb className="vega-slider-thumb"/><TimeSlider.Preview className="vega-slider-preview"><TimeSlider.Value/></TimeSlider.Preview></TimeSlider.Root></div>
   <div className="playback-toolbar">
@@ -19,6 +19,7 @@ export function CinemaControls(props:ControlsProps){
    <SeekButton seconds={10} className="icon-button" aria-label="Forward 10 seconds"><SeekForward10Icon size={24}/></SeekButton>
    <div className="volume-control"><MuteButton className="icon-button" aria-label={state.isMuted?'Unmute':'Mute'}>{state.isMuted?<MuteIcon size={22}/>:<VolumeHighIcon size={22}/>}</MuteButton><VolumeSlider.Root className="vega-slider vega-volume-slider" aria-label="Volume"><VolumeSlider.Track className="vega-slider-track"/><VolumeSlider.TrackFill className="vega-slider-fill"/><VolumeSlider.Thumb className="vega-slider-thumb"/></VolumeSlider.Root></div>
    <span className="playback-clock">{formatTime(state.currentTime)} <span>/ {formatTime(state.duration)}</span></span><div className="toolbar-spacer"/>
+   {props.onOpenQualityMenu&&<button className="text-icon-button" aria-label="Video quality" aria-haspopup="dialog" disabled={state.qualityChanging} onClick={props.onOpenQualityMenu}>{state.qualityChanging?'Changing…':state.qualities.find(quality=>quality.id===state.selectedQualityId)?.label||'Quality'}</button>}
    {props.onOpenServerMenu&&<button className="text-icon-button" aria-label="Change server" aria-haspopup="dialog" disabled={props.changingServer} onClick={props.onOpenServerMenu}><LuServer size={22}/><span>{props.changingServer?'Changing…':'Server'}</span></button>}
    <button className="text-icon-button" onClick={props.onOpenAudioMenu} aria-label="Audio tracks"><MusicIcon size={22}/><span>Audio</span></button>
    <button className={`text-icon-button ${state.selectedSubtitleTrackId!==null&&state.subtitleEnabled?'selected':''}`} onClick={props.onOpenSubtitleMenu} aria-label="Subtitles"><ClosedCaptionsIcon size={22}/><span>Subtitles</span></button>

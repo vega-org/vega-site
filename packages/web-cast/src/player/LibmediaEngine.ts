@@ -118,6 +118,7 @@ export class LibmediaEngine implements PlayerEngine {
       selectedAudioTrackId: null,
       selectedSubtitleTrackId: null,
       audioNeedsUserGesture: false,
+      qualities:[],selectedQualityId:null,qualityChanging:false,
     });
 
     try {
@@ -166,6 +167,7 @@ export class LibmediaEngine implements PlayerEngine {
 
       // Extract tracks once file is analyzed
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
 
       // Restore volume & rate before playback starts.
       this.player.setVolume(this.isMuted ? 0 : this.currentVolume);
@@ -223,6 +225,7 @@ export class LibmediaEngine implements PlayerEngine {
         await player.play();
         if (!this.isSubtitleEnabled) player.setSubtitleEnable(false);
         this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
         this.emitState({
           status: 'playing',
           audioNeedsUserGesture: player.isSuspended(),
@@ -308,6 +311,25 @@ export class LibmediaEngine implements PlayerEngine {
     this.emitState({ playbackRate: rate });
   }
 
+  private async refreshQualities():Promise<void>{
+    const player=this.player,generation=this.sourceGeneration;
+    if(!player||typeof player.isHls!=='function'||(!player.isHls()&&!player.isDash()))return;
+    const info=await player.getVideoList();
+    if(this.player!==player||this.sourceGeneration!==generation||!info)return;
+    this.emitState({qualities:info.list.map((entry,id)=>({id,label:entry.height?`${entry.height}p`:entry.width?`${entry.width}px`:`Quality ${id+1}`,width:entry.width,height:entry.height,bandwidth:entry.bandwidth,frameRate:entry.frameRate,codec:entry.codec})),selectedQualityId:info.selectedIndex>=0?info.selectedIndex:null});
+  }
+
+  async selectQuality(id:number):Promise<void>{
+    await this.runTimelineOperation(async player=>{
+      const info=await player.getVideoList();
+      if(!Number.isInteger(id)||!info?.list[id])throw new Error('Video quality is unavailable');
+      if(info.selectedIndex===id)return;
+      this.emitState({qualityChanging:true});
+      try{await player.selectVideo(id,true);await this.refreshQualities();}
+      finally{this.emitState({qualityChanging:false});}
+    });
+  }
+
   async selectAudioTrack(trackId: number): Promise<void> {
     await this.runTimelineOperation(async (player) => {
       if (player.getSelectedAudioStreamId() === trackId) return;
@@ -341,6 +363,7 @@ export class LibmediaEngine implements PlayerEngine {
         });
       }
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
       this.emitState({ subtitleEnabled: this.isSubtitleEnabled });
     });
   }
@@ -523,6 +546,7 @@ export class LibmediaEngine implements PlayerEngine {
     this.player.on(Events.LOADED, () => {
       if(!current())return;
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
       const durationMs = Number(this.player?.getDuration() ?? 0);
       this.emitState({
         status: 'loaded',
@@ -533,6 +557,7 @@ export class LibmediaEngine implements PlayerEngine {
     this.player.on(Events.PLAYING, () => {
       if(!current())return;
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
       this.emitState({
         status: 'playing',
         audioNeedsUserGesture: this.player?.isSuspended() ?? false,
@@ -579,11 +604,13 @@ export class LibmediaEngine implements PlayerEngine {
     this.player.on(Events.STREAM_UPDATE, () => {
       if(!current())return;
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
     });
 
     this.player.on(Events.CHANGED, () => {
       if(!current())return;
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
     });
 
     this.player.on(Events.ERROR, (error: Error) => {
@@ -717,6 +744,7 @@ export class LibmediaEngine implements PlayerEngine {
       // Both seek() and unpausing restart libmedia's subtitle loop.
       if (!this.isSubtitleEnabled) player.setSubtitleEnable(false);
       this.extractTracks();
+      void this.refreshQualities().catch(()=>{});
       this.emitState({
         status: wasPlaying ? 'playing' : 'paused',
         subtitleEnabled: this.isSubtitleEnabled,

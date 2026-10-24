@@ -1,4 +1,7 @@
 import {test,expect} from '@playwright/test';
+test.beforeEach(async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(navigator,'userAgent',{configurable:true,get:()=> 'Vega SmartTV control test'}));
+});
 for(const [buttonName,dialogName] of [['Subtitles','Subtitle tracks'],['Change server','Servers']]){
  test('first OK opens '+buttonName+' after playing idle without stealing focus',async({page})=>{
   await page.goto('/tests/browser/controls.html');
@@ -208,7 +211,8 @@ test('audio and subtitle selection buttons activate once per held OK',async({pag
 });
 test('direct disconnection dialog works in fullscreen and Continue preserves playback',async({page})=>{
  await page.goto('/tests/browser/controls.html');
- await page.getByRole('button',{name:'Fullscreen',exact:true}).click();
+ await page.getByRole('button',{name:'Fullscreen',exact:true}).focus();
+ await page.keyboard.press('Enter');
  await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
  await page.evaluate(()=>window.controlTest.disconnect());
  const dialog=page.getByRole('dialog',{name:'Mobile disconnected'});
@@ -305,4 +309,57 @@ test('receiver name field exits to Save with OK or Back without saving automatic
  await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();
  await page.keyboard.press('Enter');
  await expect(page.getByText('Receiver name saved.',{exact:true})).toBeVisible();
+});
+
+for(const action of ['click','Enter','Space']){
+ test(`Play ${action} resumes blocked audio without pausing playback`,async({page})=>{
+  await page.goto('/tests/browser/controls.html');
+  await page.evaluate(()=>window.controlTest.update({status:'playing',audioNeedsUserGesture:true}));
+  const play=page.getByRole('button',{name:'Play',exact:true});
+  if(action==='click')await play.click();else{await play.focus();await page.keyboard.press(action);}
+  await expect(page.getByRole('button',{name:'Pause',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>window.controlTest.calls)).toEqual([['resume-audio']]);
+  await expect(page.getByRole('button',{name:'Enable audio',exact:true})).toHaveCount(0);
+ });
+}
+
+
+test('focused playback controls hide after inactivity and remote OK restores focus without activating',async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ await page.getByRole('button',{name:'Play',exact:true}).click();
+ const pause=page.getByRole('button',{name:'Pause',exact:true});
+ await pause.focus();
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','true',{timeout:6000});
+ await page.keyboard.press('Enter');
+ await expect(pause).toBeVisible();await expect(pause).toBeFocused();
+ expect(await page.evaluate(()=>window.controlTest.calls)).toEqual([['play']]);
+ await page.keyboard.press('Enter');
+ await expect(page.getByRole('button',{name:'Play',exact:true})).toBeVisible();
+});
+
+
+test('desktop mouse leaves no button focused and PC arrows seek without TV navigation',async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(navigator,'userAgent',{configurable:true,get:()=> 'Desktop Chrome test'}));
+ await page.goto('/tests/browser/controls.html');
+ await page.getByRole('button',{name:'Play',exact:true}).click();
+ expect(await page.evaluate(()=>document.activeElement?.tagName)).toBe('BODY');
+ await page.keyboard.press('ArrowRight');
+ expect(await page.evaluate(()=>window.controlTest.getState().currentTime)).toBe(40);
+ expect(await page.evaluate(()=>document.activeElement?.tagName)).toBe('BODY');
+ await page.keyboard.press('Space');
+ await expect(page.getByRole('button',{name:'Play',exact:true})).toBeVisible();
+});
+
+
+test('quality menu only appears for multiple renditions and remote OK selects an index',async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ await expect(page.getByRole('button',{name:'Video quality',exact:true})).toHaveCount(0);
+ await page.evaluate(()=>window.controlTest.update({qualities:[{id:0,label:'720p',width:1280,height:720,bandwidth:2000000},{id:1,label:'1080p',width:1920,height:1080,bandwidth:5000000}],selectedQualityId:0}));
+ await page.getByRole('button',{name:'Video quality',exact:true}).focus();
+ await page.keyboard.press('Enter');
+ await expect(page.getByRole('dialog',{name:'Video quality',exact:true})).toBeVisible();
+ await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+ expect(await page.evaluate(()=>window.controlTest.calls)).toEqual([['quality',1]]);
+ await expect(page.getByRole('dialog',{name:'Video quality',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Video quality',exact:true})).toContainText('1080p');
 });

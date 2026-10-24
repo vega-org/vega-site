@@ -9,6 +9,8 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  await page.route('**/test-phone/**',async route=>{
   const request=route.request(),url=new URL(request.url());reads.push(url.pathname);
   if(url.pathname.endsWith('master.m3u8'))return route.fulfill({contentType:'application/vnd.apple.mpegurl',body:'#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key.bin"\n#EXTINF:4,\nsegment.ts\n#EXT-X-ENDLIST\n'});
+  if(url.pathname.endsWith('captions.srt'))return route.fulfill({contentType:'application/x-subrip',body:'1\n00:00:01,000 --> 00:00:03,000\nSubtitle test\n'});
+  if(url.pathname.endsWith('error.srt'))return route.fulfill({status:400,body:'invalid subtitle request'});
   if(url.pathname.endsWith('key.bin'))return route.fulfill({body:'a-test-key'});
   if(url.pathname.endsWith('segment.ts'))return route.fulfill({body:'a-test-segment'});
   const range=/bytes=(\d+)-(\d*)/.exec(request.headers().range||'');
@@ -54,7 +56,14 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
   const keyUrl=/URI="([^"]+)"/.exec(playlist)[1];
   const key=await (await fetch(keyUrl)).text();
   const bad=await fetch(connection.url('private-file'));
-  const result={status:seek.status,range:seek.headers.get('content-range'),length:data.length,first:data[0],last:data.at(-1),largeLength:largeBytes.length,largeLast:largeBytes.at(-1),repeated,playlist,segment,key,badStatus:bad.status};
+  connection.sender.register(location.origin+'/test-phone/captions.srt');
+  const proxySubtitlePath=new URL(connection.receiver.url(location.origin+'/test-phone/opaque-proxy','srt')).pathname;
+  const subtitleUrl=connection.url('captions.srt');
+  const subtitleText=await (await fetch(subtitleUrl)).text();
+  connection.sender.register(location.origin+'/test-phone/error.srt');
+  const failed=await fetch(connection.url('error.srt'));
+  const httpFailure={status:failed.status,message:await failed.text()};
+  const result={status:seek.status,range:seek.headers.get('content-range'),length:data.length,first:data[0],last:data.at(-1),largeLength:largeBytes.length,largeLast:largeBytes.at(-1),repeated,playlist,segment,key,badStatus:bad.status,httpFailure,subtitleUrl,subtitleText,proxySubtitlePath};
   connection.close();return result;
  });
  expect(result.status).toBe(206);expect(result.range).toBe(`bytes 65536-69631/${bytes.length}`);
@@ -63,5 +72,9 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  for(const item of result.repeated){expect(item.length).toBe(2048);expect(item.first).toBe(item.start%251);}
  expect(result.playlist).toContain('/phone-media?transport=');
  expect(result.segment).toBe('a-test-segment');expect(result.key).toBe('a-test-key');
+ expect(new URL(result.subtitleUrl).pathname).toMatch(/\/phone-media\/subtitle\.srt$/);
+ expect(result.subtitleText).toContain('Subtitle test');
+ expect(result.proxySubtitlePath).toMatch(/\/subtitle\.srt$/);
+ expect(result.httpFailure).toEqual({status:502,message:'Phone media request failed (HTTP 400)'});
  expect(result.badStatus).toBe(502);expect(reads).not.toContain('/test-phone/private-file');
 });

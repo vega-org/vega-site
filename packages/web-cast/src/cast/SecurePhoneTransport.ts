@@ -42,7 +42,7 @@ export class SecurePhoneTransport {
  async open():Promise<void>{
   if(!isSecureContext||!('serviceWorker' in navigator)||typeof RTCPeerConnection==='undefined')throw new Error('Encrypted phone delivery requires WebRTC and service workers in a secure browser.');
   const base=import.meta.env.BASE_URL;
-  const registration=await navigator.serviceWorker.register(base+'phone-worker.js',{scope:base,updateViaCache:'none'});
+  const registration=await navigator.serviceWorker.register(base+'phone-worker.js',{scope:location.pathname.startsWith(base)?base:'/',updateViaCache:'none'});
   // ready can resolve to the old active worker while the replacement installs.
   const worker=registration.installing||registration.waiting||registration.active;
   if(!worker)throw new Error('Encrypted delivery worker is unavailable.');
@@ -95,8 +95,10 @@ export class SecurePhoneTransport {
   if(message.type==='RTC_ANSWER'&&message.sdp){await this.peer.setRemoteDescription(message.sdp);this.answerReceived=true;for(const candidate of this.candidates)await this.peer.addIceCandidate(candidate);this.candidates=[];}
   if(message.type==='RTC_ICE'&&message.candidate){this.remoteCandidates++;if(this.peer.remoteDescription)await this.peer.addIceCandidate(message.candidate);else this.candidates.push(message.candidate);}
  }
- url(source:string):string{
-  const url=new URL(import.meta.env.BASE_URL+'phone-media',location.origin);url.searchParams.set('transport',this.id);url.searchParams.set('url',source);return url.toString();
+ url(source:string,format?:string):string{
+  const hint=(format||'').toLowerCase();
+  const extension=/\.(srt|vtt|ass|ssa|ttml)$/i.exec(new URL(source,location.href).pathname)?.[1].toLowerCase()||(/^(srt|vtt|ass|ssa|ttml)$/.test(hint)?hint:hint.includes('vtt')?'vtt':hint.includes('subrip')?'srt':undefined);
+  const url=new URL(import.meta.env.BASE_URL+'phone-media'+(extension?'/subtitle.'+extension:''),location.origin);url.searchParams.set('transport',this.id);url.searchParams.set('url',source);return url.toString();
  }
  private request(url:string,range:string|null,method:string):Promise<PhoneResponse>{
   if(this.channel?.readyState!=='open')return Promise.reject(new Error('Encrypted phone delivery is not connected'));

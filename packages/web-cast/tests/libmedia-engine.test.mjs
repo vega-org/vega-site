@@ -458,3 +458,22 @@ test('receiver retry policy is passed to the libmedia public loader options',asy
  assert.deepEqual(player.loadOptions.ioLoaderOptions,{retryCount:0});
  await engine.destroy();
 });
+
+
+test('HLS quality uses rendition indices, libmedia smooth switching and preserves the timeline',async()=>{
+ const {engine,player,state}=await loaded();
+ player.isHls=()=>true;player.isDash=()=>false;
+ let selectedIndex=0;
+ player.getVideoList=async()=>({list:[{width:1280,height:720,frameRate:24,codec:'avc1',bandwidth:2000000},{width:1920,height:1080,frameRate:24,codec:'avc1',bandwidth:5000000}],selectedIndex});
+ player.selectVideo=async(id,smooth)=>{assert.equal(smooth,true);selectedIndex=id;};
+ player.currentTime=45000n;
+ await engine.refreshQualities();
+ assert.deepEqual(state.qualities.map(q=>q.label),['720p','1080p']);
+ await engine.selectQuality(1);
+ assert.equal(state.selectedQualityId,1);assert.equal(player.currentTime,45000n);assert.equal(state.qualityChanging,false);
+ await engine.selectQuality(99);assert.match(state.error.message,/unavailable/);
+ player.selectVideo=async()=>{throw new Error('switch failed');};
+ await engine.selectQuality(0);assert.match(state.error.message,/switch failed/);
+ assert.equal(state.qualityChanging,false);
+ await engine.destroy();
+});

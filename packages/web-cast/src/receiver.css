@@ -77,3 +77,8 @@
 .cinema-controls [data-remote-editing]{outline:none!important;outline-offset:0!important;border-radius:10px;box-shadow:inset 0 0 0 2px var(--cast-accent,var(--accent-color,#ff6347))}
 .receiver-app .primary-play:focus-visible,.video-player-wrapper .primary-play:focus-visible{border-radius:50%}
 @media(max-width:720px){.receiver-sidebar nav{width:auto;flex-shrink:0}.receiver-sidebar .nav-item{width:auto}}
+
+/* Pointer users do not inherit the TV focus ring from programmatic focus. */
+html[data-navigation-mode="pointer"] :is(.receiver-app,.video-player-wrapper) :is(button,a,[role="slider"],[tabindex="0"]):focus,
+html[data-navigation-mode="pointer"] :is(.receiver-app,.video-player-wrapper) .vega-slider[data-focus]{outline:none!important;box-shadow:none!important}
+html:not([data-navigation-mode="remote"]) .remote-control-hint{visibility:hidden!important}

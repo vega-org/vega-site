@@ -5,6 +5,14 @@
     "nodejs_compat"
   ],
   "name": "vega-site",
+  "routes": [
+    {"pattern":"vega-app.in","custom_domain":true},
+    {"pattern":"cast.vega-app.in","custom_domain":true}
+  ],
+  "vars": {
+    "CAST_PUBLIC_URL": "https://cast.vega-app.in/",
+    "CAST_SITE_ORIGIN": "https://vega-app.in"
+  },
   "main": "./src/worker.js",
   "assets": {
     "directory": "./dist",

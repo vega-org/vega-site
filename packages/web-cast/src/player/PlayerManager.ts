@@ -41,6 +41,7 @@ export class PlayerManager {
     const seq = ++this.loadSequence;
 
     this.updateState({
+      qualities:[],selectedQualityId:null,qualityChanging:false,
       status: 'loading',
       currentTime: 0,
       duration: 0,
@@ -74,6 +75,10 @@ export class PlayerManager {
   async unload():Promise<void> {this.loadSequence++;await this.engine.unload();}
 
   setMuted(muted:boolean):void {this.engine.setMuted(muted);}
+
+  async selectQuality(id:number):Promise<void>{
+    try{await this.engine.selectQuality(id);}catch(error){this.updateState({error:normalizePlaybackError(error)});}
+  }
 
   async resumeAudio(): Promise<void> {
     await this.engine.resumeAudio();

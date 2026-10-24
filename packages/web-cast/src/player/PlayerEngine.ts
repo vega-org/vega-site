@@ -21,6 +21,7 @@ export interface PlayerEngine {
   setVolume(volume: number): void;
   setMuted(muted: boolean): void;
   setPlaybackRate(rate: number): void;
+  selectQuality(id:number):Promise<void>;
   selectAudioTrack(trackId: number): Promise<void>;
   selectSubtitleTrack(trackId: number): Promise<void>;
   setSubtitleEnabled(enabled: boolean): Promise<void>;

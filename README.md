@@ -70,3 +70,15 @@ npx astro check
 Cloudflare tests use the actual local Workers runtime, exercising QR confirmation, cross-network pairing, private commands, discovery isolation, revoked tokens and trust recovery after a restart. For a built-site browser smoke check, start `npm run preview -- --host 127.0.0.1 --port 4322`, then run `node tests/cast-site-smoke.mjs`. It checks the hosted receiver, isolation headers, pairing confirmation and two-way commands. These checks do not replace codec/4K testing on actual TV hardware.
 
 The secure-delivery browser test bundles the actual mobile sender with browser WebRTC bindings and runs it against the actual receiver/service worker over real peer connections. It verifies range byte accuracy, repeated seeks, backpressure, HLS segment/key rewriting and rejection of unregistered resources. Android native compilation validates linking. Actual phone-to-TV playback and throughput still require device testing.
+
+
+### Self-hosted Cast domains
+
+The receiver and its service worker use their own origin. Host routing is controlled by deployment variables in `wrangler.jsonc`, not domains embedded in player code.
+
+- Replace or remove the official `routes` before deploying your own Worker.
+- Remove `CAST_PUBLIC_URL` and `CAST_SITE_ORIGIN` to serve the receiver at `https://YOUR_HOST/cast/` beside the website.
+- For a dedicated receiver domain, set `CAST_PUBLIC_URL` to `https://YOUR_CAST_HOST/` and `CAST_SITE_ORIGIN` to `https://YOUR_SITE_HOST`. Route both to the same Worker. The site's relative `/cast/` link redirects to your configured receiver address.
+- Rebuild after changing deployment configuration, then deploy `dist/server/wrangler.json`.
+
+Unrelated hostnames never redirect to the configured domain. The receiver's QR code advertises its own signaling address; mobile's official discovery default does not prevent pairing with a self-hosted receiver. A new browser origin needs pairing once because its browser storage is separate. Dedicated-domain receiver assets remain under `/cast/`, with root service-worker scope granted only on that configured host.

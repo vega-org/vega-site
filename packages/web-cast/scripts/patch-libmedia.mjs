@@ -1,7 +1,25 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const file=fileURLToPath(import.meta.resolve('@libmedia/avplayer'));
 const source=fs.readFileSync(file,'utf8');
+// MKV LanguageIETF takes precedence over legacy Language. Some muxers only
+// write LanguageIETF, which 1.3.1 otherwise discards as an unknown element.
+const matroskaFile=path.join(path.dirname(file),'573.avplayer.js');
+let matroska=fs.readFileSync(matroskaFile,'utf8');
+const languageField='2274716:{type:7,filedName:"language"}';
+const ietfField=languageField+',2274717:{type:7,filedName:"languageIETF"}';
+const languageMetadata='t.language&&(d.metadata.language=t.language)';
+const ietfMetadata='(t.languageIETF||t.language)&&(d.metadata.language=t.languageIETF||t.language)';
+if(!matroska.includes(ietfField)){
+ if(matroska.split(languageField).length!==2)throw new Error('libmedia MKV language field patch does not match this version');
+ matroska=matroska.replace(languageField,ietfField);
+}
+if(!matroska.includes(ietfMetadata)){
+ if(matroska.split(languageMetadata).length!==2)throw new Error('libmedia MKV language metadata patch does not match this version');
+ matroska=matroska.replace(languageMetadata,ietfMetadata);
+}
+fs.writeFileSync(matroskaFile,matroska);
 // libmedia 1.3.1 routes even independently loaded subtitle files through the
 // HLS rendition selector. Keep external stream IDs on its existing file path.
 const original='async selectSubtitle(e){if(this.isHls()||this.isDash()){';

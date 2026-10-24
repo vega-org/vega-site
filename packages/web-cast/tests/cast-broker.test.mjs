@@ -149,3 +149,16 @@ test('pending pairing notification is redelivered after a lost poll without floo
  time+=3001;
  assert.equal((await broker.dispatch({op:'pairStatus',requestId:pair.requestId,secret:pair.secret})).status,'approved');
 });
+
+test('encrypted media negotiation stays private and roles cannot impersonate offers or answers',async()=>{
+ const broker=createCastBroker();const {receiver,controller}=await paired(broker);
+ const offer={type:'RTC_OFFER',transportId:'channel',mediaId:'movie',sdp:{type:'offer',sdp:'test-sdp'}};
+ await broker.dispatch({op:'send',auth:receiver,controllerId:controller.controllerId,message:offer});
+ assert.deepEqual((await broker.dispatch({op:'poll',auth:controller})).messages,[offer]);
+ const answer={type:'RTC_ANSWER',transportId:'channel',mediaId:'movie',sdp:{type:'answer',sdp:'test-answer'}};
+ await broker.dispatch({op:'send',auth:controller,message:answer});
+ const received=(await broker.dispatch({op:'poll',auth:receiver})).messages[0];
+ assert.equal(received.controllerId,controller.controllerId);assert.equal(received.type,'RTC_ANSWER');
+ await assert.rejects(()=>broker.dispatch({op:'send',auth:controller,message:offer}),/Unsupported/);
+ await assert.rejects(()=>broker.dispatch({op:'send',auth:receiver,message:answer}),/Unsupported/);
+});

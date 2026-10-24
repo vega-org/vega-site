@@ -9,8 +9,8 @@ const matches = (value, digest) => {
 };
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), {status}); };
 const cleanName = value => String(value || 'Vega receiver').replace(/[\x00-\x1f]/g, '').slice(0, 64);
-const controllerMessages = new Set(['COMMAND', 'LOAD_MEDIA', 'FALLBACK_SOURCE', 'CONTROLLER_DISCONNECT','SERVER_CHANGE_RESULT']);
-const receiverMessages = new Set(['STATE', 'ACK', 'PLAYBACK_ERROR', 'FALLBACK_REQUEST', 'CAPABILITIES','DELIVERY_CHANGED','SERVER_CHANGE']);
+const controllerMessages = new Set(['COMMAND', 'LOAD_MEDIA', 'FALLBACK_SOURCE', 'CONTROLLER_DISCONNECT','SERVER_CHANGE_RESULT','RTC_ANSWER','RTC_ICE']);
+const receiverMessages = new Set(['STATE', 'ACK', 'PLAYBACK_ERROR', 'FALLBACK_REQUEST', 'CAPABILITIES','DELIVERY_CHANGED','SERVER_CHANGE','RTC_OFFER','RTC_ICE']);
 /** Authenticated control messages only. This broker never fetches or relays media. */
 export function createCastBrokerCore({initialRecords=[],initialLive=[],initialRequests=[],persist=()=>{},publicUrl,advertise=()=>publicUrl,scopeForAddress=value=>value,ownDeviceName=()=>undefined,idPrefix='',now=Date.now}={}) {
   const discoveryScope=scopeForAddress;

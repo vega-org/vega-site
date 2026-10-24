@@ -3,6 +3,7 @@ import type {PlaybackState} from '../core/playback-state';
 import type {CastMedia, CastMessage, PairRequest, ReceiverIdentity,CastServerOption} from './protocol';
 import {receiverCapabilities, receiverHost, needsPhoneAccess} from '../platform/receiverHost';
 import {normalizePlaybackError} from '../player/errors';
+import {SecurePhoneTransport} from './SecurePhoneTransport';
 
 export interface ReceiverSessionState {
   status:'offline'|'connecting'|'ready'|'connected'|'error'; name:string; code:string;
@@ -31,6 +32,7 @@ export class ReceiverSession {
   private serverTimer?:ReturnType<typeof setTimeout>;
   private serverRequest?:string;
   private commands:Promise<void>=Promise.resolve();
+  private secureTransport?:SecurePhoneTransport;
   private manager:PlayerManager;
   private onMedia:(media:CastMedia)=>Promise<void>;
   constructor(manager:PlayerManager, onMedia:(media:CastMedia)=>Promise<void>) {
@@ -62,7 +64,7 @@ export class ReceiverSession {
       const invitation = `vega-cast://pair?server=${encodeURIComponent(registration.serviceUrl || this.endpoint)}&code=${registration.code}`;
       this.update({status:'ready',name:registration.name,code:registration.code,expiresAt:registration.expiresAt,invitation,phones:registration.rememberedControllers || []});
       this.unsubscribe=this.manager.subscribe(state=>{
-        if(state.status==='idle'){this.media=null;this.loadedMediaId=undefined;this.updateServers();if(this.state.disconnectedMedia)this.update({disconnectedMedia:undefined});}
+        if(state.status==='idle'){this.secureTransport?.close();this.secureTransport=undefined;this.media=null;this.loadedMediaId=undefined;this.updateServers();if(this.state.disconnectedMedia)this.update({disconnectedMedia:undefined});}
         const media=this.media;
         if(state.error&&media?.proxy&&media.delivery!=='phone-proxy'&&this.accessError(state.error)&&this.queuedProxyId!==media.id){
           this.queuedProxyId=media.id;
@@ -82,7 +84,7 @@ export class ReceiverSession {
         if(this.state.error)this.update({error:undefined});
         delay=1000;
         for(const message of result.messages) {
-          if(['PAIR_REQUEST','CONTROLLER_CONNECTED'].includes(message.type))await this.receive(message);
+          if(['PAIR_REQUEST','CONTROLLER_CONNECTED','RTC_ANSWER','RTC_ICE'].includes(message.type))await this.receive(message);
           else {
             // Keep heartbeats/pairing alive while AVPlayer opens a slow source.
             this.commands=this.commands.then(()=>this.stopped?undefined:this.receive(message)).catch(error=>this.update({error:error instanceof Error?error.message:'Playback command failed'}));
@@ -104,7 +106,7 @@ export class ReceiverSession {
     this.update({phones:this.state.phones.filter(phone=>phone.id!==controllerId)});
   }
 
-  releaseMedia(){this.media=null;this.loadedMediaId=undefined;this.updateServers();this.update({disconnectedMedia:undefined});}
+  releaseMedia(){this.secureTransport?.close();this.secureTransport=undefined;this.media=null;this.loadedMediaId=undefined;this.updateServers();this.update({disconnectedMedia:undefined});}
   private updateServers(){
     if(this.serverTimer)clearTimeout(this.serverTimer);this.serverTimer=undefined;this.serverRequest=undefined;
     const media=this.media;
@@ -142,6 +144,10 @@ export class ReceiverSession {
     this.update({name:registration.name,code:registration.code,expiresAt:registration.expiresAt,invitation:`vega-cast://pair?server=${encodeURIComponent(registration.serviceUrl || this.endpoint)}&code=${registration.code}`});
   }
   private async receive(message:CastMessage) {
+    if(['RTC_ANSWER','RTC_ICE'].includes(message.type)){
+      if(message.controllerId===this.controllerId)await this.secureTransport?.receiveSignal(message as Parameters<SecurePhoneTransport['receiveSignal']>[0]);
+      return;
+    }
     if(message.type==='PAIR_REQUEST') {
       if(this.state.pending.some(request=>request.requestId===message.requestId))return;
       this.update({pending:[...this.state.pending,{requestId:message.requestId!,name:message.name!,confirmation:message.confirmation!}]});return;
@@ -195,7 +201,7 @@ export class ReceiverSession {
           case 'AUDIO': if(!Number.isInteger(value)) throw new Error('Invalid audio track');await this.manager.selectAudioTrack(value);break;
           case 'SUBTITLE': if(!Number.isInteger(value)) throw new Error('Invalid subtitle track');await this.manager.selectSubtitleTrack(value);break;
           case 'SUBTITLE_DELAY': if(!Number.isFinite(value)) throw new Error('Invalid subtitle delay');this.manager.setSubtitleDelay(value);break;
-          case 'EXTERNAL_SUBTITLE': if(typeof message.value!=='string'||!/^https?:\/\//i.test(message.value)) throw new Error('Invalid subtitle URL');await this.manager.loadExternalSubtitle({source:message.value});break;
+          case 'EXTERNAL_SUBTITLE': if(typeof message.value!=='string'||!/^https?:\/\//i.test(message.value)) throw new Error('Invalid subtitle URL');await this.manager.loadExternalSubtitle({source:this.secureTransport?this.secureTransport.url(message.value):message.value});break;
           case 'STOP': await this.manager.unload();break;
           case 'GET_STATE': break;
           default: throw new Error('Unknown playback command');
@@ -229,6 +235,9 @@ export class ReceiverSession {
     return true;
   }
   private async loadMedia(media:CastMedia) {
+    if(media.delivery==='phone-proxy'&&location.protocol==='https:'&&media.source.url.startsWith('http:')&&!receiverCapabilities().nativeNetworking&&!media.proxy?.secure){
+      throw new Error('Update Vega Mobile and reconnect to use encrypted phone delivery. This secure receiver will not load the phone stream over HTTP.');
+    }
     // Let the browser enforce mixed content and Local Network Access. Modern
     // Chrome can permit HTTP LAN delivery after the user grants local access.
     const checkAccess=media.delivery!=='phone-proxy'&&!!media.proxy&&!receiverCapabilities().nativeNetworking;
@@ -237,6 +246,14 @@ export class ReceiverSession {
     try{
       if(checkAccess)await this.checkDirectAccess(media);
       if(this.media!==media)return;
+      this.secureTransport?.close();this.secureTransport=undefined;
+      if(media.delivery==='phone-proxy'&&media.proxy?.secure&&!receiverCapabilities().nativeNetworking){
+        const transport=this.secureTransport=new SecurePhoneTransport(message=>this.send(message,this.controllerId),media.id,media.proxy.iceServers);
+        try{await transport.open();}catch(error){transport.close();throw error;}
+        source.source=transport.url(source.source);
+        source.headers=undefined;
+        source.externalSubtitles=source.externalSubtitles?.map(track=>({...track,source:transport.url(track.source)}));
+      }
       const prepared=receiverHost() ? await receiverHost()!.prepareSource(source):source;
       await this.onMedia(media);if(this.media!==media)return;this.loadedMediaId=media.id;await this.manager.load(prepared);
     }catch(error){
@@ -246,9 +263,6 @@ export class ReceiverSession {
     }
     const error=this.manager.getState().error;
     if(error) {
-      if(media.delivery==='phone-proxy'&&location.protocol==='https:'&&media.source.url.startsWith('http:')&&this.accessError(error)){
-        error.message='Unable to access the phone stream. Allow local network access for this site in your browser and keep the phone on the same Wi-Fi. If the browser does not support HTTP local-network access, use secure delivery or an app host.';
-      }
       if(this.accessError(error)&&await this.useProvidedProxy(media,error.category))return;
       await this.send({type:'PLAYBACK_ERROR',category:error.category,message:error.message,mediaId:media.id},this.controllerId);
       if(media.delivery!=='phone-proxy'||['UNSUPPORTED_AUDIO_CODEC','UNSUPPORTED_CONTAINER'].includes(error.category))await this.requestFallback(error.category);
@@ -282,5 +296,5 @@ export class ReceiverSession {
       selectedAudioTrackId:state.selectedAudioTrackId,selectedSubtitleTrackId:state.selectedSubtitleTrackId,subtitleDelay:state.subtitleDelay,
       audioTracks:state.audioTracks,subtitleTracks:state.subtitleTracks,mediaId:this.media?.id,delivery:this.media?.delivery||'direct',processing:this.media?.processing||'original',error:state.error?{category:state.error.category,message:state.error.message}:null}},this.controllerId);
   }
-  stop() {this.stopped=true;this.media=null;this.controllerId=undefined;if(this.serverTimer)clearTimeout(this.serverTimer);this.abort?.abort();this.unsubscribe?.();this.listeners.clear();}
+  stop() {this.secureTransport?.close();this.secureTransport=undefined;this.stopped=true;this.media=null;this.controllerId=undefined;if(this.serverTimer)clearTimeout(this.serverTimer);this.abort?.abort();this.unsubscribe?.();this.listeners.clear();}
 }

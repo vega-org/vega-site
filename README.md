@@ -45,7 +45,15 @@ See the official [Astro Cloudflare custom entrypoint guide](https://docs.astro.b
 
 ### Media delivery limits
 
-Accessible HTTPS direct sources and receiver-local files play independently of the phone. Browser CORS, forbidden headers, mixed-content and local-network restrictions still apply. Moving signaling to Cloudflare does not make an HTTPS website able to fetch an insecure `http://phone-ip` proxy. Phone-served downloads, proxy and remux playback therefore still need an accessible secure delivery endpoint or an app host with its own networking bridge. The existing LAN development receiver and native delivery infrastructure remain reusable; this change does not add a public media proxy or bypass browser security.
+Accessible HTTPS direct sources and receiver-local files play independently of the phone. When direct access fails, updated mobile and browser receivers negotiate a WebRTC data channel. The phone reads its existing registered delivery sessions locally and sends the bytes over DTLS. Video never passes through Cloudflare signaling, and the browser does not fetch an HTTP phone URL.
+
+`SecureCastDelivery` in mobile and `SecurePhoneTransport` in the reusable receiver implement this path. A receiver service worker serves ephemeral same-origin virtual media URLs to libmedia; HLS playlists rewrite segment, rendition and key references through the same encrypted channel. Range reads preserve progressive-file seeking. Requests are restricted to registered media/subtitle URLs and references learned from their playlists. Progressive reads are capped at 512 KiB, complete HLS fragments at 16 MiB, and channel frames at 12 KiB of payload with backpressure. Over-limit fragments report an error rather than silently truncating them. No alternative playback engine or FFmpeg browser pipeline is added.
+
+The HTTPS receiver requires WebRTC, service workers and an updated mobile app for phone-assisted playback; it does not silently downgrade to HTTP if encryption fails. Native app hosts can retain their own networking bridges. The phone must stay connected for assisted playback. This does not remove browser CORS rules for original direct sources.
+
+Default ICE configuration is empty, targeting devices on the same LAN. Isolated Wi-Fi clients, mobile hotspots and different networks may need STUN/TURN. Operators can supply `VEGA_CAST_ICE_SERVERS` as a JSON array when configuring mobile; those servers are sent privately to the paired receiver. There are no bundled public relay credentials and no automatic TURN provisioning service. Use temporary, authenticated TURN credentials in production. A relay configuration is required before promising connectivity across restrictive networks.
+
+After installing mobile dependencies, rebuild its native app because `react-native-webrtc` contains native code; an OTA JavaScript update or Expo Go is insufficient. The implementation only creates data channels and never requests microphone, screen capture or additional camera access. Use `https://vega-app.in/cast/` in mobile's info dialog.
 
 ### Validation
 
@@ -53,7 +61,10 @@ Accessible HTTPS direct sources and receiver-local files play independently of t
 npm run test:cast
 npm run test:cast:cloudflare
 npm run test:cast:browser
+npm run test:cast:secure
 npx astro check
 ```
 
 Cloudflare tests use the actual local Workers runtime, exercising QR confirmation, cross-network pairing, private commands, discovery isolation, revoked tokens and trust recovery after a restart. For a built-site browser smoke check, start `npm run preview -- --host 127.0.0.1 --port 4322`, then run `node tests/cast-site-smoke.mjs`. It checks the hosted receiver, isolation headers, pairing confirmation and two-way commands. These checks do not replace codec/4K testing on actual TV hardware.
+
+The secure-delivery browser test bundles the actual mobile sender with browser WebRTC bindings and runs it against the actual receiver/service worker over real peer connections. It verifies range byte accuracy, repeated seeks, backpressure, HLS segment/key rewriting and rejection of unregistered resources. Android native compilation validates linking. Actual phone-to-TV playback and throughput still require device testing.

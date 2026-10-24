@@ -7,9 +7,12 @@ const hostSource=await readFile(new URL('../src/platform/receiverHost.ts',import
 const host=dataUrl(ts.transpileModule(hostSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
 const errorsSource=await readFile(new URL('../src/player/errors.ts',import.meta.url),'utf8');
 const errors=dataUrl(ts.transpileModule(errorsSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
+const secureSource=await readFile(new URL('../src/cast/SecurePhoneTransport.ts',import.meta.url),'utf8');
+const secure=dataUrl(ts.transpileModule(secureSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText.replaceAll('import.meta.env.BASE_URL',JSON.stringify('/')));
 const source=await readFile(new URL('../src/cast/ReceiverSession.ts',import.meta.url),'utf8');
 const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText
  .replace('import.meta.env.VITE_VEGA_CAST_SERVICE_URL','undefined')
+ .replace(/from ['"]\.\/SecurePhoneTransport['"]/g,'from '+JSON.stringify(secure))
  .replace(/from ['"]\.\.\/platform\/receiverHost['"]/g,'from '+JSON.stringify(host))
  .replace(/from ['"]\.\.\/player\/errors['"]/g,'from '+JSON.stringify(errors));
 const {ReceiverSession}=await import(dataUrl(compiled));
@@ -222,10 +225,10 @@ test('repeated pairing notifications keep one confirmation dialog request',async
  assert.equal(f.snapshot().pending.length,1);
 });
 
-test('HTTPS receiver permits browser-managed HTTP phone delivery instead of rejecting before permission',async()=>{
+test('HTTPS receiver rejects unencrypted phone delivery from older mobile versions',async()=>{
  const f=fixture();globalThis.location={origin:'https://receiver.test',protocol:'https:'};
+ const messages=[];f.session.send=async message=>{messages.push(message);};
  await dualLoad(f.session,{...dualMedia,source:{...dualMedia.source,headers:{Cookie:'provider-cookie'}}});
- assert.equal(f.calls.length,1);
- assert.equal(f.calls[0][1].source,dualMedia.proxy.source.url);
- assert.equal(f.session.media.delivery,'phone-proxy');
+ assert.equal(f.calls.length,0);
+ assert.match(messages.find(message=>message.type==='ACK').error,/encrypted phone delivery/);
 });

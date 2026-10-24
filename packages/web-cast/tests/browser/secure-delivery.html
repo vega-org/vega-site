@@ -1,0 +1,11 @@
+<!doctype html><html><head><title>Encrypted delivery test</title></head><body><script type="module">
+import {SecurePhoneTransport} from '/src/cast/SecurePhoneTransport.ts';
+import {SecureCastDelivery} from './secure-sender.generated.js';
+window.secureTest={start:async()=>{
+ const root=location.origin+'/test-phone/';
+ const sender=new SecureCastDelivery(async message=>receiver.receiveSignal(message),'test-media',[root+'video.mkv',root+'master.m3u8']);
+ const receiver=new SecurePhoneTransport(async message=>sender.signal(message),'test-media');
+ await receiver.open();
+ return window.secureTest.connection={url:source=>receiver.url(root+source),close:()=>{receiver.close();sender.close();},receiver,sender};
+}};
+</script></body></html>

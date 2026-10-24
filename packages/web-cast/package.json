@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "cast:server": "node scripts/cast-server.mjs",
     "test:browser": "playwright test",
-    "build:site": "node scripts/copy-libmedia-assets.mjs && tsc -b && vite build --base=/cast/ --outDir=dist-site && node scripts/publish-site-build.mjs"
+    "build:site": "node scripts/copy-libmedia-assets.mjs && tsc -b && vite build --base=/cast/ --outDir=dist-site && node scripts/publish-site-build.mjs",
+    "pretest:browser": "node ../../scripts/build-secure-test.mjs"
   },
   "dependencies": {
     "@libmedia/avplayer": "^1.3.1",

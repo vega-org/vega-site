@@ -1,5 +1,6 @@
 export const CAST_PROTOCOL_VERSION = 1;
 export interface ReceiverCapabilities {
+  securePhoneDelivery?:boolean;
   host: 'browser' | 'native';
   nativeNetworking: boolean;
   customHeaders: boolean;
@@ -19,7 +20,7 @@ export interface CastMedia {
     skip?:{title?:string;from:number;to:number}[];
   };
   source: {url:string; format?:string; headers?:Record<string,string>};
-  proxy?: {source:{url:string;format?:string};subtitles?:{uri:string;language?:string;title?:string}[]};
+  proxy?: {secure?:boolean;iceServers?:RTCIceServer[];source:{url:string;format?:string};subtitles?:{uri:string;language?:string;title?:string}[]};
   audioTrack?:number;
   subtitleTrack?:number;
   subtitles?: {uri:string; language?:string; title?:string; type?:string}[];

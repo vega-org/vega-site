@@ -31,10 +31,12 @@ export function receiverHost(): ReceiverHost | undefined {
   return host?.capabilities.nativeNetworking && typeof host.prepareSource === 'function' ? host : undefined;
 }
 export function receiverCapabilities(): ReceiverCapabilities {
-  return receiverHost()?.capabilities ?? {host:'browser', nativeNetworking:false, customHeaders:false, browserSecurity:true};
+  return receiverHost()?.capabilities ?? {host:'browser', nativeNetworking:false, customHeaders:false, browserSecurity:true,
+    securePhoneDelivery:typeof RTCPeerConnection!=='undefined'&&typeof navigator!=='undefined'&&'serviceWorker' in navigator&&globalThis.isSecureContext===true};
 }
 export function needsPhoneAccess(media:CastMedia, caps:ReceiverCapabilities): boolean {
   if(/^(file:|content:|\/)|^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/)/i.test(media.source.url))return true;
+  if(!caps.nativeNetworking&&media.proxy?.secure&&/^http:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[f[cd])/i.test(media.source.url))return true;
   const restricted = Object.keys(media.source.headers || {}).some(key => /^(cookie|cookie2|origin|referer|user-agent|host|connection|content-length|accept-encoding|sec-.*|proxy-.*)$/i.test(key));
   return restricted&&!(caps.nativeNetworking&&caps.customHeaders);
 }

@@ -1,0 +1,56 @@
+---
+import {Cast, Smartphone, Gamepad2, CircleHelp} from '@lucide/astro';
+import GuideShell from '../../components/guide/GuideShell.astro';
+---
+
+<GuideShell title="Vega Cast" description="Pair Vega Mobile with a browser, cast a stream, and control playback with your phone, keyboard or controller." currentPath="/guide/web-cast">
+  <section class="rounded-2xl border border-white/10 bg-vega-surface p-7 md:p-10">
+    <div class="inline-flex items-center gap-2 text-sm font-bold text-vega-accent"><Cast class="h-5 w-5" aria-hidden="true" />Vega Cast</div>
+    <h2 class="mt-4 font-headline text-3xl font-black text-white">Watch on another screen</h2>
+    <p class="mt-3 text-base leading-relaxed text-vega-muted">Open Vega Cast on your TV or computer and connect Vega Mobile. Your phone selects the stream; the receiver plays it and provides its own playback controls.</p>
+    <a href="/cast/" class="mt-6 inline-flex rounded-lg bg-vega-accent px-5 py-3 font-bold text-[#240900]">Open Vega Cast</a>
+    <p class="mt-3 text-sm text-vega-muted">The official receiver is <a href="https://cast.vega-app.in/" class="text-vega-accent underline underline-offset-2">cast.vega-app.in</a>. If you use a self-hosted receiver, open its address instead.</p>
+
+    <article class="mt-8 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <h3 class="flex items-center gap-2 font-headline text-xl font-bold text-white"><Smartphone class="h-5 w-5 text-vega-accent" aria-hidden="true" />Connect your phone</h3>
+      <ol class="mt-4 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent">
+        <li>Connect the phone and receiver to the same Wi-Fi. Open Vega Cast on the receiving screen and choose <strong class="text-white">Connect</strong>.</li>
+        <li>In Vega Mobile, open the cast device chooser and choose <strong class="text-white">Vega Cast</strong>, rather than DLNA or Google Cast.</li>
+        <li>Select the receiver if it appears. Otherwise, tap the scan icon and scan the receiver's QR code. Allow camera access when asked.</li>
+        <li>Check that both devices show the same confirmation number. Approve the connection on both screens. You do not need to type the code.</li>
+        <li>Select a video in Vega Mobile and send it to the receiver. Paired devices can reconnect without repeating the first-time pairing.</li>
+      </ol>
+      <p class="mt-4 text-sm leading-relaxed text-vega-muted">If the receiver asks to allow audio, select <strong class="text-white">Allow audio &amp; continue</strong> on that screen. Browsers may require a local action before playing sound.</p>
+    </article>
+
+    <article class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <h3 class="font-headline text-xl font-bold text-white">During playback</h3>
+      <p class="mt-3 text-sm leading-relaxed text-vega-muted">Use either screen to play, pause, seek, change volume or playback speed, and select available audio and subtitle tracks. Quality choices appear for streams that expose multiple qualities. Server choices depend on the stream supplied by your phone.</p>
+      <p class="mt-3 text-sm leading-relaxed text-vega-muted">The receiver tries to load the original stream directly. When browser access restrictions prevent this, it can use the phone's encrypted delivery connection. Keep the phone connected and Vega running when phone delivery is in use.</p>
+      <p class="mt-3 text-sm leading-relaxed text-vega-muted">A directly accessible stream can continue after the phone disconnects: choose <strong class="text-white">Continue watching</strong> when prompted. Choosing <strong class="text-white">Stop cast</strong> ends playback. Expired stream URLs can still interrupt playback.</p>
+      <p class="mt-3 text-sm leading-relaxed text-vega-muted">To play a file already on the receiving device, choose the local-file option in <strong class="text-white">Watch</strong>. This does not require pairing a phone.</p>
+    </article>
+
+    <article class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <h3 class="flex items-center gap-2 font-headline text-xl font-bold text-white"><Gamepad2 class="h-5 w-5 text-vega-accent" aria-hidden="true" />Remote, keyboard and controller</h3>
+      <ul class="mt-4 list-disc space-y-3 pl-5 text-sm leading-relaxed text-vega-muted marker:text-vega-accent">
+        <li><strong class="text-white">TV remote:</strong> arrows move focus, OK selects, and Back closes a menu. On a timeline or volume slider, press OK to adjust, use arrows, then OK or Back to finish.</li>
+        <li><strong class="text-white">Standard gamepad:</strong> D-pad or left stick moves focus, A/Cross selects, and B/Circle goes back. Press a controller button if the browser has not detected it yet. Nonstandard controller layouts may not work.</li>
+        <li><strong class="text-white">Computer:</strong> Space or K toggles playback; left/right arrows seek, and up/down arrows adjust volume when navigating with a mouse and keyboard. Use Tab to focus controls. F toggles fullscreen and M toggles mute.</li>
+        <li><strong class="text-white">Mouse:</strong> move the pointer to reveal controls. Click an empty area of the player to hide or show them.</li>
+      </ul>
+    </article>
+
+    <article class="mt-6 rounded-xl border border-white/10 bg-vega-surface-hi p-5">
+      <h3 class="flex items-center gap-2 font-headline text-xl font-bold text-white"><CircleHelp class="h-5 w-5 text-vega-accent" aria-hidden="true" />Troubleshooting</h3>
+      <dl class="mt-4 space-y-5 text-sm leading-relaxed text-vega-muted">
+        <div><dt class="font-bold text-white">The receiver is not listed</dt><dd class="mt-1">Use the QR scan option. Check that both devices have an internet connection and are on the same Wi-Fi. Guest-network isolation or a VPN can prevent their local connection.</dd></div>
+        <div><dt class="font-bold text-white">Pairing or encrypted delivery times out</dt><dd class="mt-1">Keep Vega open on the phone, reload the receiver, and reconnect. If one device is on a guest network, move both to the main network. Networks that block peer connections may prevent phone delivery.</dd></div>
+        <div><dt class="font-bold text-white">Video plays without sound</dt><dd class="mt-1">Allow audio on the receiver if prompted, check mute and volume on that screen, and try another available audio track.</dd></div>
+        <div><dt class="font-bold text-white">Subtitles or a codec are unavailable</dt><dd class="mt-1">Open the track menu and select an available track. Support depends on the source, decoder and receiving browser. You can import an external subtitle file from the receiver's subtitle menu. Subtitle timing can be adjusted there too.</dd></div>
+        <div><dt class="font-bold text-white">Playback buffers or stops</dt><dd class="mt-1">Try a lower available quality or another server. With phone delivery, check both the phone's connection to the stream and its connection to the receiver. High-resolution playback also depends on the receiving device's decoding capabilities.</dd></div>
+      </dl>
+      <p class="mt-5 text-sm leading-relaxed text-vega-muted">Smart TV browser capabilities vary. Start with a current desktop browser when troubleshooting; support for a particular codec or 4K stream is not guaranteed on every device.</p>
+    </article>
+  </section>
+</GuideShell>

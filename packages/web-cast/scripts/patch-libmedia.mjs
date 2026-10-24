@@ -18,3 +18,13 @@ if(!current.includes(patchedInfo)){
  if(current.split(originalInfo).length!==2)throw new Error('libmedia external subtitle metadata patch does not match this version');
  fs.writeFileSync(file,current.replace(originalInfo,patchedInfo));
 }
+
+// Use the same resolved seek timestamp as the A/V pipelines. currentTime is
+// read from asynchronously updated render statistics and may still be stale.
+const seekSource=fs.readFileSync(file,'utf8');
+const oldSeek='for(let e=0;e<this.externalSubtitleTasks.length;e++)await Le.DemuxerThread.seek(this.externalSubtitleTasks[e].taskId,this.currentTime,8);this.subtitleRender&&(this.subtitleRender.reset(),this.subtitleRender.start())}async seek(e)';
+const newSeek='for(let subtitleIndex=0;subtitleIndex<this.externalSubtitleTasks.length;subtitleIndex++)await Le.DemuxerThread.seek(this.externalSubtitleTasks[subtitleIndex].taskId,a>=BigInt(0)?a>e?a:e:e,8);this.subtitleRender&&(this.subtitleRender.reset(),this.subtitleRender.start())}async seek(e)';
+if(!seekSource.includes(newSeek)){
+ if(seekSource.split(oldSeek).length!==2)throw new Error('libmedia external subtitle seek patch does not match this version');
+ fs.writeFileSync(file,seekSource.replace(oldSeek,newSeek));
+}

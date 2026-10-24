@@ -314,14 +314,15 @@ test('receiver name field exits to Save with OK or Back without saving automatic
 });
 
 for(const action of ['click','Enter','Space']){
- test(`Play ${action} resumes blocked audio without pausing playback`,async({page})=>{
+ test(`Allow audio ${action} resumes blocked audio without pausing playback`,async({page})=>{
   await page.goto('/tests/browser/controls.html');
   await page.evaluate(()=>window.controlTest.update({status:'playing',audioNeedsUserGesture:true}));
-  const play=page.getByRole('button',{name:'Play',exact:true});
+  const play=page.getByRole('button',{name:'Allow audio & continue',exact:true});
+  await expect(page.getByRole('dialog',{name:'Allow audio',exact:true})).toBeVisible();
   if(action==='click')await play.click();else{await play.focus();await page.keyboard.press(action);}
   await expect(page.getByRole('button',{name:'Pause',exact:true})).toBeVisible();
   expect(await page.evaluate(()=>window.controlTest.calls)).toEqual([['resume-audio']]);
-  await expect(page.getByRole('button',{name:'Enable audio',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('dialog',{name:'Allow audio',exact:true})).toHaveCount(0);
  });
 }
 

@@ -554,5 +554,7 @@ test('external subtitle files on HLS select their stream ID without requiring pl
   const calls=[];player.selectSubtitle=async id=>{calls.push(id);player.subtitleId=id;};
   await engine.selectSubtitleTrack(14);
   assert.deepEqual(calls,[14]);assert.equal(state.selectedSubtitleTrackId,14);
+  assert.equal(player.calls.some(call=>String(call).startsWith('seek')),false);
+  assert.equal(player.calls.includes('pause'),false);
  }finally{await engine.destroy();}
 });

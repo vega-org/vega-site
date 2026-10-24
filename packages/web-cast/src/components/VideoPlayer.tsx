@@ -1,3 +1,4 @@
+import {FocusDialog} from './FocusDialog';
 import {QualityMenu} from './QualityMenu';
 import {ServerMenu} from './ServerMenu';
 import type {CastServerOption} from '../cast/protocol';
@@ -36,6 +37,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
     return()=>document.documentElement.classList.remove('vega-player-active');
   },[active]);
 
+  const [audioDialogDismissed,setAudioDialogDismissed]=useState(false);
+  const [allowingAudio,setAllowingAudio]=useState(false);
+  const [audioDialogError,setAudioDialogError]=useState('');
+  useEffect(()=>{if(!state.audioNeedsUserGesture){setAudioDialogDismissed(false);setAudioDialogError('');}},[state.audioNeedsUserGesture]);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -230,10 +235,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
         
       </div>
 
-      {state.audioNeedsUserGesture && !isError && (
-        <div className="player-overlay-center" style={{pointerEvents:'none'}}>
-          <span className="spinner-text">Press Play to start audio.</span>
-        </div>
+      {active&&state.audioNeedsUserGesture&&!isError&&!audioDialogDismissed&&(
+        <FocusDialog title="Allow audio" onClose={()=>setAudioDialogDismissed(true)}>
+          <p className="dialog-description">Allow sound to continue watching.</p>
+          {audioDialogError&&<p role="alert">{audioDialogError}</p>}
+          <div className="dialog-actions"><button className="accent-button" data-dialog-primary disabled={allowingAudio} onClick={()=>{
+            // Must start resume synchronously within the click/remote gesture.
+            const resumed=playerManager.resumeAudio();setAllowingAudio(true);setAudioDialogError('');
+            void resumed.then(async()=>{
+              if(playerManager.getState().audioNeedsUserGesture){setAudioDialogError('Audio is still blocked. Select Allow audio & continue again.');return;}
+              if(!['playing','buffering'].includes(playerManager.getState().status))await playerManager.play();
+            }).catch(()=>setAudioDialogError('Unable to start audio. Please try again.')).finally(()=>setAllowingAudio(false));
+          }}>{allowingAudio?'Starting audio…':'Allow audio & continue'}</button></div>
+        </FocusDialog>
       )}
 
       {/* Loading & Buffering Spinner */}

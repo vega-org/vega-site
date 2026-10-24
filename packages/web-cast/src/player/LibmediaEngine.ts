@@ -386,7 +386,15 @@ export class LibmediaEngine implements PlayerEngine {
       if (trackId < 0) {
         player.setSubtitleEnable(false);
         this.isSubtitleEnabled = false;
-      } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())&&!(player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===trackId)){
+      } else if((player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===trackId)){
+        // Libmedia switches the external demux task and seeks it to the active
+        // clock itself. A full A/V seek here is unnecessary and disruptive.
+        if(player.getSelectedSubtitleStreamId()!==trackId)await player.selectSubtitle(trackId);
+        if(player.getSelectedSubtitleStreamId()!==trackId)throw new Error(`External subtitle track ${trackId} was not selected by libmedia`);
+        if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
+        this.isSubtitleEnabled=true;
+        player.setSubtitleDelay(Math.round(this.currentSubtitleDelay*1000));
+      } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())){
         // The loader list can arrive after the initial demuxed tracks. Resolve
         // against the current playlist rather than treating stream IDs as indices.
         const previous=this.cachedTracks.subtitle.find(track=>track.id===trackId);

@@ -200,7 +200,7 @@ test('audio and subtitle selection buttons activate once per held OK',async({pag
  const audio=page.getByRole('button',{name:'Audio tracks',exact:true});
  await holdOk(page,audio);
  await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true}).locator('.track-item-title')).toHaveText('English');
- await holdOk(page,page.getByRole('button',{name:'English English audio ENG',exact:true}));
+ await holdOk(page,page.getByRole('button',{name:'English English audio',exact:true}));
  await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true})).toBeVisible();
  await holdOk(page,page.getByRole('button',{name:'Close audio tracks menu',exact:true}));
  await expect(page.getByRole('dialog',{name:'Audio tracks',exact:true})).toHaveCount(0);
@@ -208,7 +208,7 @@ test('audio and subtitle selection buttons activate once per held OK',async({pag
  expect(await page.evaluate(()=>window.controlTest.calls.filter(call=>call[0]==='audio'))).toEqual([['audio',1]]);
  await holdOk(page,page.getByRole('button',{name:'Subtitles',exact:true}));
  await expect(page.getByRole('dialog',{name:'Subtitle tracks',exact:true}).locator('.track-item-title').last()).toHaveText('English');
- await holdOk(page,page.getByRole('button',{name:'English English subtitles ENG',exact:true}));
+ await holdOk(page,page.getByRole('button',{name:'English English subtitles',exact:true}));
  expect(await page.evaluate(()=>window.controlTest.calls.filter(call=>call[0]==='subtitle'))).toEqual([['subtitle',2]]);
 });
 test('direct disconnection dialog works in fullscreen and Continue preserves playback',async({page})=>{
@@ -392,4 +392,30 @@ for(const kind of ['audio','subtitle'])test(`${kind} switching displays pending 
  await expect(dialog.getByRole('button',{name:/English/})).toBeDisabled();
  await expect(dialog.getByRole('status')).toHaveCount(0);
  await expect(dialog.getByRole('button',{name:/English/})).toBeEnabled();
+});
+
+
+test('clicking empty video toggles controls without toggling playback',async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ await page.getByRole('button',{name:'Play',exact:true}).click();
+ const canvas=page.locator('.media-canvas-container');
+ await canvas.click({position:{x:400,y:240}});
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','true');
+ await canvas.click({position:{x:400,y:240}});
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','false');
+ expect(await page.evaluate(()=>window.controlTest.calls)).toEqual([['play']]);
+});
+
+
+test('manual hide remains hidden while paused and ignores tiny pointer jitter',async({page})=>{
+ await page.goto('/tests/browser/controls.html');
+ const canvas=page.locator('.media-canvas-container');
+ await canvas.click({position:{x:400,y:240}});
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','true');
+ const box=await canvas.boundingBox();
+ await page.mouse.move(box.x+402,box.y+241);
+ await page.waitForTimeout(300);
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','true');
+ await page.mouse.move(box.x+420,box.y+240);
+ await expect(page.locator('.controls-wrapper')).toHaveAttribute('aria-hidden','false');
 });

@@ -30,6 +30,8 @@ interface VideoPlayerProps {
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, onRetry, title, subtitle, onExit, active=true,servers=[],selectedServerId,canChangeServer=false,changingServer=false,serverError,onSelectServer }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const lastPointer=useRef<{x:number;y:number}|null>(null);
+  const hiddenAtPointer=useRef<{x:number;y:number}|null>(null);
 
   useEffect(()=>{
     if(!active)return;
@@ -193,8 +195,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
   const subtitleCodec=state.subtitleTracks.find(track=>track.id===state.selectedSubtitleTrackId)?.codec;
   const plainSubtitles=!!subtitleCodec&&['94210','94213','94216','94225','94226','text','srt','subrip','webvtt'].includes(subtitleCodec.toLowerCase());
 
+  useEffect(()=>{setIsControlsVisible(true);},[state.status,showAudioMenu,showSubtitleMenu,showDiagnostics,showSpeedMenu,showServerMenu,showQualityMenu]);
   useEffect(()=>{
-    if(!active||state.status!=='playing'||showAudioMenu||showSubtitleMenu||showDiagnostics||showSpeedMenu||showServerMenu||showQualityMenu){setIsControlsVisible(true);return;}
+    if(!active||state.status!=='playing'||showAudioMenu||showSubtitleMenu||showDiagnostics||showSpeedMenu||showServerMenu||showQualityMenu)return;
     const timer=window.setTimeout(()=>{
       const focused=document.activeElement as HTMLElement|null;
       if(focused&&wrapperRef.current?.contains(focused)){
@@ -217,8 +220,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ playerManager, state, 
     <div
       ref={wrapperRef}
       className={`video-player-wrapper ${isFullscreen ? 'fullscreen' : ''} ${!isControlsVisible && state.status === 'playing' ? 'hide-cursor' : ''}`}
-      onMouseMove={resetHideTimer}
-      onClick={resetHideTimer}
+      onMouseMove={event=>{
+        const previous=lastPointer.current;lastPointer.current={x:event.clientX,y:event.clientY};
+        const hidden=hiddenAtPointer.current;
+        if(hidden&&Math.hypot(event.clientX-hidden.x,event.clientY-hidden.y)<8)return;
+        hiddenAtPointer.current=null;
+        if(!previous||previous.x!==event.clientX||previous.y!==event.clientY)resetHideTimer();
+      }}
+      onClick={event=>{
+        const target=event.target as HTMLElement;
+        if(target.closest('button,input,select,a,[role="slider"],.controls-wrapper,.cinema-header,.track-modal-overlay,.diagnostics-overlay,.dialog-backdrop')){resetHideTimer();return;}
+        if(showAudioMenu||showSubtitleMenu||showDiagnostics||showSpeedMenu||showServerMenu||showQualityMenu)return;
+        hiddenAtPointer.current=isControlsVisible?{x:event.clientX,y:event.clientY}:null;
+        setIsControlsVisible(visible=>!visible);setControlActivity(value=>value+1);
+        const focused=document.activeElement as HTMLElement|null;
+        if(focused&&wrapperRef.current?.contains(focused))focused.blur();
+      }}
       onPointerUpCapture={event=>{
         if(state.audioNeedsUserGesture&&(event.target as HTMLElement).closest('[data-primary-play]')){
           event.preventDefault();event.stopPropagation();

@@ -143,6 +143,7 @@ export class ReceiverSession {
   }
   private async receive(message:CastMessage) {
     if(message.type==='PAIR_REQUEST') {
+      if(this.state.pending.some(request=>request.requestId===message.requestId))return;
       this.update({pending:[...this.state.pending,{requestId:message.requestId!,name:message.name!,confirmation:message.confirmation!}]});return;
     }
     if(message.type==='CONTROLLER_CONNECTED') {

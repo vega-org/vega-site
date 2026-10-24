@@ -130,3 +130,22 @@ test('server change requests and results are private and role-restricted',async(
  const result=(await broker.dispatch({op:'poll',auth:receiver})).messages[0];
  assert.equal(result.type,'SERVER_CHANGE_RESULT');assert.equal(result.controllerId,controller.controllerId);
 });
+
+test('pending pairing notification is redelivered after a lost poll without flooding the queue',async()=>{
+ let time=1000;const broker=createCastBroker({now:()=>time});
+ const registration=await broker.dispatch({op:'register',name:'Receiver'});
+ const auth={...registration.identity,kind:'receiver'};
+ const pair=await broker.dispatch({op:'pair',code:registration.code,name:'Phone'});
+ // Simulate a response that the server delivered but the browser never received.
+ await broker.dispatch({op:'poll',auth});
+ time+=3001;
+ await broker.dispatch({op:'pairStatus',requestId:pair.requestId,secret:pair.secret});
+ time+=3001;
+ await broker.dispatch({op:'pairStatus',requestId:pair.requestId,secret:pair.secret});
+ const messages=(await broker.dispatch({op:'poll',auth})).messages;
+ assert.equal(messages.length,1);
+ assert.equal(messages[0].requestId,pair.requestId);
+ await broker.dispatch({op:'confirm',auth,requestId:pair.requestId,allow:true});
+ time+=3001;
+ assert.equal((await broker.dispatch({op:'pairStatus',requestId:pair.requestId,secret:pair.secret})).status,'approved');
+});

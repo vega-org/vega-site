@@ -5,6 +5,7 @@ import {chromium} from '@playwright/test';
 const origin=process.env.CAST_SITE_TEST_URL||'http://127.0.0.1:4322';
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const context=await browser.newContext();
+let cleanup;
 try{
  await context.addInitScript(()=>localStorage.setItem('vega.cast.environment','browser'));
  const page=await context.newPage();
@@ -21,6 +22,7 @@ try{
   const response=await fetch(receiver.serviceUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const result=await response.json();assert.equal(response.status,200,JSON.stringify(result));return result;
  };
+ cleanup=()=>request({op:'unregister',auth:{...receiver.identity,kind:'receiver'}});
  const pairing=await request({op:'pair',code:receiver.code,name:'Smoke test mobile'});
  await page.getByRole('button',{name:'Confirm & remember',exact:true}).click();
  const approved=await request({op:'pairStatus',requestId:pairing.requestId,secret:pairing.secret});
@@ -37,4 +39,4 @@ try{
  assert.deepEqual(errors,[]);
  await page.screenshot({path:'.cast-test-build/site-receiver.png'});
  console.log('Hosted receiver assets, isolation headers, pairing confirmation and two-way mobile commands passed.');
-}finally{await context.close();await browser.close();}
+}finally{if(cleanup)await cleanup().catch(()=>{});await context.close();await browser.close();}

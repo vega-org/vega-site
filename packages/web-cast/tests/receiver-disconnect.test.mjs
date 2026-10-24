@@ -215,3 +215,9 @@ test('successful access probe cancels its body and disables engine retries for d
  assert.equal(f.calls[0][1].source,dualMedia.source.url);
  assert.equal(f.calls[0][1].networkRetryCount,0);
 });
+
+test('repeated pairing notifications keep one confirmation dialog request',async()=>{
+ const f=fixture();const message={type:'PAIR_REQUEST',requestId:'pair-one',name:'Phone',confirmation:'1234'};
+ await f.session.receive(message);await f.session.receive(message);
+ assert.equal(f.snapshot().pending.length,1);
+});

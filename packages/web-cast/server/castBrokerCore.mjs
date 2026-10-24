@@ -103,13 +103,22 @@ export function createCastBrokerCore({initialRecords=[],initialLive=[],initialRe
       const requestId = idPrefix+id();
       const secret = id();
       const confirmation = String(randomInt(1000, 10000));
-      requests.set(requestId, {receiverId:entry[0], name:cleanName(body.name || 'Vega Mobile'), secretHash:hash(secret), confirmation, until:now()+120_000, status:'pending'});
+      requests.set(requestId, {receiverId:entry[0], name:cleanName(body.name || 'Vega Mobile'), secretHash:hash(secret), confirmation, until:now()+120_000, status:'pending',lastNotifiedAt:now()});
       push(`${entry[0]}:receiver`, {type:'PAIR_REQUEST', requestId, name:cleanName(body.name || 'Vega Mobile'), confirmation});
       return {requestId, secret, confirmation};
     }
     if (op === 'pairStatus') {
       const request = requests.get(body.requestId);
       if (!request || !matches(body.secret, request.secretHash)) fail('Pairing request expired', 401);
+      // A poll response can be lost when a browser reloads or its connection
+      // drops. Keep the authenticated phone's pending request deliverable.
+      if(request.status==='pending'&&now()-(request.lastNotifiedAt||0)>=3000){
+        const key=`${request.receiverId}:receiver`;
+        if(!queues.get(key)?.some(message=>message.type==='PAIR_REQUEST'&&message.requestId===body.requestId)){
+          push(key,{type:'PAIR_REQUEST',requestId:body.requestId,name:request.name,confirmation:request.confirmation});
+        }
+        request.lastNotifiedAt=now();
+      }
       return {status:request.status, ...(request.grant ? {grant:request.grant} : {})};
     }
     const record = authenticate(auth);

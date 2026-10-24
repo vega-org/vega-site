@@ -37,7 +37,7 @@ npx wrangler deploy --dry-run --config dist/server/wrangler.json
 npx wrangler deploy --config dist/server/wrangler.json
 ```
 
-The checked-in Wrangler configuration declares the `CastSession` and `CastDirectory` bindings and their SQLite migration. Astro produces the final configuration in `dist/server/wrangler.json`; deploy that complete output, including `dist/client`. The deployment needs an account supporting SQLite-backed Durable Objects. Production receiver URL: `https://vega.8man.in/cast/`; signaling URL: `https://vega.8man.in/vega-cast/v1`.
+The checked-in Wrangler configuration declares the `CastSession` and `CastDirectory` bindings and their SQLite migration. Astro produces the final configuration in `dist/server/wrangler.json`; deploy that complete output, including `dist/client`. The deployment needs an account supporting SQLite-backed Durable Objects. Production receiver URL: `https://vega-app.in/cast/`; signaling URL: `https://vega-app.in/vega-cast/v1`.
 
 Mobile defaults discovery to that signaling URL in `app.config.js`; `VEGA_CAST_SERVICE_URL` remains an explicit build-time override for other deployments. Existing saved receivers and LAN discovery remain available. Rebuild mobile to pick up the default endpoint.
 

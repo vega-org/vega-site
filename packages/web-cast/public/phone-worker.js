@@ -1,6 +1,9 @@
 /* Same-origin virtual media URLs; bytes arrive only over the paired DTLS channel. */
 self.addEventListener('install',event=>event.waitUntil(self.skipWaiting()));
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
+self.addEventListener('message',event=>{
+ if(event.data?.type==='claim')event.waitUntil(self.clients.claim());
+});
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);
  if(url.origin!==self.location.origin||!url.pathname.endsWith('/phone-media'))return;

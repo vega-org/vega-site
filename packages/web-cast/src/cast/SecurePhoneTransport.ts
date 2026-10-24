@@ -42,7 +42,7 @@ export class SecurePhoneTransport {
    navigator.serviceWorker.ready.then(()=>{clearTimeout(timer);resolve();},error=>{clearTimeout(timer);reject(error);});
   });
   if(!navigator.serviceWorker.controller){
-   await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>{navigator.serviceWorker.removeEventListener('controllerchange',changed);reject(new Error('Reload the receiver to enable encrypted delivery.'));},5000);const changed=()=>{clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',changed);resolve();};navigator.serviceWorker.addEventListener('controllerchange',changed);registration.active?.postMessage({type:'claim'});});
+   await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>{navigator.serviceWorker.removeEventListener('controllerchange',changed);reject(new Error('Reload the receiver to enable encrypted delivery.'));},5000);const changed=()=>{clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',changed);resolve();};navigator.serviceWorker.addEventListener('controllerchange',changed);if(navigator.serviceWorker.controller){changed();return;}registration.active?.postMessage({type:'claim'});});
   }
   if(this.closed)throw new Error('Phone delivery closed');
   this.id=crypto.randomUUID();

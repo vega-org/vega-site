@@ -18,6 +18,11 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  await page.goto('/tests/browser/secure-delivery.html');
  await page.waitForFunction(()=>window.secureTest);
  await page.evaluate(()=>window.secureTest.start());
+ // Reopening a receiver must reuse the worker without another reload prompt.
+ await page.evaluate(()=>window.secureTest.connection.close());
+ await page.reload();
+ await page.waitForFunction(()=>window.secureTest);
+ await page.evaluate(()=>window.secureTest.start());
  const result=await page.evaluate(async()=>{
   const connection=window.secureTest.connection;
   const seek=await fetch(connection.url('video.mkv'),{headers:{Range:'bytes=65536-69631'}});

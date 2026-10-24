@@ -260,6 +260,7 @@ export class ReceiverSession {
       this.secureTransport?.close();this.secureTransport=undefined;
       if(media.delivery==='phone-proxy'&&media.proxy?.secure&&!receiverCapabilities().nativeNetworking){
         const transport=this.secureTransport=new SecurePhoneTransport(message=>this.send(message,this.controllerId),media.id,media.proxy.iceServers);
+        transport.onDeliveryError=message=>{if(this.secureTransport===transport&&this.media===media)this.manager.reportDeliveryError(message);};
         const controller=this.controllerId;
         let controls=Promise.resolve();
         transport.onControl=message=>{

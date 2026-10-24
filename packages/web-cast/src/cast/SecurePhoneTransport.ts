@@ -5,12 +5,16 @@ export class SecurePhoneTransport {
  private peer:RTCPeerConnection|null=null;
  private channel:RTCDataChannel|null=null;
  private controls:RTCDataChannel|null=null;
+ onDeliveryError?: (message:string)=>void;
  onControl?: (message:Record<string,unknown>)=>void;
  sendControl(message:Record<string,unknown>):boolean{
   if(this.controls?.readyState!=='open'||this.controls.bufferedAmount>64*1024)return false;
   try{this.controls.send(JSON.stringify(message));return true;}catch{return false;}
  }
  private id='';
+ private routeId=crypto.randomUUID();
+ private reconnecting?:Promise<void>;
+ private reconnects=0;
  private pending=new Map<string,Pending>();
  private closed=false;
  private rejectOpen?: (error:Error)=>void;
@@ -24,7 +28,7 @@ export class SecurePhoneTransport {
  constructor(signal:(message:Signal)=>Promise<unknown>,mediaId:string,iceServers:RTCIceServer[]=[]){this.signal=signal;this.mediaId=mediaId;this.iceServers=iceServers;}
  private workerMessage=(event:MessageEvent)=>{
   const data=event.data;
-  if(data?.type!=='VEGA_PHONE_FETCH'||data.transportId!==this.id||!event.ports[0])return;
+  if(data?.type!=='VEGA_PHONE_FETCH'||data.transportId!==this.routeId||!event.ports[0])return;
   const port=event.ports[0];
   void this.request(data.url,data.range,data.method).then(result=>{
    const type=result.headers['content-type']||'';
@@ -37,7 +41,11 @@ export class SecurePhoneTransport {
     result.headers['content-type']='application/vnd.apple.mpegurl';result.status=200;
    }
    port.postMessage(result,[result.body]);
-  }).catch(error=>port.postMessage({status:502,headers:{'content-type':'text/plain'},body:new TextEncoder().encode(error.message).buffer})).finally(()=>port.close());
+  }).catch(error=>{
+   const message=String(error?.message||'Phone media read failed').replace(/https?:\/\/\S+/gi,'[source]').slice(0,300);
+   if(!this.closed)this.onDeliveryError?.(message);
+   port.postMessage({status:502,headers:{'content-type':'text/plain'},body:new TextEncoder().encode(message).buffer});
+  }).finally(()=>port.close());
  };
  async open():Promise<void>{
   if(!isSecureContext||!('serviceWorker' in navigator)||typeof RTCPeerConnection==='undefined')throw new Error('Encrypted phone delivery requires WebRTC and service workers in a secure browser.');
@@ -65,6 +73,7 @@ export class SecurePhoneTransport {
   });
   if(this.closed)throw new Error('Phone delivery closed');
   this.id=crypto.randomUUID();
+  this.answerReceived=false;this.localCandidates=0;this.remoteCandidates=0;this.signalErrors=0;this.candidates=[];
   navigator.serviceWorker.addEventListener('message',this.workerMessage);
   const peer=this.peer=new RTCPeerConnection({iceServers:this.iceServers});
   peer.onicecandidate=event=>{if(event.candidate){this.localCandidates++;void this.signal({type:'RTC_ICE',transportId:this.id,mediaId:this.mediaId,candidate:event.candidate.toJSON()}).catch(()=>{this.signalErrors++;});}};
@@ -75,7 +84,7 @@ export class SecurePhoneTransport {
   };
   const channel=this.channel=peer.createDataChannel('vega-media-v1',{ordered:true});
   channel.onmessage=event=>this.receive(event.data);
-  channel.onclose=()=>this.failPending(new Error('Encrypted phone delivery disconnected'));
+  channel.onclose=()=>{if(this.channel!==channel||this.closed)return;this.failPending(new Error('Encrypted phone delivery disconnected'));this.onDeliveryError?.('Encrypted phone delivery disconnected. Reconnecting on the next media read…');};
   const opened=new Promise<void>((resolve,reject)=>{
    const fail=(error:Error)=>{clearTimeout(timer);this.rejectOpen=undefined;reject(error);};
    const timer=setTimeout(()=>{channel.onopen=null;fail(new Error(`Encrypted phone connection timed out (answer: ${this.answerReceived?'received':'missing'}, ICE: ${peer.iceConnectionState}, candidates: ${this.localCandidates} local / ${this.remoteCandidates} remote, signaling failures: ${this.signalErrors}). Keep both devices on the same Wi-Fi or configure a TURN relay.`));},25_000);
@@ -98,9 +107,29 @@ export class SecurePhoneTransport {
  url(source:string,format?:string):string{
   const hint=(format||'').toLowerCase();
   const extension=/\.(srt|vtt|ass|ssa|ttml)$/i.exec(new URL(source,location.href).pathname)?.[1].toLowerCase()||(/^(srt|vtt|ass|ssa|ttml)$/.test(hint)?hint:hint.includes('vtt')?'vtt':hint.includes('subrip')?'srt':undefined);
-  const url=new URL(import.meta.env.BASE_URL+'phone-media'+(extension?'/subtitle.'+extension:''),location.origin);url.searchParams.set('transport',this.id);url.searchParams.set('url',source);return url.toString();
+  const url=new URL(import.meta.env.BASE_URL+'phone-media'+(extension?'/subtitle.'+extension:''),location.origin);url.searchParams.set('transport',this.routeId);url.searchParams.set('url',source);return url.toString();
  }
- private request(url:string,range:string|null,method:string):Promise<PhoneResponse>{
+ private async reconnect():Promise<void>{
+  if(this.closed)throw new Error('Phone delivery closed');
+  if(this.reconnecting)return this.reconnecting;
+  if(this.reconnects>=2)throw new Error('Encrypted phone connection was lost and could not recover. Reconnect Vega Mobile.');
+  this.reconnects++;
+  const oldChannel=this.channel,oldPeer=this.peer,oldControls=this.controls;
+  this.channel=null;this.peer=null;this.controls=null;
+  oldChannel?.close();oldControls?.close();oldPeer?.close();
+  this.reconnecting=this.open().finally(()=>{this.reconnecting=undefined;});
+  return this.reconnecting;
+ }
+ private async request(url:string,range:string|null,method:string):Promise<PhoneResponse>{
+  if(this.channel?.readyState!=='open')await this.reconnect();
+  try{return await this.read(url,range,method);}catch(error){
+   if(!this.closed&&this.channel?.readyState!=='open'){
+    await this.reconnect();return this.read(url,range,method);
+   }
+   throw error;
+  }
+ }
+ private read(url:string,range:string|null,method:string):Promise<PhoneResponse>{
   if(this.channel?.readyState!=='open')return Promise.reject(new Error('Encrypted phone delivery is not connected'));
   if(this.pending.size>=8)return Promise.reject(new Error('Too many simultaneous media reads'));
   const id=crypto.randomUUID();

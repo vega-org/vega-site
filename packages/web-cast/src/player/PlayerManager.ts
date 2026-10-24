@@ -76,6 +76,8 @@ export class PlayerManager {
 
   setMuted(muted:boolean):void {this.engine.setMuted(muted);}
 
+  reportDeliveryError(message:string):void{this.updateState({error:{category:'NETWORK_ERROR',message,recoverable:true,timestamp:Date.now()}});}
+
   async selectQuality(id:number):Promise<void>{
     try{await this.engine.selectQuality(id);}catch(error){this.updateState({error:normalizePlaybackError(error)});}
   }

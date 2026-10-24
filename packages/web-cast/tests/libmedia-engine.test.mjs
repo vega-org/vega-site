@@ -516,3 +516,28 @@ test('HLS subtitle rendition switches use playlist indices instead of demux IDs'
   assert.equal(state.subtitleEnabled,true);
  }finally{await engine.destroy();}
 });
+
+
+test('late HLS subtitle lists resolve demux IDs by language before selecting a rendition',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  let selectedIndex=0;const calls=[];
+  player.getSubtitleList=async()=>({list:[{lang:'hin',codec:'webvtt'},{lang:'eng',codec:'webvtt'}],selectedIndex});
+  player.selectSubtitle=async id=>{calls.push(id);selectedIndex=id;};
+  await engine.selectSubtitleTrack(72);
+  assert.deepEqual(calls,[1]);assert.equal(state.selectedSubtitleTrackId,1);
+ }finally{await engine.destroy();}
+});
+
+test('embedded-only HLS subtitles report the loader limitation without sending a stream ID as a rendition index',async()=>{
+ const {engine,player,state}=await loaded();
+ try{
+  player.isHls=()=>true;player.isDash=()=>false;
+  player.getSubtitleList=async()=>({list:[],selectedIndex:-1});
+  player.streams.push({...tracks[2],id:14});
+  engine.extractTracks();const calls=[];player.selectSubtitle=async id=>calls.push(id);
+  await engine.selectSubtitleTrack(14);
+  assert.deepEqual(calls,[]);assert.match(state.error.message,/no selectable subtitle renditions/);
+ }finally{await engine.destroy();}
+});

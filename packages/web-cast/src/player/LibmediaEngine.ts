@@ -386,18 +386,40 @@ export class LibmediaEngine implements PlayerEngine {
       if (trackId < 0) {
         player.setSubtitleEnable(false);
         this.isSubtitleEnabled = false;
-      } else if(this.adaptiveSubtitles?.player===player){
+      } else if(typeof player.isHls==='function'&&(player.isHls()||player.isDash())){
+        // The loader list can arrive after the initial demuxed tracks. Resolve
+        // against the current playlist rather than treating stream IDs as indices.
+        const previous=this.cachedTracks.subtitle.find(track=>track.id===trackId);
+        const wasRendition=this.adaptiveSubtitles?.player===player;
         const info=await player.getSubtitleList();
-        if(!Number.isInteger(trackId)||!info?.list[trackId])throw new Error(`Subtitle rendition ${trackId} is unavailable`);
-        if(info.selectedIndex!==trackId)await player.selectSubtitle(trackId);
-        if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
-        this.isSubtitleEnabled=true;
-        await this.refreshAdaptiveSubtitles();
-        if(this.adaptiveSubtitles?.selectedIndex!==trackId)throw new Error(`Subtitle rendition ${trackId} was not selected by libmedia`);
+        if(!info?.list?.length){
+          if(player.getSelectedSubtitleStreamId()===trackId){
+            if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
+            this.isSubtitleEnabled=true;
+          }else throw new Error('Libmedia exposes embedded subtitles in this HLS stream, but no selectable subtitle renditions. Switching these embedded HLS subtitles is unavailable.');
+        }else{
+          let index=wasRendition?trackId:-1;
+          if(!wasRendition&&previous?.language){
+            const matches=info.list.map((entry,id)=>({entry,id})).filter(({entry})=>entry.lang.toLowerCase()===previous.language!.toLowerCase());
+            if(matches.length===1)index=matches[0].id;
+          }
+          if(!Number.isInteger(index)||!info.list[index]){
+            await this.refreshAdaptiveSubtitles();
+            throw new Error('Subtitle rendition list changed. Select the language again.');
+          }
+          if(info.selectedIndex!==index)await player.selectSubtitle(index);
+          if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
+          this.isSubtitleEnabled=true;
+          await this.refreshAdaptiveSubtitles();
+          if(this.adaptiveSubtitles?.selectedIndex!==index)throw new Error(`Subtitle rendition ${index} was not selected by libmedia`);
+        }
       } else {
         const track = this.cachedTracks.subtitle.find((entry) => entry.id === trackId);
         if (!track) throw new Error(`Subtitle track ${trackId} is unavailable`);
-        if (player.getSelectedSubtitleStreamId() === trackId && this.isSubtitleEnabled) return;
+        if (player.getSelectedSubtitleStreamId() === trackId) {
+          if(!this.isSubtitleEnabled)player.setSubtitleEnable(true);
+          this.isSubtitleEnabled=true;this.extractTracks();this.emitState({subtitleEnabled:true});return;
+        }
         await this.changeTrackAtCurrentTime(player, async () => {
           await player.selectSubtitle(trackId);
           if (player.getSelectedSubtitleStreamId() !== trackId) {

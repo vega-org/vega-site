@@ -9,6 +9,7 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  await page.route('**/test-phone/**',async route=>{
   const request=route.request(),url=new URL(request.url());reads.push(url.pathname);
   if(url.pathname.endsWith('master.m3u8'))return route.fulfill({contentType:'application/vnd.apple.mpegurl',body:'#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key.bin"\n#EXTINF:4,\nsegment.ts\n#EXT-X-ENDLIST\n'});
+  if(url.pathname.endsWith('eof.mkv'))return route.fulfill({status:416,headers:{'content-range':'bytes */1024'},body:''});
   if(url.pathname.endsWith('captions.srt'))return route.fulfill({contentType:'application/x-subrip',body:'1\n00:00:01,000 --> 00:00:03,000\nSubtitle test\n'});
   if(url.pathname.endsWith('error.srt'))return route.fulfill({status:400,body:'invalid subtitle request'});
   if(url.pathname.endsWith('key.bin'))return route.fulfill({body:'a-test-key'});
@@ -41,6 +42,14 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  expect(control).toEqual({type:'ACK',id:'volume-control',ok:true});
  const result=await page.evaluate(async()=>{
   const connection=window.secureTest.connection;
+  const stableUrl=connection.url('video.mkv');
+  connection.sender.closePeer();
+  await new Promise(resolve=>setTimeout(resolve,150));
+  const recovered=await fetch(stableUrl,{headers:{Range:'bytes=100-199'}});
+  const recoveredBytes=new Uint8Array(await recovered.arrayBuffer());
+  if(recovered.status!==206||recoveredBytes.length!==100||recoveredBytes[0]!==100)throw new Error('Encrypted reconnection failed');
+  if(connection.url('video.mkv')!==stableUrl)throw new Error('Reconnect changed existing media URLs');
+  const deliveryErrors=[];connection.receiver.onDeliveryError=message=>deliveryErrors.push(message);
   const seek=await fetch(connection.url('video.mkv'),{headers:{Range:'bytes=65536-69631'}});
   const data=new Uint8Array(await seek.arrayBuffer());
   const large=await fetch(connection.url('video.mkv'),{headers:{Range:'bytes=0-1048575'}});
@@ -55,6 +64,9 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
   const segment=await (await fetch(segmentUrl)).text();
   const keyUrl=/URI="([^"]+)"/.exec(playlist)[1];
   const key=await (await fetch(keyUrl)).text();
+  connection.sender.register(location.origin+'/test-phone/eof.mkv');
+  const eof=await fetch(connection.url('eof.mkv'));
+  const eofStatus=eof.status;
   const bad=await fetch(connection.url('private-file'));
   connection.sender.register(location.origin+'/test-phone/captions.srt');
   const proxySubtitlePath=new URL(connection.receiver.url(location.origin+'/test-phone/opaque-proxy','srt')).pathname;
@@ -63,7 +75,7 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
   connection.sender.register(location.origin+'/test-phone/error.srt');
   const failed=await fetch(connection.url('error.srt'));
   const httpFailure={status:failed.status,message:await failed.text()};
-  const result={status:seek.status,range:seek.headers.get('content-range'),length:data.length,first:data[0],last:data.at(-1),largeLength:largeBytes.length,largeLast:largeBytes.at(-1),repeated,playlist,segment,key,badStatus:bad.status,httpFailure,subtitleUrl,subtitleText,proxySubtitlePath};
+  const result={status:seek.status,range:seek.headers.get('content-range'),length:data.length,first:data[0],last:data.at(-1),largeLength:largeBytes.length,largeLast:largeBytes.at(-1),repeated,playlist,segment,key,badStatus:bad.status,httpFailure,subtitleUrl,subtitleText,proxySubtitlePath,deliveryErrors,eofStatus};
   connection.close();return result;
  });
  expect(result.status).toBe(206);expect(result.range).toBe(`bytes 65536-69631/${bytes.length}`);
@@ -75,6 +87,8 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  expect(new URL(result.subtitleUrl).pathname).toMatch(/\/phone-media\/subtitle\.srt$/);
  expect(result.subtitleText).toContain('Subtitle test');
  expect(result.proxySubtitlePath).toMatch(/\/subtitle\.srt$/);
+ expect(result.eofStatus).toBe(416);
+ expect(result.deliveryErrors).toContain('Phone media request failed (HTTP 400)');
  expect(result.httpFailure).toEqual({status:502,message:'Phone media request failed (HTTP 400)'});
  expect(result.badStatus).toBe(502);expect(reads).not.toContain('/test-phone/private-file');
 });

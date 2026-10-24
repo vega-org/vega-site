@@ -36,14 +36,27 @@ export class SecurePhoneTransport {
  async open():Promise<void>{
   if(!isSecureContext||!('serviceWorker' in navigator)||typeof RTCPeerConnection==='undefined')throw new Error('Encrypted phone delivery requires WebRTC and service workers in a secure browser.');
   const base=import.meta.env.BASE_URL;
-  const registration=await navigator.serviceWorker.register(base+'phone-worker.js',{scope:base});
+  const registration=await navigator.serviceWorker.register(base+'phone-worker.js',{scope:base,updateViaCache:'none'});
+  // ready can resolve to the old active worker while the replacement installs.
+  const worker=registration.installing||registration.waiting||registration.active;
+  if(!worker)throw new Error('Encrypted delivery worker is unavailable.');
   await new Promise<void>((resolve,reject)=>{
-   const timer=setTimeout(()=>reject(new Error('Encrypted delivery worker did not activate. Reload the receiver.')),10_000);
-   navigator.serviceWorker.ready.then(()=>{clearTimeout(timer);resolve();},error=>{clearTimeout(timer);reject(error);});
+   const cleanup=()=>{clearTimeout(timer);worker.removeEventListener('statechange',changed);};
+   const changed=()=>{
+    if(worker.state==='activated'){cleanup();resolve();}
+    else if(worker.state==='redundant'){cleanup();reject(new Error('Encrypted delivery worker installation failed.'));}
+   };
+   const timer=setTimeout(()=>{cleanup();reject(new Error('Encrypted delivery worker activation timed out.'));},15_000);
+   worker.addEventListener('statechange',changed);changed();
   });
-  if(!navigator.serviceWorker.controller){
-   await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>{navigator.serviceWorker.removeEventListener('controllerchange',changed);reject(new Error('Reload the receiver to enable encrypted delivery.'));},5000);const changed=()=>{clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',changed);resolve();};navigator.serviceWorker.addEventListener('controllerchange',changed);if(navigator.serviceWorker.controller){changed();return;}registration.active?.postMessage({type:'claim'});});
-  }
+  await new Promise<void>((resolve,reject)=>{
+   const cleanup=()=>{clearTimeout(timer);clearInterval(retry);navigator.serviceWorker.removeEventListener('controllerchange',changed);};
+   const changed=()=>{if(navigator.serviceWorker.controller?.scriptURL===worker.scriptURL){cleanup();resolve();}};
+   const claim=()=>{worker.postMessage({type:'claim'});changed();};
+   const timer=setTimeout(()=>{cleanup();reject(new Error(`Encrypted delivery worker could not control this receiver (page: ${location.pathname}, scope: ${new URL(registration.scope).pathname}).`));},10_000);
+   const retry=setInterval(claim,500);
+   navigator.serviceWorker.addEventListener('controllerchange',changed);claim();
+  });
   if(this.closed)throw new Error('Phone delivery closed');
   this.id=crypto.randomUUID();
   navigator.serviceWorker.addEventListener('message',this.workerMessage);

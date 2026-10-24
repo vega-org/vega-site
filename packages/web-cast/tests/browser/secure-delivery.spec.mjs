@@ -17,6 +17,10 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  });
  await page.goto('/tests/browser/secure-delivery.html');
  await page.waitForFunction(()=>window.secureTest);
+ // Simulate an existing installation whose active worker cannot handle claim.
+ await page.route('**/phone-worker.js',route=>route.fulfill({contentType:'text/javascript',body:"self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));"}));
+ await page.evaluate(async()=>{await navigator.serviceWorker.register('/phone-worker.js',{scope:'/'});await navigator.serviceWorker.ready;});
+ await page.unroute('**/phone-worker.js');
  await page.evaluate(()=>window.secureTest.start());
  // Reopening a receiver must reuse the worker without another reload prompt.
  await page.evaluate(()=>window.secureTest.connection.close());

@@ -49,6 +49,14 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  const result=await page.evaluate(async()=>{
   const connection=window.secureTest.connection;
   const stableUrl=connection.url('video.mkv');
+  const originalFetch=window.fetch;let malformed=0;
+  window.fetch=(input,init)=>{
+   if(String(input).includes('/test-phone/video.mkv')&&malformed++===0)return Promise.reject(new TypeError('java.net.ProtocolException: Unexpected status line'));
+   return originalFetch(input,init);
+  };
+  const retried=await fetch(stableUrl,{headers:{Range:'bytes=0-63'}});
+  const retriedBytes=new Uint8Array(await retried.arrayBuffer());window.fetch=originalFetch;
+  if(retried.status!==206||retriedBytes.length!==64||malformed!==2)throw new Error('Malformed HTTP retry did not recover exactly once');
   connection.sender.closePeer();
   await new Promise(resolve=>setTimeout(resolve,150));
   const recovered=await fetch(stableUrl,{headers:{Range:'bytes=100-199'}});

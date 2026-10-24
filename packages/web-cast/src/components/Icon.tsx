@@ -1,0 +1,4 @@
+import {LuFileVideo,LuCast,LuHouse,LuSettings,LuArrowLeft,LuX,LuCheck,LuMaximize,LuVolume2,LuVolumeX,LuHeadphones,LuCaptions,LuGauge,LuInfo,LuRotateCcw,LuRotateCw,LuSmartphone,LuMonitor,LuPlay,LuPause} from 'react-icons/lu';
+export type IconName='play'|'pause'|'file'|'cast'|'home'|'settings'|'back'|'close'|'check'|'fullscreen'|'volume'|'mute'|'audio'|'subtitles'|'speed'|'info'|'rewind'|'forward'|'phone'|'screen';
+const icons={play:LuPlay,pause:LuPause,file:LuFileVideo,cast:LuCast,home:LuHouse,settings:LuSettings,back:LuArrowLeft,close:LuX,check:LuCheck,fullscreen:LuMaximize,volume:LuVolume2,mute:LuVolumeX,audio:LuHeadphones,subtitles:LuCaptions,speed:LuGauge,info:LuInfo,rewind:LuRotateCcw,forward:LuRotateCw,phone:LuSmartphone,screen:LuMonitor};
+export function Icon({name,size=22}:{name:IconName;size?:number}){const Component=icons[name];return <Component size={size} aria-hidden="true"/>;}

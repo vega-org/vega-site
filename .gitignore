@@ -24,3 +24,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Generated reusable receiver bundle
+public/cast/
+.cast-test-build/
+
+cast-*.log

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Libmedia subtitle renderer probe</title>
+  <link rel="stylesheet" href="/src/index.css">
+  <style>
+    body { padding:16px; }
+    input, select, button { background:#12161f; color:#f8fafc; border:1px solid #64748b; padding:10px; margin:6px 0; }
+    button { cursor:pointer; }
+    #trace { white-space:pre-wrap; background:#12161f; border:1px solid #64748b; padding:12px; min-height:100px; }
+  </style>
+</head>
+<body>
+  <div class="video-player-wrapper" style="width:960px;height:540px">
+    <div id="mount" class="media-canvas-container"></div>
+  </div>
+  <pre id="result">pending</pre>
+  <section style="max-width:960px;padding:16px">
+    <h2>Embedded subtitle trace</h2>
+    <p>This test uses the existing player and records subtitle timing without changing cues.</p>
+    <label>Source URL <input id="source" type="url" style="width:100%"></label>
+    <label>Start time in seconds <input id="start" type="number" min="0" value="60"></label>
+    <button id="load" type="button">Load and trace subtitles</button>
+    <label>Subtitle track <select id="track"></select></label>
+    <button id="copy" type="button">Copy trace JSON</button>
+    <pre id="trace">Waiting for an explicitly loaded source.</pre>
+    <div class="video-player-wrapper" style="width:960px;max-width:100%;height:540px">
+      <div id="embedded-mount" class="media-canvas-container"></div>
+    </div>
+  </section>
+  <script type="module">
+    document.getElementById('source').value = new URLSearchParams(location.hash.slice(1)).get('source') ?? '';
+    document.getElementById('copy').onclick = async () => {
+      await navigator.clipboard.writeText(document.getElementById('trace').textContent);
+      document.getElementById('copy').textContent = 'Trace copied';
+    };
+    try {
+      // Test-only introspection of the pinned 1.3.1 bundle. Production uses AVPlayer.
+      await import('/node_modules/@libmedia/avplayer/dist/esm/avplayer.js');
+      let require;
+      self.webpackChunklibmedia.push([[987654321], {}, runtime => { require = runtime; }]);
+      await Promise.all([require.e(384), require.e(630)]);
+      const AssRender = require(98137).A;
+      const SubtitleRender = require(17630).default;
+      const mount = document.getElementById('mount');
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      canvas.style.cssText = 'width:100%;height:100%';
+      canvas.currentTime = 1;
+      mount.append(canvas);
+      const renderer = new AssRender(canvas, { container: mount, videoWidth:1280, videoHeight:720 });
+      await new Promise(resolve => setTimeout(resolve, 150));
+      renderer.render({
+        type:1, Start:0n, End:10000n, ReadOrder:0, Layer:0, Style:'Default', Name:'',
+        MarginL:0, MarginR:0, MarginV:0,
+        Text:{ raw:'Vega subtitle rendering check', combined:'Vega subtitle rendering check',
+          parsed:[{tags:[],text:'Vega subtitle rendering check',drawing:[]}] },
+      });
+      const layer = mount.querySelector('.ASS-box');
+      const glyph = mount.querySelector('[data-text]');
+      const bounds = node => { const r=node?.getBoundingClientRect(); return r ? {x:r.x,y:r.y,width:r.width,height:r.height} : null; };
+      document.getElementById('result').textContent = JSON.stringify({
+        layer: bounds(layer), glyph: bounds(glyph), text:layer?.textContent,
+        cues:mount.querySelectorAll('.ASS-dialogue').length,
+        glyphStyle:glyph ? {fontSize:getComputedStyle(glyph).fontSize,color:getComputedStyle(glyph).color,display:getComputedStyle(glyph).display} : null,
+      });
+
+      const trace = { phase:'ready', loadRequests:0, sourceResponse:null, packetTransfers:[], decodedCues:[], renderCalls:0, errors:[] };
+      const pullSubtitle = SubtitleRender.prototype.pull;
+      SubtitleRender.prototype.pull = function(...args) {
+        const port = this.leftPorts.get(this.currentPort);
+        if (port && !port.vegaTraceWrapped) {
+          port.vegaTraceWrapped = true;
+          const request = port.request.bind(port);
+          port.request = async (...requestArgs) => {
+            const packet = await request(...requestArgs);
+            if (requestArgs[0] === 'pull') {
+              trace.packetTransfers.push({
+                type:typeof packet,
+                timeBase:packet && typeof packet === 'object' ? packet.timeBase : null,
+              });
+              trace.packetTransfers = trace.packetTransfers.slice(-6);
+            }
+            return packet;
+          };
+        }
+        return pullSubtitle.apply(this, args);
+      };
+      const convertText = SubtitleRender.prototype.text2AssEvent;
+      SubtitleRender.prototype.text2AssEvent = function(text, start, end) {
+        trace.decodedCues.push({ startMs:String(start), endMs:String(end), durationMs:String(end-start), chars:text.length });
+        trace.decodedCues = trace.decodedCues.slice(-8);
+        return convertText.call(this, text, start, end);
+      };
+      const renderEvent = AssRender.prototype.render;
+      AssRender.prototype.render = function(event) {
+        trace.renderCalls++;
+        return renderEvent.call(this, event);
+      };
+      const recordError = error => {
+        // Avoid including source URLs or subtitle dialogue in shared output.
+        trace.errors.push(String(error?.stack ?? error?.message ?? error).replace(/https?:\/\/\S+/g, '[URL]'));
+        trace.errors = trace.errors.slice(-4);
+      };
+      window.addEventListener('error', event => recordError(event.error ?? event.message));
+      window.addEventListener('unhandledrejection', event => recordError(event.reason));
+      const { LibmediaEngine } = await import('/src/player/LibmediaEngine.ts');
+      const engine = new LibmediaEngine();
+      const embeddedMount = document.getElementById('embedded-mount');
+      engine.attach(embeddedMount);
+      let state = {};
+      let trackSignature = '';
+      const trackSelect = document.getElementById('track');
+      engine.setEventListeners({
+        onStateChange: update => { state = {...state, ...update}; },
+        onError: error => recordError(error),
+        onTracksChange: tracks => {
+          const signature = tracks.subtitle.map(track => track.id).join(',');
+          if (signature !== trackSignature) {
+            trackSignature = signature;
+            trackSelect.replaceChildren(...tracks.subtitle.map(track => {
+              const option = document.createElement('option');
+              option.value = String(track.id);
+              option.textContent = `${track.label} — codec ${track.codec}`;
+              return option;
+            }));
+          }
+        },
+      });
+      const loadButton = document.getElementById('load');
+      loadButton.onclick = async () => {
+        const url = document.getElementById('source').value.trim();
+        if (!url) {
+          trace.phase = 'waiting-for-url';
+          document.getElementById('trace').textContent = 'Enter the video URL first.';
+          return;
+        }
+        trace.loadRequests++;
+        trace.phase = 'loading-source';
+        loadButton.disabled = true;
+        loadButton.textContent = 'Loading source…';
+        trace.decodedCues = [];
+        trace.packetTransfers = [];
+        trace.renderCalls = 0;
+        trace.errors = [];
+        try {
+          trace.phase = 'checking-source-response';
+          const response = await fetch(url, {headers:{Range:'bytes=0-4095'}});
+          const reader = response.body?.getReader();
+          const first = reader ? await reader.read() : null;
+          if (reader) await reader.cancel();
+          const bytes = first?.value ?? new Uint8Array();
+          const hex = [...bytes.slice(0,16)].map(byte => byte.toString(16).padStart(2,'0')).join(' ');
+          const ascii = new TextDecoder().decode(bytes.slice(0,16));
+          const format = hex.startsWith('1a 45 df a3') ? 'mkv'
+            : ascii.slice(4,8) === 'ftyp' ? 'mp4'
+            : ascii.trimStart().startsWith('#EXTM3U') ? 'm3u8' : undefined;
+          trace.sourceResponse = {
+            status:response.status, type:response.headers.get('content-type'),
+            range:response.headers.get('content-range'), length:response.headers.get('content-length'),
+            first16BytesHex:hex, detectedFormat:format ?? 'unknown',
+          };
+          if (!response.ok) throw new Error(`Source returned HTTP ${response.status}`);
+          trace.phase = 'loading-source';
+          await engine.load({id:'subtitle-trace', source:url, format, startPosition:Number(document.getElementById('start').value)});
+          trace.phase = state.status === 'error' ? 'playback-error' : 'source-loaded';
+        } catch (error) {
+          trace.phase = 'load-failed';
+          recordError(error);
+        } finally {
+          loadButton.disabled = false;
+          loadButton.textContent = 'Reload source and trace';
+        }
+      };
+      trackSelect.onchange = () => engine.selectSubtitleTrack(Number(trackSelect.value));
+      document.getElementById('load').scrollIntoView({block:'center'});
+      setInterval(() => {
+        // Read-only internal observations, isolated to this version-specific test.
+        const player = engine.player;
+        const subtitle = player?.subtitleRender;
+        const layer = embeddedMount.querySelector('.ASS-box');
+        document.getElementById('trace').textContent = JSON.stringify({
+          status:state.status, timeMs:player ? String(player.currentTime) : null,
+          selectedSubtitle:state.selectedSubtitleTrackId, subtitleEnabled:state.subtitleEnabled,
+          crossOriginIsolated:window.crossOriginIsolated,
+          sharedArrayBuffer:typeof SharedArrayBuffer === 'function',
+          configuredAuxiliaryWorkers:player?.getOptions().enableWorker,
+          rendererExists:!!subtitle, loopRunning:subtitle?.loop?.isStarted(),
+          pulling:subtitle?.pulling, ended:subtitle?.ended,
+          queue:subtitle?.queue?.slice(0,4).map(event => ({startMs:String(event.Start),endMs:String(event.End)})),
+          layer:bounds(layer), activeCueNodes:embeddedMount.querySelectorAll('.ASS-dialogue').length,
+          ...trace,
+        }, null, 2);
+      }, 1000);
+      // A source explicitly supplied through the diagnostic link is loaded once.
+      // The URL stays in the fragment and is never sent to the development server.
+      if (document.getElementById('source').value) loadButton.click();
+    } catch (error) {
+      document.getElementById('result').textContent = JSON.stringify({error:String(error),stack:error.stack});
+    }
+  </script>
+</body>
+</html>

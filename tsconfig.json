@@ -6,6 +6,10 @@
     "./worker-configuration.d.ts"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "packages",
+    "tests",
+    ".cast-test-build",
+    "public"
   ]
 }

@@ -7,10 +7,16 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run build:cast && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "generate-types": "wrangler types"
+    "generate-types": "wrangler types",
+    "build:cast": "npm run build:site --workspace @vega/web-cast",
+    "test:cast": "npm test --workspace @vega/web-cast",
+    "test:cast:cloudflare": "node --test tests/cast-cloudflare.test.mjs",
+    "dev:cast": "npm run dev --workspace @vega/web-cast",
+    "test:cast:browser": "npm run test:browser --workspace @vega/web-cast",
+    "cast:server": "npm run cast:server --workspace @vega/web-cast"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -26,5 +32,12 @@
   },
   "overrides": {
     "vite": "^7"
+  },
+  "workspaces": [
+    "packages/web-cast"
+  ],
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "miniflare": "^4.20260730.0"
   }
 }

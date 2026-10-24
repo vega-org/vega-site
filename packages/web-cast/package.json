@@ -1,0 +1,35 @@
+{
+  "name": "@vega/web-cast",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/copy-libmedia-assets.mjs && vite",
+    "build": "node scripts/copy-libmedia-assets.mjs && tsc -b && vite build",
+    "lint": "oxlint src",
+    "test": "node --test tests/*.test.mjs",
+    "preview": "vite preview",
+    "cast:server": "node scripts/cast-server.mjs",
+    "test:browser": "playwright test",
+    "build:site": "node scripts/copy-libmedia-assets.mjs && tsc -b && vite build --base=/cast/ --outDir=dist-site && node scripts/publish-site-build.mjs"
+  },
+  "dependencies": {
+    "@libmedia/avplayer": "^1.3.1",
+    "@vidstack/react": "^1.15.7",
+    "maverick.js": "^0.44.1",
+    "media-icons": "^1.1.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-icons": "^5.7.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "oxlint": "^1.88.0",
+    "typescript": "~6.0.3",
+    "vite": "^7.3.0"
+  }
+}

@@ -540,7 +540,14 @@ export class LibmediaEngine implements PlayerEngine {
     const videoTime = activeVideo && statsObj?.videoCurrentTime != null
       && statsObj.videoCurrentTime >= 0n ? Number(statsObj.videoCurrentTime) : undefined;
 
+    const streamStartTimes=this.player.getStreams().filter(stream=>['audio','video','subtitle'].includes(stream.mediaType.toLowerCase())).map(stream=>{
+      const value=stream.startTime;
+      const seconds=value==null||value===-9223372036854775808n||!stream.timeBase?.den?null:Number(value)*stream.timeBase.num/stream.timeBase.den;
+      return {type:stream.mediaType.toLowerCase(),id:stream.id,startSeconds:seconds!=null&&Number.isFinite(seconds)?seconds:null};
+    });
+    const externalSubtitleSelected=(this.player.getExternalSubtitle() as {streamId?:number}[]).some(track=>track.streamId===this.player!.getSelectedSubtitleStreamId());
     return {
+      streamStartTimes,externalSubtitleSelected,subtitleDelaySeconds:this.currentSubtitleDelay,
       currentTime,
       duration,
       buffered: 0, // No buffered-range measurement is currently integrated.

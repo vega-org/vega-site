@@ -30,6 +30,12 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  await page.reload();
  await page.waitForFunction(()=>window.secureTest);
  await page.evaluate(()=>window.secureTest.start());
+ await page.evaluate(async()=>{
+  const {sender,receiver}=window.secureTest.connection;
+  const peer=sender.peer;
+  await sender.signal({type:'RTC_OFFER',transportId:sender.id,mediaId:'test-media',sdp:receiver.peer.localDescription.toJSON()});
+  if(sender.peer!==peer)throw new Error('Duplicate offer replaced a working encrypted peer');
+ });
  const control=await page.evaluate(async()=>{
   const {receiver,sender}=window.secureTest.connection;
   return new Promise((resolve,reject)=>{

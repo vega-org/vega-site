@@ -12,6 +12,9 @@ export type PlaybackStatus =
   | 'error';
 
 export interface DiagnosticsStats {
+  streamStartTimes?:{type:string;id:number;startSeconds:number|null}[];
+  subtitleDelaySeconds?:number;
+  externalSubtitleSelected?:boolean;
   videoCodec?: string;
   audioCodec?: string;
   resolution?: string;

@@ -1,4 +1,4 @@
-type Signal={type:string;transportId?:string;mediaId?:string;sdp?:RTCSessionDescriptionInit;candidate?:RTCIceCandidateInit};
+type Signal={type:string;transportId?:string;mediaId?:string;sdp?:RTCSessionDescriptionInit;candidate?:RTCIceCandidateInit;error?:string};
 interface PhoneResponse {status:number;headers:Record<string,string>;body:ArrayBuffer}
 interface Pending {resolve:(value:PhoneResponse)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>;chunks:Uint8Array[];size:number}
 export class SecurePhoneTransport {
@@ -17,6 +17,7 @@ export class SecurePhoneTransport {
  private reconnects=0;
  private pending=new Map<string,Pending>();
  private closed=false;
+ private offerRetry?:ReturnType<typeof setInterval>;
  private rejectOpen?: (error:Error)=>void;
  private answerReceived=false;
  private localCandidates=0;
@@ -86,22 +87,25 @@ export class SecurePhoneTransport {
   channel.onmessage=event=>this.receive(event.data);
   channel.onclose=()=>{if(this.channel!==channel||this.closed)return;this.failPending(new Error('Encrypted phone delivery disconnected'));this.onDeliveryError?.('Encrypted phone delivery disconnected. Reconnecting on the next media read…');};
   const opened=new Promise<void>((resolve,reject)=>{
-   const fail=(error:Error)=>{clearTimeout(timer);this.rejectOpen=undefined;reject(error);};
-   const timer=setTimeout(()=>{channel.onopen=null;fail(new Error(`Encrypted phone connection timed out (answer: ${this.answerReceived?'received':'missing'}, ICE: ${peer.iceConnectionState}, candidates: ${this.localCandidates} local / ${this.remoteCandidates} remote, signaling failures: ${this.signalErrors}). Keep both devices on the same Wi-Fi or configure a TURN relay.`));},25_000);
+   const fail=(error:Error)=>{clearInterval(this.offerRetry);clearTimeout(timer);this.rejectOpen=undefined;reject(error);};
+   const timer=setTimeout(()=>{channel.onopen=null;fail(new Error(`Encrypted phone connection timed out (answer: ${this.answerReceived?'received':'missing'}, ICE: ${peer.iceConnectionState}, candidates: ${this.localCandidates} local / ${this.remoteCandidates} remote, signaling failures: ${this.signalErrors}). ${this.answerReceived?'Check network connectivity or relay configuration.':'The phone did not answer signaling. Check Vega Mobile is connected and select the stream again.'}`));},25_000);
    this.rejectOpen=fail;
-   channel.onopen=()=>{clearTimeout(timer);this.rejectOpen=undefined;resolve();};
+   channel.onopen=()=>{clearInterval(this.offerRetry);clearTimeout(timer);this.rejectOpen=undefined;resolve();};
    channel.onerror=()=>fail(new Error('Encrypted phone connection failed'));
   });
   // Attach a rejection handler immediately while signaling is in flight.
   void opened.catch(()=>{});
   const offer=await peer.createOffer();await peer.setLocalDescription(offer);
-  await this.signal({type:'RTC_OFFER',transportId:this.id,mediaId:this.mediaId,sdp:peer.localDescription!.toJSON()});
+  const offerMessage={type:'RTC_OFFER',transportId:this.id,mediaId:this.mediaId,sdp:peer.localDescription!.toJSON()};
+  this.offerRetry=setInterval(()=>{if(!this.answerReceived&&!this.closed&&this.peer===peer)void this.signal(offerMessage).catch(()=>{this.signalErrors++;});},8000);
+  await this.signal(offerMessage);
   await opened;
  }
  private candidates:RTCIceCandidateInit[]=[];
  async receiveSignal(message:Signal):Promise<void>{
   if(message.transportId!==this.id||!this.peer)return;
-  if(message.type==='RTC_ANSWER'&&message.sdp){await this.peer.setRemoteDescription(message.sdp);this.answerReceived=true;for(const candidate of this.candidates)await this.peer.addIceCandidate(candidate);this.candidates=[];}
+  if(message.type==='RTC_ERROR'){this.rejectOpen?.(new Error(message.error||'Phone rejected encrypted delivery'));return;}
+  if(message.type==='RTC_ANSWER'&&message.sdp){if(this.answerReceived)return;clearInterval(this.offerRetry);await this.peer.setRemoteDescription(message.sdp);this.answerReceived=true;for(const candidate of this.candidates)await this.peer.addIceCandidate(candidate);this.candidates=[];}
   if(message.type==='RTC_ICE'&&message.candidate){this.remoteCandidates++;if(this.peer.remoteDescription)await this.peer.addIceCandidate(message.candidate);else this.candidates.push(message.candidate);}
  }
  url(source:string,format?:string):string{
@@ -154,5 +158,5 @@ export class SecurePhoneTransport {
  }
  private finish(id:string,error:Error){const pending=this.pending.get(id);if(pending){clearTimeout(pending.timer);this.pending.delete(id);pending.reject(error);}}
  private failPending(error:Error){for(const id of this.pending.keys())this.finish(id,error);}
- close(){this.closed=true;navigator.serviceWorker?.removeEventListener('message',this.workerMessage);this.rejectOpen?.(new Error('Phone delivery closed'));this.failPending(new Error('Phone delivery closed'));this.controls?.close();this.controls=null;this.channel?.close();this.peer?.close();this.channel=null;this.peer=null;}
+ close(){this.closed=true;clearInterval(this.offerRetry);navigator.serviceWorker?.removeEventListener('message',this.workerMessage);this.rejectOpen?.(new Error('Phone delivery closed'));this.failPending(new Error('Phone delivery closed'));this.controls?.close();this.controls=null;this.channel?.close();this.peer?.close();this.channel=null;this.peer=null;}
 }

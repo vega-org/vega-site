@@ -9,7 +9,7 @@ const matches = (value, digest) => {
 };
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), {status}); };
 const cleanName = value => String(value || 'Vega receiver').replace(/[\x00-\x1f]/g, '').slice(0, 64);
-const controllerMessages = new Set(['COMMAND', 'LOAD_MEDIA', 'FALLBACK_SOURCE', 'CONTROLLER_DISCONNECT','SERVER_CHANGE_RESULT','RTC_ANSWER','RTC_ICE']);
+const controllerMessages = new Set(['COMMAND', 'LOAD_MEDIA', 'FALLBACK_SOURCE', 'CONTROLLER_DISCONNECT','SERVER_CHANGE_RESULT','RTC_ANSWER','RTC_ICE','RTC_ERROR']);
 const receiverMessages = new Set(['STATE', 'ACK', 'PLAYBACK_ERROR', 'FALLBACK_REQUEST', 'CAPABILITIES','DELIVERY_CHANGED','SERVER_CHANGE','RTC_OFFER','RTC_ICE']);
 /** Authenticated control messages only. This broker never fetches or relays media. */
 export function createCastBrokerCore({initialRecords=[],initialLive=[],initialRequests=[],persist=()=>{},publicUrl,advertise=()=>publicUrl,scopeForAddress=value=>value,ownDeviceName=()=>undefined,idPrefix='',now=Date.now}={}) {
@@ -188,7 +188,10 @@ export function createCastBrokerCore({initialRecords=[],initialLive=[],initialRe
       }
       const queued = queues.get(key);
       if (queued?.length) { queues.delete(key); return {messages:queued}; }
-      if (waiters.has(key)) fail('A poll is already active', 409);
+      // Reload/reconnect can arrive before the previous HTTP long poll closes.
+      // Complete that poll before replacing it, without dropping queued messages.
+      const previous=waiters.get(key);
+      if(previous){waiters.delete(key);previous([]);}
       return new Promise(resolve => {
         const timer = setTimeout(() => { waiters.delete(key); resolve({messages:[]}); }, 15_000);
         timer.unref?.();

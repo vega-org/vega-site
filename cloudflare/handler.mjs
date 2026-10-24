@@ -7,6 +7,7 @@ const response=(data,status=200)=>Response.json(data,{status,headers:{
 export async function castRequest(request,env){
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'}});
   if(request.method!=='POST')return response({error:'Use POST'},405);
+  let parsed=false;
   try{
     const reader=request.body?.getReader();let size=0;const chunks=[];
     if(!reader)return response({error:'Missing request body'},400);
@@ -14,6 +15,7 @@ export async function castRequest(request,env){
     const input=new Uint8Array(size);let offset=0;for(const chunk of chunks){input.set(chunk,offset);offset+=chunk.length;}
     const body=JSON.parse(new TextDecoder().decode(input));
     if(!body||typeof body!=='object'||Array.isArray(body))return response({error:'Invalid control request'},400);
+    parsed=true;
     // CF sets this header at the edge. Hash before storage; ignore forwarded IPs.
     const address=createHash('sha256').update(request.headers.get('CF-Connecting-IP')||'local-development').digest('hex');
     const directory=env.VEGA_CAST_DIRECTORY.getByName(address);
@@ -36,5 +38,5 @@ export async function castRequest(request,env){
       await env.VEGA_CAST_DIRECTORY.getByName(result.presence.scope).publish(result.presence);
     }
     return response(result.result);
-  }catch{return response({error:'Invalid Vega Cast request'},400);}
+  }catch{return parsed?response({error:'Vega Cast signaling is temporarily unavailable. Retrying…'},503):response({error:'Invalid Vega Cast request'},400);}
 }

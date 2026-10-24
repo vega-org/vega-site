@@ -162,3 +162,13 @@ test('encrypted media negotiation stays private and roles cannot impersonate off
  await assert.rejects(()=>broker.dispatch({op:'send',auth:controller,message:offer}),/Unsupported/);
  await assert.rejects(()=>broker.dispatch({op:'send',auth:receiver,message:answer}),/Unsupported/);
 });
+
+
+test('reconnecting long poll replaces a stale poll and retains subsequent commands',async()=>{
+ const broker=createCastBroker();const {receiver,controller}=await paired(broker);
+ const first=broker.dispatch({op:'poll',auth:receiver});
+ const second=broker.dispatch({op:'poll',auth:receiver});
+ assert.deepEqual((await first).messages,[]);
+ await broker.dispatch({op:'send',auth:controller,message:{type:'COMMAND',id:'after-reconnect',command:'PAUSE'}});
+ assert.equal((await second).messages[0].id,'after-reconnect');
+});

@@ -84,7 +84,7 @@ export class ReceiverSession {
         if(this.state.error)this.update({error:undefined});
         delay=1000;
         for(const message of result.messages) {
-          if(['PAIR_REQUEST','CONTROLLER_CONNECTED','RTC_ANSWER','RTC_ICE','CONTROLLER_DISCONNECT'].includes(message.type)||(message.type==='COMMAND'&&message.command==='STOP'))void this.receive(message).catch(error=>this.update({error:String(error)}));
+          if(['PAIR_REQUEST','CONTROLLER_CONNECTED','RTC_ANSWER','RTC_ICE','RTC_ERROR','CONTROLLER_DISCONNECT'].includes(message.type)||(message.type==='COMMAND'&&message.command==='STOP'))void this.receive(message).catch(error=>this.update({error:String(error)}));
           else {
             // Keep heartbeats/pairing alive while AVPlayer opens a slow source.
             const epoch=this.mediaEpoch;
@@ -155,7 +155,7 @@ export class ReceiverSession {
     try{await operation;}finally{this.activeCommands.delete(message.id);}
   }
   private async handleMessage(message:CastMessage) {
-    if(['RTC_ANSWER','RTC_ICE'].includes(message.type)){
+    if(['RTC_ANSWER','RTC_ICE','RTC_ERROR'].includes(message.type)){
       if(message.controllerId===this.controllerId)await this.secureTransport?.receiveSignal(message as Parameters<SecurePhoneTransport['receiveSignal']>[0]);
       return;
     }

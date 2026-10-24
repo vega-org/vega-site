@@ -96,6 +96,12 @@ export const PlaybackDiagnostics: React.FC<PlaybackDiagnosticsProps> = ({ state,
             </div>
           </div>
 
+          <div className="diag-card">
+            <span className="diag-label">Subtitle timeline</span>
+            <div className="diag-value">{diag.externalSubtitleSelected?'External subtitle':'Stream subtitle'}</div>
+            <div className="diag-sub">Delay: {diag.subtitleDelaySeconds??state.subtitleDelay}s</div>
+            {diag.streamStartTimes?.map(stream=><div className="diag-sub" key={`${stream.type}-${stream.id}`}>{stream.type} #{stream.id} start: {stream.startSeconds==null?'Unavailable':`${stream.startSeconds.toFixed(3)}s`}</div>)}
+          </div>
           {/* Audio Metrics */}
           <div className="diag-card">
             <span className="diag-label">Network & Queues</span>

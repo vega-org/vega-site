@@ -94,7 +94,7 @@ test('real WebRTC delivery supports range seeks, HLS references and rejects unre
  });
  expect(result.status).toBe(206);expect(result.range).toBe(`bytes 65536-69631/${bytes.length}`);
  expect(result.length).toBe(4096);expect(result.first).toBe(65536%251);expect(result.last).toBe(69631%251);
- expect(result.largeLength).toBe(512*1024);expect(result.largeLast).toBe((512*1024-1)%251);
+ expect(result.largeLength).toBe(bytes.length);expect(result.largeLast).toBe((bytes.length-1)%251);
  for(const item of result.repeated){expect(item.length).toBe(2048);expect(item.first).toBe(item.start%251);}
  expect(result.playlist).toContain('/phone-media?transport=');
  expect(result.segment).toBe('a-test-segment');expect(result.key).toBe('a-test-key');

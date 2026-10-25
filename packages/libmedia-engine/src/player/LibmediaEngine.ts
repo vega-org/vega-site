@@ -184,7 +184,9 @@ export class LibmediaEngine implements PlayerEngine {
       if(source.networkRetryCount!=null)loadOptions.ioLoaderOptions={retryCount:source.networkRetryCount};
 
       if (source.format) {
-        loadOptions.ext = source.format;
+        // Libmedia selects its HLS loader using the extension, including for
+        // prepared blob URLs which no longer have a .m3u8 pathname.
+        loadOptions.ext = /^(hls|mpegurl)$/i.test(source.format) ? 'm3u8' : source.format;
       }
 
       if (source.headers && Object.keys(source.headers).length > 0) {

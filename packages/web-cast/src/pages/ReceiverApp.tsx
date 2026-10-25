@@ -24,7 +24,6 @@ export function ReceiverApp(){
  const [session,setSession]=useState(initialSession);
  const [view,setView]=useState<View>('watch');
  const [media,setMedia]=useState<CastMedia|null>(null);
- const [profile,setProfile]=useState(()=>read('vega.cast.environment',''));
  const [name,setName]=useState(()=>read('vega.cast.name',defaultReceiverName()));
  const automaticName=useRef(!read('vega.cast.name',''));
  const [clock,setClock]=useState(Date.now());
@@ -38,11 +37,11 @@ export function ReceiverApp(){
   const stop=receiver.subscribe(next=>{setSession(next);if(automaticName.current&&(next.status==='ready'||next.status==='connected'))setName(next.name);});setRuntime({manager,session:receiver});
   return()=>{stop();unsubscribe();receiver.stop();void manager.destroy();};
  },[showMedia]);
- useEffect(()=>{if(runtime&&profile)void runtime.session.start(name,automaticName.current&&!window.vegaCastHost?.deviceName);},[runtime,profile,name]);
+ useEffect(()=>{if(runtime)void runtime.session.start(name,automaticName.current&&!window.vegaCastHost?.deviceName);},[runtime,name]);
  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),1000);return()=>clearInterval(timer);},[]);
  useEffect(()=>{if(!media&&browserPlatform.isFullscreen())void browserPlatform.exitFullscreen().catch(()=>{});},[media]);
  const exitPlayer=useCallback(()=>{runtime?.session.releaseMedia();setMedia(null);void runtime?.manager.unload();},[runtime]);
- const back=useCallback(()=>{const pending=session.pending[0];if(pending){void runtime?.session.confirm(pending.requestId,false).catch(error=>setNotice(error.message));return;}if(session.disconnectedMedia){void runtime?.session.resolveDisconnect(true).catch(error=>setNotice(error.message));return;}if(!profile){save('vega.cast.environment','browser');setProfile('browser');}else if(media)exitPlayer();else setView('watch');},[profile,media,exitPlayer,session.pending,session.disconnectedMedia,runtime]);
+ const back=useCallback(()=>{const pending=session.pending[0];if(pending){void runtime?.session.confirm(pending.requestId,false).catch(error=>setNotice(error.message));return;}if(session.disconnectedMedia){void runtime?.session.resolveDisconnect(true).catch(error=>setNotice(error.message));return;}if(media)exitPlayer();else setView('watch');},[media,exitPlayer,session.pending,session.disconnectedMedia,runtime]);
  useRemoteNavigation(back);
  const openFile=async(file:File)=>{
   if(!runtime)return;runtime.session.releaseMedia();setLocalFile(file);setNotice('');
@@ -50,7 +49,6 @@ export function ReceiverApp(){
   await showMedia(next);await runtime.manager.load({id:next.id,title:next.title,source:file});
  };
  const retry=()=>{if(localFile)void openFile(localFile);else setNotice('Choose the stream again in Vega Mobile.');};
- const chooseProfile=(value:string)=>{save('vega.cast.environment',value);setProfile(value);};
  const caps=receiverCapabilities();
  const connected=session.status==='connected';
  const expires=Math.max(0,Math.ceil((session.expiresAt-clock)/1000));
@@ -72,7 +70,6 @@ export function ReceiverApp(){
   </div>
   {runtime&&<div className={`receiver-player-shell ${media?'active':'standby'}`} aria-hidden={!media} inert={!media}><VideoPlayer playerManager={runtime.manager} state={state} title={media?.title} subtitle={media?.subtitle} onExit={exitPlayer} onRetry={retry} active={!!media} servers={session.servers} selectedServerId={session.selectedServerId} canChangeServer={session.canChangeServer} changingServer={session.changingServer} serverError={session.serverError} onSelectServer={id=>act(runtime.session.selectServer(id))}/></div>}
   <input ref={fileRef} className="sr-only" tabIndex={-1} type="file" accept="video/*,.mkv,.webm,.m3u8" onChange={event=>{const file=event.target.files?.[0];if(file)void openFile(file);event.target.value='';}}/>
-  {!profile&&<FocusDialog title="Where is Vega running?" onClose={()=>chooseProfile('browser')}><p className="dialog-description">Choose how this receiver accesses your media.</p><button className="environment-choice" onClick={()=>chooseProfile('browser')}><Icon name="screen"/><span><strong>Web browser</strong><small>Web security is enabled. Use direct playback where allowed, with phone-assisted delivery when needed.</small></span><Icon name="back"/></button><button className="environment-choice" disabled={!receiverHost()} onClick={()=>chooseProfile('native')}><Icon name="cast"/><span><strong>Custom receiver app</strong><small>{receiverHost()?'Use this app host’s verified networking and request-header support.':'Available when a desktop or TV app supplies the Vega host bridge.'}</small></span></button></FocusDialog>}
   {session.disconnectedMedia&&<DisconnectedPlaybackDialog onContinue={()=>act(runtime?.session.resolveDisconnect(true))} onClose={()=>act(runtime?.session.resolveDisconnect(false))}/>}
   {request&&<FocusDialog title="Allow this phone to connect?" onClose={()=>act(runtime?.session.confirm(request.requestId,false))}><p className="dialog-description">{request.name} wants to control this screen. Confirm that the same number appears on your phone.</p><div className="confirmation-code">{request.confirmation}</div><div className="dialog-actions"><button className="quiet-button" onClick={()=>act(runtime?.session.confirm(request.requestId,false))}>Decline</button><button className="accent-button" onClick={()=>act(runtime?.session.confirm(request.requestId,true))}>Confirm & remember</button></div></FocusDialog>}
  </div>;

@@ -1,6 +1,7 @@
 ---
 import { APP_LINKS, REPO, DESKTOP_REPO } from "../../config/site";
 import PlatformDownload from "./PlatformDownload.astro";
+import { ExternalLink, Globe } from "@lucide/astro";
 ---
 
 <section class="bg-vega-bg px-4 py-24 md:px-6" id="download">
@@ -15,6 +16,18 @@ import PlatformDownload from "./PlatformDownload.astro";
     </p>
 
     <div class="mt-12 flex flex-col gap-12">
+      <div class="flex flex-col items-center justify-between gap-5 rounded-2xl border border-white/10 bg-vega-surface p-6 text-left sm:flex-row sm:p-8">
+        <div class="flex items-center gap-4">
+          <Globe class="h-8 w-8 shrink-0 text-vega-accent" aria-hidden="true" />
+          <div>
+            <h3 class="font-headline text-2xl font-bold text-white">Vega for Web</h3>
+            <p class="mt-1 text-sm text-vega-muted">Open Vega in your browser.</p>
+          </div>
+        </div>
+        <a href={APP_LINKS.webApp} target="_blank" rel="noreferrer" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-vega-accent px-6 py-3 font-headline font-bold text-[#240900] transition hover:brightness-110 sm:w-auto">
+          Open Web App <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        </a>
+      </div>
       <PlatformDownload
         repo={REPO}
         title="Vega for Android & TV"
@@ -28,7 +41,7 @@ import PlatformDownload from "./PlatformDownload.astro";
       />
       <PlatformDownload
         repo={DESKTOP_REPO}
-        title="Vega for Desktop"
+        title="Vega for Desktop and Other Platforms"
         platformType="desktop"
         autoDetectOS={true}
         storeLink={{

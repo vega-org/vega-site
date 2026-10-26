@@ -1,5 +1,5 @@
 ---
-import { ChevronDown, Download } from "@lucide/astro";
+import { ChevronDown, Download, Tv } from "@lucide/astro";
 import { marked } from "marked";
 import {
   getRepoReleases,
@@ -91,13 +91,32 @@ const DESKTOP_EXCLUDED_PATTERNS = [/\.sig$/i, /^latest\.json$/i];
 interface PlatformGroup {
   id: string;
   name: string;
-  icon: "android-tv" | "windows" | "linux" | "apple";
+  icon: "android-tv" | "windows" | "linux" | "apple" | "tv";
   patterns: string[];
   preferred: string;
   architecture?: RegExp;
 }
 
 const PLATFORMS: PlatformGroup[] = [
+  {
+    id: "webos",
+    name: "LG webOS",
+    icon: "tv",
+    patterns: [".ipk"],
+    preferred: ".ipk",
+  },
+  ...([
+    ["arm64", "ARM64"],
+    ["armv7", "ARMv7"],
+    ["x64", "x64"],
+  ] as const).map(([architecture, label]): PlatformGroup => ({
+    id: `vegaos-${architecture}`,
+    name: `Amazon Vega OS — ${label}`,
+    icon: "tv",
+    patterns: [".vpkg"],
+    preferred: ".vpkg",
+    architecture: new RegExp(`(?:^|[_.-])${architecture}(?:[_.-]|$)`, "i"),
+  })),
   {
     id: "windows",
     name: "Windows — Intel / AMD (x64)",
@@ -205,7 +224,7 @@ function getPrimaryDownloadUrl(release: RepoRelease): string {
   return getLatestDownloadUrl(release);
 }
 
-const primaryBtnText = isDesktop ? "Choose your desktop download" : "Download Latest";
+const primaryBtnText = isDesktop ? "Choose your platform" : "Download Latest";
 
 const releaseSubtitle = latestRelease
   ? isDesktop
@@ -299,6 +318,7 @@ const filteredAssets =
             {desktopPlatformAssets.map(({ asset, platform }) => (
               <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/10 bg-vega-surface p-4 sm:flex sm:gap-4 sm:px-5">
                 <div class="flex shrink-0 items-center justify-center rounded-lg bg-white/5 p-2.5">
+                  {platform.icon === "tv" && <Tv class="h-6 w-6 text-white" aria-hidden="true" />}
                   {platform.icon === "windows" && (
                     <svg
                       class="h-6 w-6 text-white"

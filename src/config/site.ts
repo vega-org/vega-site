@@ -23,6 +23,7 @@ export const DESKTOP_REPO = Object.freeze({
 export const DISCORD_INVITE_URL = "https://discord.com/invite/cr42m6maWy";
 
 export const APP_LINKS = Object.freeze({
+  webApp: "https://web.vega-app.in",
   guide: "/guide",
   officialSite: "https://vega.8man.in",
   playStore: "https://play.google.com/store/apps/details?id=vega.app",

@@ -10,11 +10,14 @@ const errors=dataUrl(ts.transpileModule(errorsSource,{compilerOptions:{target:ts
 const secureSource=await readFile(new URL('../src/cast/SecurePhoneTransport.ts',import.meta.url),'utf8');
 const secure=dataUrl(ts.transpileModule(secureSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText.replaceAll('import.meta.env.BASE_URL',JSON.stringify('/')));
 const source=await readFile(new URL('../src/cast/ReceiverSession.ts',import.meta.url),'utf8');
+const torrentSource=await readFile(new URL('../../libmedia-engine/src/delivery/torrentSource.ts',import.meta.url),'utf8');
+const torrent=dataUrl(ts.transpileModule(torrentSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
 const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText
  .replace('import.meta.env.VITE_VEGA_CAST_SERVICE_URL','undefined')
  .replace(/from ['"]\.\/SecurePhoneTransport['"]/g,'from '+JSON.stringify(secure))
  .replace(/from ['"]\.\.\/platform\/receiverHost['"]/g,'from '+JSON.stringify(host))
- .replace(/from ['"]\.\.\/player\/errors['"]/g,'from '+JSON.stringify(errors));
+ .replace(/from ['"]\.\.\/player\/errors['"]/g,'from '+JSON.stringify(errors))
+ .replace(/from ['"]@vega\/libmedia-engine\/torrent-source['"]/g,'from '+JSON.stringify(torrent));
 const {ReceiverSession}=await import(dataUrl(compiled));
 function fixture(onLoad){
  globalThis.window={};
@@ -28,6 +31,15 @@ function fixture(onLoad){
  return{session,calls,snapshot:()=>snapshot,setState:partial=>{state={...state,...partial};}};
 }
 const load=(session,delivery='direct',id='movie')=>session.receive({type:'LOAD_MEDIA',id:'load-'+id,controllerId:'phone',media:{id,title:'Movie',delivery,source:{url:'https://example.invalid/video.mkv'}}});
+
+test('raw torrent descriptors reach the engine without HTTP probing or phone fallback',async()=>{
+ const f=fixture((_source,update)=>update({error:{category:'TORRENT_UNSUPPORTED',message:'WebTorrent is unsupported'}}));
+ const magnet='magnet:?xt=urn:btih:0123456789012345678901234567890123456789';
+ await f.session.receive({type:'LOAD_MEDIA',id:'torrent',controllerId:'phone',media:{id:'torrent',title:'Owned torrent',source:{url:magnet,torrent:{fileIndex:2}},proxy:{source:{url:'http://phone.test/proxy'}}}});
+ assert.equal(f.calls.length,1);assert.equal(f.calls[0][1].source,magnet);assert.equal(f.calls[0][1].torrent.fileIndex,2);
+ await f.session.receive({type:'COMMAND',command:'STOP',id:'stop',controllerId:'phone'});
+ assert.equal(f.calls.at(-1)[0],'unload');
+});
 test('direct disconnect offers a choice without pausing, reloading or resetting the clock',async()=>{
  const f=fixture();await load(f.session);
  await f.session.receive({type:'CONTROLLER_DISCONNECT',controllerId:'phone'});

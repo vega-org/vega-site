@@ -4,6 +4,7 @@ import type {CastMedia, CastMessage, PairRequest, ReceiverIdentity,CastServerOpt
 import {receiverCapabilities, receiverHost, needsPhoneAccess} from '../platform/receiverHost';
 import {normalizePlaybackError} from '../player/errors';
 import {SecurePhoneTransport} from './SecurePhoneTransport';
+import {isTorrentSource} from '@vega/libmedia-engine/torrent-source';
 
 export interface ReceiverSessionState {
   status:'offline'|'connecting'|'ready'|'connected'|'error'; name:string; code:string;
@@ -192,10 +193,10 @@ export class ReceiverSession {
     const prior=this.seen.get(message.id);if(prior) {await this.send(prior,message.controllerId);return;}
     try {
       if(message.type==='LOAD_MEDIA' || message.type==='FALLBACK_SOURCE') {
-        if(!message.media || typeof message.media.source?.url!=='string' || !/^(https?:\/\/|file:|content:|\/)/i.test(message.media.source.url)) throw new Error('Invalid media source');
+        if(!message.media || typeof message.media.source?.url!=='string' || !/^(magnet:\?|https?:\/\/|file:|content:|\/)/i.test(message.media.source.url)) throw new Error('Invalid media source');
         this.update({disconnectedMedia:undefined});this.media=message.media;this.controllerId=message.controllerId;
         this.updateServers();
-        if(needsPhoneAccess(message.media,receiverCapabilities()) && message.media.delivery!=='phone-proxy') {
+        if(!isTorrentSource(message.media.source.url,message.media.source.format)&&needsPhoneAccess(message.media,receiverCapabilities()) && message.media.delivery!=='phone-proxy') {
           if(!await this.useProvidedProxy(message.media,'SOURCE_ACCESS_REQUIRED'))await this.requestFallback('SOURCE_ACCESS_REQUIRED');
         } else {
           await this.loadMedia(message.media);
@@ -228,6 +229,7 @@ export class ReceiverSession {
     return ['CORS_BLOCKED','HEADERS_NOT_ALLOWED','NETWORK_ERROR'].includes(error.category)||/open stream failed/i.test(error.message);
   }
   private async useProvidedProxy(media:CastMedia,category:string):Promise<boolean>{
+    if(isTorrentSource(media.source.url,media.source.format))return false;
     if(this.media!==media||!this.controllerId||media.delivery==='phone-proxy'||!media.proxy||this.proxyIds.has(media.id))return false;
     if(!/^https?:\/\//i.test(media.proxy.source.url))throw new Error('Invalid phone proxy URL');
     this.proxyIds.add(media.id);if(this.proxyIds.size>100)this.proxyIds.delete(this.proxyIds.values().next().value!);
@@ -251,8 +253,9 @@ export class ReceiverSession {
     }
     // Let the browser enforce mixed content and Local Network Access. Modern
     // Chrome can permit HTTP LAN delivery after the user grants local access.
-    const checkAccess=media.delivery!=='phone-proxy'&&!!media.proxy&&!receiverCapabilities().nativeNetworking;
-    const source={id:media.id,title:media.title,source:media.source.url,format:media.source.format==='hls'?'m3u8':media.source.format,headers:media.source.headers,networkRetryCount:checkAccess?0:undefined,startPosition:media.startPosition,audioTrackId:media.audioTrack,subtitleTrackId:media.subtitleTrack,
+    const torrent=isTorrentSource(media.source.url,media.source.format);
+    const checkAccess=!torrent&&media.delivery!=='phone-proxy'&&!!media.proxy&&!receiverCapabilities().nativeNetworking;
+    const source={id:media.id,title:media.title,source:media.source.url,format:media.source.format==='hls'?'m3u8':media.source.format,headers:media.source.headers,torrent:media.source.torrent,networkRetryCount:checkAccess?0:undefined,startPosition:media.startPosition,audioTrackId:media.audioTrack,subtitleTrackId:media.subtitleTrack,
       externalSubtitles:media.subtitles?.filter(track=>/^https?:\/\//i.test(track.uri)).map(track=>({source:track.uri,lang:track.language,title:track.title,format:track.type}))};
     try{
       if(checkAccess)await this.checkDirectAccess(media);
@@ -277,7 +280,7 @@ export class ReceiverSession {
         source.externalSubtitles=source.externalSubtitles?.map(track=>({...track,source:transport.url(track.source,track.format)}));
       }
       if(this.media!==media)return;
-      const prepared=receiverHost() ? await receiverHost()!.prepareSource(source):source;
+      const prepared=receiverHost()&&!torrent ? await receiverHost()!.prepareSource(source):source;
       if(this.media!==media)return;
       await this.onMedia(media);if(this.media!==media)return;this.loadedMediaId=media.id;await this.manager.load(prepared);
     }catch(error){
@@ -310,6 +313,7 @@ export class ReceiverSession {
     }finally{clearTimeout(timer);}
   }
   private async requestFallback(category:string) {
+    if(this.media&&isTorrentSource(this.media.source.url,this.media.source.format))return;
     if(['PLAYER_ASSET_ERROR','PLAYER_INTERNAL_ERROR'].includes(category))return;
     if(!this.media || this.fallbackIds.has(this.media.id)) return;
     const conversionAfterAccessProxy=this.proxyIds.has(this.media.id)&&['UNSUPPORTED_AUDIO_CODEC','UNSUPPORTED_CONTAINER'].includes(category);

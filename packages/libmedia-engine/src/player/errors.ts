@@ -9,7 +9,11 @@ export function normalizePlaybackError(error: unknown): PlaybackError {
   let category: PlaybackError['category'] = 'UNKNOWN_ERROR';
   let recoverable = false;
 
-  if (/chunkloaderror|loading chunk .*failed|failed to fetch dynamically imported module/.test(lowerMsg)) {
+  if (/webtorrent is unsupported/.test(lowerMsg)) {
+    category='TORRENT_UNSUPPORTED';
+  } else if (/torrent/.test(lowerMsg)) {
+    category='TORRENT_ERROR'; recoverable=true;
+  } else if (/chunkloaderror|loading chunk .*failed|failed to fetch dynamically imported module/.test(lowerMsg)) {
     category='PLAYER_ASSET_ERROR';
   } else if (/\bret:\s*-2097152\b/.test(lowerMsg)) {
     // libmedia cheap/error.ts: REQUEST_ERROR = -(1 << 21). This is a

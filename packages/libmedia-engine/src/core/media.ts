@@ -29,6 +29,7 @@ export interface MediaSourceDescriptor {
   headers?: Record<string, string>;
   /** Receiver-owned access recovery can disable the engine's internal retries. */
   networkRetryCount?: number;
+  torrent?: import('../delivery/torrentSource').TorrentOptions;
   startPosition?: number;
   audioTrackId?: number;
   subtitleTrackId?: number;

@@ -19,7 +19,7 @@ export interface CastMedia {
     headers?:unknown;subtitles?:{uri:string;language:string;title:string;type:string}[];
     skip?:{title?:string;from:number;to:number}[];
   };
-  source: {url:string; format?:string; headers?:Record<string,string>};
+  source: {url:string; format?:string; headers?:Record<string,string>; torrent?: import('@vega/libmedia-engine/torrent-source').TorrentOptions};
   proxy?: {secure?:boolean;iceServers?:RTCIceServer[];source:{url:string;format?:string};subtitles?:{uri:string;language?:string;title?:string;type?:string}[]};
   audioTrack?:number;
   subtitleTrack?:number;

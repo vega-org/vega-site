@@ -1,4 +1,5 @@
 import AVPlayer, { Events } from '@libmedia/avplayer';
+import {isTorrentSource} from '../delivery/torrentSource';
 import type { MediaSourceDescriptor, MediaTrack, ExternalSubtitleDescriptor } from '../core/media';
 import type { DiagnosticsStats, PlaybackState, PlaybackStatus } from '../core/playback-state';
 import type { PlayerEngine, PlayerEngineEvents } from './PlayerEngine';
@@ -25,6 +26,7 @@ export class LibmediaEngine implements PlayerEngine {
   };
   private events: PlayerEngineEvents = {};
   private currentSource: MediaSourceDescriptor | null = null;
+  private torrentInput?: import('../delivery/TorrentInput').TorrentInput;
 
   private isDestroyed = false;
   private nativeAudioGestureRequired=false;
@@ -161,6 +163,15 @@ export class LibmediaEngine implements PlayerEngine {
     });
 
     try {
+      let input: Parameters<AVPlayer['load']>[0] = source.source;
+      if (isTorrentSource(source.source, source.format)) {
+        const {TorrentInput} = await import('../delivery/TorrentInput');
+        if (superseded()) return;
+        const torrent = this.torrentInput = new TorrentInput(source.source, source.torrent);
+        await torrent.open();
+        if (superseded()) {await torrent.stop(); return;}
+        input = torrent;
+      }
       const caps = detectEnvironmentCapabilities();
 
       this.player = new AVPlayer({
@@ -183,7 +194,7 @@ export class LibmediaEngine implements PlayerEngine {
       const loadOptions: Record<string, unknown> = {};
       if(source.networkRetryCount!=null)loadOptions.ioLoaderOptions={retryCount:source.networkRetryCount};
 
-      if (source.format) {
+      if (source.format && !this.torrentInput) {
         // Libmedia selects its HLS loader using the extension, including for
         // prepared blob URLs which no longer have a .m3u8 pathname.
         loadOptions.ext = /^(hls|mpegurl)$/i.test(source.format) ? 'm3u8' : source.format;
@@ -204,7 +215,7 @@ export class LibmediaEngine implements PlayerEngine {
       }
 
       // Load media source
-      await this.player.load(source.source, loadOptions);
+      await this.player.load(input, loadOptions);
       if(superseded())return;
 
       // Extract tracks once file is analyzed
@@ -252,6 +263,7 @@ export class LibmediaEngine implements PlayerEngine {
       this.applySubtitleDelay();
     } catch (err) {
       if(superseded())return;
+      await this.torrentInput?.stop(); this.torrentInput=undefined;
       const normalizedError = normalizePlaybackError(err);
       this.events.onError?.(normalizedError);
       this.emitState({
@@ -648,6 +660,8 @@ export class LibmediaEngine implements PlayerEngine {
   }
 
   private async cleanupPlayer(): Promise<void> {
+    const torrent=this.torrentInput;this.torrentInput=undefined;
+    await torrent?.stop();
     if(this.progressTimer!==null){clearInterval(this.progressTimer);this.progressTimer=null;}
     await this.timelineOperations;
     const player=this.player;

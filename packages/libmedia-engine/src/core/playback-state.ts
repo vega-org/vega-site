@@ -59,6 +59,8 @@ export interface PlaybackError {
     | 'UNSUPPORTED_AUDIO_CODEC'
     | 'DECODER_FAILURE'
     | 'SEEK_FAILURE'
+    | 'TORRENT_UNSUPPORTED'
+    | 'TORRENT_ERROR'
     | 'UNKNOWN_ERROR';
   message: string;
   recoverable: boolean;

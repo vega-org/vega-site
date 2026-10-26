@@ -100,10 +100,12 @@ const mockUrl = dataUrl(`
 const { default: MockAVPlayer, Events } = await import(mockUrl);
 const errorsUrl = await sourceModule('../../libmedia-engine/src/player/errors.ts');
 const playbackStateUrl = await sourceModule('../../libmedia-engine/src/core/playback-state.ts');
+const torrentSourceUrl = await sourceModule('../../libmedia-engine/src/delivery/torrentSource.ts');
 const engineUrl = await sourceModule('../../libmedia-engine/src/player/LibmediaEngine.ts', {
   '@libmedia/avplayer': mockUrl,
   '../core/playback-state': playbackStateUrl,
   './errors': errorsUrl,
+  '../delivery/torrentSource': torrentSourceUrl,
   './capabilities': dataUrl('export const detectEnvironmentCapabilities = () => ({ webCodecs: true, audioWorklet: true });'),
 });
 const { LibmediaEngine } = await import(engineUrl);

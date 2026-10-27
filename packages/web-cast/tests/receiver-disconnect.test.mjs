@@ -5,12 +5,12 @@ import ts from 'typescript';
 const dataUrl=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
 const hostSource=await readFile(new URL('../src/platform/receiverHost.ts',import.meta.url),'utf8');
 const host=dataUrl(ts.transpileModule(hostSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
-const errorsSource=await readFile(new URL('../../libmedia-engine/src/player/errors.ts',import.meta.url),'utf8');
+const errorsSource=await readFile(new URL(import.meta.resolve('@vega/libmedia-engine/errors')),'utf8');
 const errors=dataUrl(ts.transpileModule(errorsSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
 const secureSource=await readFile(new URL('../src/cast/SecurePhoneTransport.ts',import.meta.url),'utf8');
 const secure=dataUrl(ts.transpileModule(secureSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText.replaceAll('import.meta.env.BASE_URL',JSON.stringify('/')));
 const source=await readFile(new URL('../src/cast/ReceiverSession.ts',import.meta.url),'utf8');
-const torrentSource=await readFile(new URL('../../libmedia-engine/src/delivery/torrentSource.ts',import.meta.url),'utf8');
+const torrentSource=await readFile(new URL(import.meta.resolve('@vega/libmedia-engine/torrent-source')),'utf8');
 const torrent=dataUrl(ts.transpileModule(torrentSource,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText);
 const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2023,module:ts.ModuleKind.ESNext}}).outputText
  .replace('import.meta.env.VITE_VEGA_CAST_SERVICE_URL','undefined')

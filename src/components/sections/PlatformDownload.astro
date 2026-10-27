@@ -150,7 +150,10 @@ const PLATFORMS: PlatformGroup[] = [
 ];
 
 function isDesktopInstaller(name: string): boolean {
-  return !DESKTOP_EXCLUDED_PATTERNS.some((p) => p.test(name));
+  return !DESKTOP_EXCLUDED_PATTERNS.some((p) => p.test(name)) &&
+    PLATFORMS.some((platform) => platform.patterns.some((extension) =>
+      name.toLowerCase().endsWith(extension.toLowerCase()),
+    ));
 }
 
 function isPreferred(name: string, platform: PlatformGroup): boolean {

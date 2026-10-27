@@ -98,10 +98,10 @@ const mockUrl = dataUrl(`
   }
 `);
 const { default: MockAVPlayer, Events } = await import(mockUrl);
-const errorsUrl = await sourceModule('../../libmedia-engine/src/player/errors.ts');
-const playbackStateUrl = await sourceModule('../../libmedia-engine/src/core/playback-state.ts');
-const torrentSourceUrl = await sourceModule('../../libmedia-engine/src/delivery/torrentSource.ts');
-const engineUrl = await sourceModule('../../libmedia-engine/src/player/LibmediaEngine.ts', {
+const errorsUrl = await sourceModule(import.meta.resolve('@vega/libmedia-engine/errors'));
+const playbackStateUrl = await sourceModule(import.meta.resolve('@vega/libmedia-engine/core/playback-state'));
+const torrentSourceUrl = await sourceModule(import.meta.resolve('@vega/libmedia-engine/torrent-source'));
+const engineUrl = await sourceModule(import.meta.resolve('@vega/libmedia-engine'), {
   '@libmedia/avplayer': mockUrl,
   '../core/playback-state': playbackStateUrl,
   './errors': errorsUrl,

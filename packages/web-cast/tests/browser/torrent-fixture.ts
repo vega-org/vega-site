@@ -1,6 +1,6 @@
 import {LibmediaEngine} from '@vega/libmedia-engine';
-import {TorrentInput} from '../../../libmedia-engine/src/delivery/TorrentInput';
-import {selectTorrentFile} from '../../../libmedia-engine/src/delivery/torrentSource';
+import {TorrentInput} from '@vega/libmedia-engine/torrent-input';
+import {selectTorrentFile} from '@vega/libmedia-engine/torrent-source';
 
 // Test peers are on one host. Avoid external STUN availability affecting this
 // controlled transfer; production keeps WebTorrent's normal ICE configuration.

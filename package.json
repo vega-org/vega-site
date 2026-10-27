@@ -35,8 +35,7 @@
     "vite": "^7"
   },
   "workspaces": [
-    "packages/web-cast",
-    "packages/libmedia-engine"
+    "packages/web-cast"
   ],
   "devDependencies": {
     "esbuild": "^0.28.2",

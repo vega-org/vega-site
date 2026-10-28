@@ -17,6 +17,61 @@ interface GitHubRepoResponse {
   stargazers_count?: number;
 }
 
+interface OrganizationRepo extends GitHubRepoResponse { name: string; size: number }
+const organizationCache = new Map<string, {expires: number; value: Promise<OrganizationRepo[] | null>}>();
+
+async function getOrganizationRepos(owner: string, ttl: number): Promise<OrganizationRepo[] | null> {
+  const cached = organizationCache.get(owner);
+  if (cached && cached.expires > Date.now()) return cached.value;
+  const value = (async () => {
+    const repositories: OrganizationRepo[] = [];
+    for (let page = 1; page <= 100; page++) {
+      const response = await fetchGitHubResponse(`/orgs/${encodeURIComponent(owner)}/repos?type=public&per_page=100&page=${page}`, DEFAULT_GITHUB_TIMEOUT_MS, ttl);
+      if (!response) return null;
+      const data = await response.json();
+      if (!Array.isArray(data) || data.some(repo => typeof repo.name !== 'string' || !Number.isInteger(repo.stargazers_count))) return null;
+      repositories.push(...data);
+      if (!response.headers.get('link')?.includes('rel="next"')) return repositories;
+    }
+    return null;
+  })().catch(() => null);
+  organizationCache.set(owner, {expires: Date.now() + ttl * 1000, value});
+  return value;
+}
+
+export async function getOrganizationStars(owner: string, ttl = DEFAULT_CACHE_TTL_SECONDS): Promise<number | null> {
+  const repositories = await getOrganizationRepos(owner, ttl);
+  return repositories ? repositories.reduce((sum, repo) => sum + repo.stargazers_count!, 0) : null;
+}
+
+const organizationStatsCache = new Map<string, {expires: number; value: Promise<{totalDownloads: number | null; totalCommits: number | null; totalStars: number | null}>}>();
+export async function getOrganizationStats(owner: string, ttl = DEFAULT_CACHE_TTL_SECONDS) {
+  const cached = organizationStatsCache.get(owner);
+  if (cached && cached.expires > Date.now()) return cached.value;
+  const value = (async () => {
+    const repositories = await getOrganizationRepos(owner, ttl);
+    if (!repositories) return {totalDownloads: null, totalCommits: null, totalStars: null};
+    const results: {downloads: number | null; commits: number | null}[] = [];
+    // Bound concurrency; large organizations should not flood GitHub on a cold cache.
+    for (let i = 0; i < repositories.length; i += 4) {
+      results.push(...await Promise.all(repositories.slice(i, i + 4).map(async repo => {
+        const [downloads, commits] = await Promise.all([
+          getRepoTotalDownloads(owner, repo.name, ttl),
+          repo.size === 0 ? Promise.resolve(0) : getRepoCommitCount(owner, repo.name, ttl),
+        ]);
+        return {downloads, commits};
+      })));
+    }
+    return {
+      totalStars: repositories.reduce((sum, repo) => sum + repo.stargazers_count!, 0),
+      totalDownloads: results.some(repo => repo.downloads === null) ? null : results.reduce((sum, repo) => sum + repo.downloads!, 0),
+      totalCommits: results.some(repo => repo.commits === null) ? null : results.reduce((sum, repo) => sum + repo.commits!, 0),
+    };
+  })().catch(() => ({totalDownloads: null, totalCommits: null, totalStars: null}));
+  organizationStatsCache.set(owner, {expires: Date.now() + ttl * 1000, value});
+  return value;
+}
+
 interface GitHubContributorResponse {
   login?: string;
   avatar_url?: string;
@@ -284,7 +339,8 @@ export async function getRepoTotalDownloads(
     return totalDownloads;
   }
 
-  const maxPages = Math.min(lastPage, 10);
+  if (lastPage > 100) return null;
+  const maxPages = lastPage;
   const pageRequests: Promise<GitHubReleaseResponse[] | null>[] = [];
 
   for (let page = 2; page <= maxPages; page += 1) {
@@ -298,6 +354,7 @@ export async function getRepoTotalDownloads(
   }
 
   const pages = await Promise.all(pageRequests);
+  if (pages.some(page => !Array.isArray(page))) return null;
   pages.forEach((pageData) => {
     if (Array.isArray(pageData)) {
       totalDownloads += sumReleaseDownloads(pageData);

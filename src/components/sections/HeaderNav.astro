@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import { APP_LINKS, DISCORD_INVITE_URL, REPO } from "../../config/site";
-import { formatCompactNumber, getRepoStars } from "../../lib/github";
+import { formatCompactNumber, getOrganizationStars } from "../../lib/github";
 import { getDiscordMemberCount } from "../../lib/stats";
 import logo from "../../assets/logo.png";
 import { Globe } from "@lucide/astro";
@@ -10,10 +10,10 @@ interface Props {
   repoUrl?: string;
 }
 
-const { repoUrl = REPO.url } = Astro.props;
+const { repoUrl = REPO.orgUrl } = Astro.props;
 
 const [stars, discordMembers] = await Promise.all([
-  getRepoStars(REPO.owner, REPO.name, REPO.githubCacheTtlSeconds),
+  getOrganizationStars(REPO.owner, REPO.githubCacheTtlSeconds),
   getDiscordMemberCount(REPO.discordInviteApiUrl, REPO.githubCacheTtlSeconds),
 ]);
 
@@ -87,8 +87,8 @@ const discordMembersLabel =
         target="_blank"
         rel="noreferrer"
         aria-label={typeof stars === "number"
-          ? `Vega GitHub repository with ${stars} stars`
-          : "Vega GitHub repository"}
+          ? `Vega GitHub organization with ${stars} stars across public repositories`
+          : "Vega GitHub organization"}
       >
         <svg
           class="h-4 w-4"

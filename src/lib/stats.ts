@@ -1,7 +1,5 @@
 import {
-  getRepoCommitCount,
-  getRepoStars,
-  getRepoTotalDownloads,
+  getOrganizationStats,
 } from "./github";
 
 interface DiscordInviteResponse {
@@ -60,22 +58,18 @@ export async function getDiscordMemberCount(
 
 export async function getAppStats(
   owner: string,
-  repo: string,
+  _repo: string,
   discordInviteApiUrl: string,
   cacheTtlSeconds: number,
 ): Promise<AppStats> {
-  const [totalDownloads, totalCommits, totalStars, discordMembers] =
+  const [organization, discordMembers] =
     await Promise.all([
-      getRepoTotalDownloads(owner, repo, cacheTtlSeconds),
-      getRepoCommitCount(owner, repo, cacheTtlSeconds),
-      getRepoStars(owner, repo, cacheTtlSeconds),
+      getOrganizationStats(owner, cacheTtlSeconds),
       getDiscordMemberCount(discordInviteApiUrl, cacheTtlSeconds),
     ]);
 
   return {
-    totalDownloads,
-    totalCommits,
-    totalStars,
+    ...organization,
     discordMembers,
   };
 }

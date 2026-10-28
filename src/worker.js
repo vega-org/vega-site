@@ -1,6 +1,6 @@
 import {handle} from '@astrojs/cloudflare/handler';
 import {castRequest} from '../cloudflare/handler.mjs';
-import {blocksProviderIntent} from './lib/domainPolicy';
+import {blocksProviderIntent,isOfficialDomain} from './lib/domainPolicy';
 export {CastSession,CastDirectory} from '../cloudflare/cast.mjs';
 
 export default {
@@ -27,6 +27,12 @@ export default {
       headers.set('Cross-Origin-Opener-Policy','same-origin');
       headers.set('Cross-Origin-Embedder-Policy','credentialless');
       return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    }
+    // Apply to both the prerendered homepage and deferred Docs HTML. Filtering
+    // at the request boundary avoids shipping visible source examples on the
+    // official domain while retaining them on community domains.
+    if(isOfficialDomain(url.hostname)&&response.headers.get('Content-Type')?.includes('text/html')){
+      return new HTMLRewriter().on('[data-provider-source-example]',{element(element){element.remove();}}).transform(response);
     }
     return response;
   },

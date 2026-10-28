@@ -12,7 +12,7 @@ const faqs: FaqItem[] = [
   {
     question: "How do I add providers?",
     answer:
-      "Go to Settings > Provider Manager > Available Providers, tap the plus button, then enter one of: vega-org, zenda-cross, or https://github.com/vega-org/vega-providers, and confirm. Use the same flow for adding custom provider sources.",
+      "Go to Settings > Provider Manager > Available Providers, tap the plus button, then enter your chosen provider source and confirm.",
   },
   {
     question: "Is the app available for TV?",
@@ -91,6 +91,7 @@ const faqs: FaqItem[] = [
                 <div class="overflow-hidden">
                   <p class="pb-5 pr-8 text-base leading-relaxed text-vega-muted">
                     {item.answer}
+                    {index === 0 && <span data-provider-source-example> For example: vega-org, zenda-cross, or https://github.com/vega-org/vega-providers.</span>}
                     {itemHref ? (
                       <a
                         class="ml-1 font-semibold text-vega-accent underline underline-offset-2"

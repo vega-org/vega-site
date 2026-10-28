@@ -38,6 +38,7 @@
     "packages/web-cast"
   ],
   "devDependencies": {
+    "@astrojs/node": "^10.0.6",
     "esbuild": "^0.28.2",
     "miniflare": "^4.20260730.0"
   }

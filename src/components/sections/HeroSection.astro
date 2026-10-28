@@ -3,11 +3,11 @@ import { Star } from "@lucide/astro";
 import { Image } from "astro:assets";
 import { REPO } from "../../config/site";
 import heroLandscape from "../../assets/hero-landscape.png";
-import heroPortrait from "../../assets/hero-portrait.png";
+import heroPortrait from "../../assets/hero-portrait.jpg";
 ---
 
 <header
-  class="overflow-hidden px-4 pb-6 pt-28 md:px-6 md:pb-10 md:pt-28 lg:pb-8 lg:pt-24"
+  class="hero-section overflow-hidden px-4 pb-6 pt-28 md:px-6 md:pb-10 md:pt-28 lg:pb-8 lg:pt-24"
   id="top"
 >
   <div
@@ -19,7 +19,7 @@ import heroPortrait from "../../assets/hero-portrait.png";
         >Open Source</span
       > -->
       <h1
-        class="mt-3 font-headline text-[clamp(2.05rem,8.7vw,5.2rem)] leading-[0.94] font-black tracking-tight text-white [text-shadow:0_0_32px_rgba(255,143,112,0.28)]"
+        class="mt-3 font-headline text-[clamp(2.05rem,8.7vw,5.2rem)] leading-[0.94] font-black tracking-tight text-white"
       >
         Play, stream and cast your media.
       </h1>
@@ -48,27 +48,137 @@ import heroPortrait from "../../assets/hero-portrait.png";
       </div>
     </div>
     <div
-      class="group relative mx-auto mt-2 flex w-full max-w-176 items-end py-1 sm:mt-3 md:py-2"
+      class="device-stage group relative mx-auto mt-2 flex w-full max-w-176 items-end sm:mt-3"
     >
+      <div class="device-glow glow-portrait" aria-hidden="true"></div>
+      <div class="device-glow glow-landscape" aria-hidden="true"></div>
+      <div class="device-frame device-landscape absolute bottom-0 right-0 z-10 w-[90%] transition duration-500">
+      <span class="device-camera" aria-hidden="true"></span>
       <Image
-        class="absolute bottom-0 right-[1%] z-0 w-[86%] max-w-none object-contain transition duration-500 group-hover:translate-x-[1%] md:w-[82%]"
+        class="device-screen"
         src={heroLandscape}
         width={1100}
         sizes="(min-width: 1024px) 42vw, 82vw"
         quality={80}
-        alt="Vega landscape playback mockup"
+        alt="Vega video player in landscape"
         loading="lazy"
       />
+      </div>
 
+      <div class="device-frame device-portrait relative z-0 w-[38%] max-w-[240px] transition duration-500">
+      <span class="device-camera" aria-hidden="true"></span>
       <Image
-        class="-mb-2 relative z-10 w-[63%] min-w-44 max-w-[320px] object-contain transition duration-500 group-hover:-translate-y-1 sm:-mb-4 md:-mb-5 md:w-[56%] md:min-w-52"
+        class="device-screen"
         src={heroPortrait}
         width={520}
-        sizes="(min-width: 1024px) 24vw, 56vw"
+        sizes="(min-width: 1024px) 18vw, 38vw"
         quality={80}
-        alt="Vega portrait browsing mockup"
+        alt="Vega home screen in portrait"
         loading="lazy"
       />
+      </div>
     </div>
   </div>
 </header>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.device-stage').forEach(stage => {
+    stage.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'mouse' || !matchMedia('(hover: hover)').matches) return;
+      stage.dataset.motion = 'back';
+    });
+    stage.addEventListener('pointerleave', () => {
+      if (stage.dataset.motion) stage.dataset.motion = 'front';
+    });
+  });
+</script>
+
+<style>
+  .hero-section { background: #000; }
+  .device-stage { isolation: isolate; }
+  .device-glow {
+    position: absolute;
+    z-index: -2;
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(36px);
+  }
+  .glow-portrait {
+    width: 85%;
+    height: 110%;
+    left: -25%;
+    top: -20%;
+    background: radial-gradient(ellipse, rgb(137 44 28 / 40%), rgb(93 27 20 / 15%) 45%, transparent 72%);
+  }
+  .glow-landscape {
+    width: 155%;
+    height: 115%;
+    right: -30%;
+    bottom: -30%;
+    background: radial-gradient(ellipse, rgb(56 145 190 / 72%), rgb(37 112 155 / 42%) 42%, transparent 74%);
+  }
+  .device-frame {
+    border: 2px solid #5b5b60;
+    border-radius: clamp(16px, 2.6vw, 32px);
+    padding: clamp(4px, .55vw, 7px);
+    background: #09090b;
+    box-shadow: 0 0 0 1px #131316, inset 0 0 0 1px #b8b8c23b,
+      0 24px 60px #0009, 0 4px 12px #0008;
+    isolation: isolate;
+    transition: transform 420ms cubic-bezier(.2,.8,.2,1), box-shadow 420ms ease;
+  }
+  @media (hover: hover) {
+    .device-stage[data-motion='back'] .device-landscape {
+      animation: landscape-to-back 800ms cubic-bezier(.4,0,.2,1) both;
+    }
+    .device-stage[data-motion='front'] .device-landscape {
+      animation: landscape-to-front 800ms cubic-bezier(.4,0,.2,1) both;
+    }
+  }
+  @keyframes landscape-to-back {
+    0% { transform: translateX(0); z-index: 10; }
+    49% { transform: translateX(30%); z-index: 10; }
+    50% { transform: translateX(30%); z-index: -1; }
+    100% { transform: translateX(0); z-index: -1; }
+  }
+  @keyframes landscape-to-front {
+    0% { transform: translateX(0); z-index: -1; }
+    49% { transform: translateX(30%); z-index: -1; }
+    50% { transform: translateX(30%); z-index: 10; }
+    100% { transform: translateX(0); z-index: 10; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .device-frame { transition: none; }
+    .device-stage[data-motion] .device-landscape { animation: none; }
+    .device-stage[data-motion='back'] .device-landscape { z-index: -1; }
+    .device-stage[data-motion='front'] .device-landscape { z-index: 10; }
+  }
+  .device-screen {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: clamp(10px, 2vw, 23px);
+  }
+  .device-camera {
+    position: absolute;
+    z-index: 1;
+    width: clamp(4px, .6vw, 7px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #182536, #030305 65%);
+    box-shadow: 0 0 0 2px #09090b;
+  }
+  .device-portrait .device-camera { top: 2.5%; left: 50%; transform: translateX(-50%); }
+  .device-landscape .device-camera { left: 2%; top: 50%; transform: translateY(-50%); }
+  .device-frame::before,
+  .device-frame::after {
+    content: '';
+    position: absolute;
+    background: linear-gradient(90deg, #28282d, #85858c, #343439);
+    border-radius: 2px;
+  }
+  .device-portrait::before { right: -4px; top: 21%; width: 3px; height: 12%; }
+  .device-portrait::after { right: -4px; top: 38%; width: 3px; height: 7%; }
+  .device-landscape::before { top: -4px; left: 21%; height: 3px; width: 12%; }
+  .device-landscape::after { top: -4px; left: 38%; height: 3px; width: 7%; }
+</style>

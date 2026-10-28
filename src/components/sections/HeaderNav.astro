@@ -4,6 +4,7 @@ import { APP_LINKS, DISCORD_INVITE_URL, REPO } from "../../config/site";
 import { formatCompactNumber, getRepoStars } from "../../lib/github";
 import { getDiscordMemberCount } from "../../lib/stats";
 import logo from "../../assets/logo.png";
+import { Globe } from "@lucide/astro";
 
 interface Props {
   repoUrl?: string;
@@ -43,12 +44,10 @@ const discordMembersLabel =
       <span class="text-2xl font-black tracking-tight md:text-3xl">Vega</span>
     </a>
 
-    <div class="hidden items-center gap-7 md:flex">
+    <div class="hidden items-center gap-7 lg:flex">
       <a
         class="font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
-        href={APP_LINKS.webApp}
-        target="_blank"
-        rel="noopener noreferrer">Web App</a
+        href="/cast/">Cast</a
       >
       <a
         class="border-b-2 border-vega-accent pb-1 font-headline text-xs font-bold uppercase tracking-[0.08em] text-vega-accent"
@@ -72,7 +71,16 @@ const discordMembersLabel =
       >
     </div>
     <div class="flex items-center gap-1.5 md:gap-2">
-      <a class="rounded-md px-3 py-2 text-sm font-bold text-white transition hover:bg-white/10" href="/cast/">Cast</a>
+      <a
+        class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/15 bg-white/5 px-2.5 py-2 font-headline text-sm font-bold text-white transition hover:bg-white/12 sm:px-4 sm:py-2.5"
+        href={APP_LINKS.webApp}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open Vega Web App"
+      >
+        <Globe class="h-4 w-4" aria-hidden="true" />
+        <span>Web App</span>
+      </a>
       <a
         class="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/5 px-2.5 py-2 font-headline text-sm font-bold text-white transition hover:bg-white/12 sm:px-4 sm:py-2.5"
         href={repoUrl}
@@ -134,15 +142,13 @@ const discordMembersLabel =
     </div>
   </div>
 
-  <div class="border-t border-white/8 md:hidden">
+  <div class="border-t border-white/8 lg:hidden">
     <div
       class="mx-auto flex w-[min(1400px,calc(100%-1rem))] items-center gap-4 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <a
         class="shrink-0 font-headline text-[0.7rem] font-bold uppercase tracking-[0.08em] text-vega-muted transition-colors hover:text-vega-accent"
-        href={APP_LINKS.webApp}
-        target="_blank"
-        rel="noopener noreferrer">Web App</a
+        href="/cast/">Cast</a
       >
       <a
         class="shrink-0 border-b-2 border-vega-accent pb-1 font-headline text-[0.7rem] font-bold uppercase tracking-[0.08em] text-vega-accent"
